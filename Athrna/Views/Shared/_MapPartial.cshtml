@@ -1,0 +1,25 @@
+﻿<section class="map-section">
+    <h2>Explore Historical Sites</h2>
+    <div class="map-container">
+        <div class="map-controls">
+            <button class="map-btn active" data-city="madinah">Madinah</button>
+            <button class="map-btn" data-city="riyadh">Riyadh</button>
+            <button class="map-btn" data-city="alula">AlUla</button>
+        </div>
+        <div class="map-display">
+            <div id="map" class="map"></div>
+            <div class="site-info" id="siteInfo">
+                <img id="siteImage" src="/api/placeholder/300/150" alt="Historical Site" />
+                <h3 id="siteName">Site Name</h3>
+                <p id="siteDescription">Site description goes here.</p>
+                <p id="siteYear">
+                    <strong>Established:</strong> <span id="yearValue">Year</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/map.js"></script>
+}

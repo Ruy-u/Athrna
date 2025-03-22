@@ -1,49 +1,53 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Athrna</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Athrna.styles.css" asp-append-version="true" />
+    <link rel="icon" href="~/images/logo.jpg" />
+    <link rel="stylesheet" href="~/css/styles.css" />
+    <link rel="stylesheet" href="~/css/map.css" />
+    @RenderSection("Styles", required: false)
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Athrna</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
+        <div class="logo">
+            <img src="~/images/logo.jpg" alt="Athrna Logo" id="logo-image" />
+            <div class="logo-text">Athrna</div>
+        </div>
+        <button class="login-btn" id="loginButton">Login</button>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+    @RenderBody()
+
+    <footer>
+        <p>&copy; @DateTime.Now.Year Athrna - Saudi Historical Sites. All rights reserved.</p>
+    </footer>
+
+    <!-- Login Modal -->
+    <div class="login-modal" id="loginModal">
+        <div class="modal-content">
+            <h2>Login to Your Account</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required />
+                </div>
+                <div class="form-group">
+                    <label for="password">EncryptedPassword</label>
+                    <input type="password" id="EncryptedPassword" required />
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="close-btn" id="closeModal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="submit-btn">Login</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - Athrna - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    <script src="~/js/login.js"></script>
+    @RenderSection("Scripts", required: false)
 </body>
 </html>
