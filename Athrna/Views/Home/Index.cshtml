@@ -2,6 +2,12 @@
     ViewData["Title"] = "Home";
 }
 
+<!-- Authentication Buttons -->
+<div class="auth-buttons">
+    <a asp-controller="Account" asp-action="Login" class="auth-btn login-btn">Login</a>
+    <a asp-controller="Account" asp-action="Register" class="auth-btn register-btn">Register</a>
+</div>
+
 <section class="hero">
     <h1>Discover Saudi Arabia's Rich Heritage</h1>
     <p>
@@ -29,7 +35,6 @@
             <a asp-controller="City" asp-action="Explore" asp-route-id="madinah" class="explore-btn">Explore Madinah</a>
         </div>
     </div>
-
     <!-- Riyadh Card -->
     <div class="card">
         <div class="card-img">
@@ -48,7 +53,6 @@
             <a asp-controller="City" asp-action="Explore" asp-route-id="riyadh" class="explore-btn">Explore Riyadh</a>
         </div>
     </div>
-
     <!-- AlUla Card -->
     <div class="card">
         <div class="card-img">
@@ -69,6 +73,5 @@
         </div>
     </div>
 </div>
-
 <!-- Interactive Map Section -->
-@await Html.PartialAsync("_MapPartial")
+@await Html.PartialAsync("_MapPartial"))

@@ -1,22 +1,38 @@
-html {
-  font-size: 14px;
+.auth-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    position: relative;
+    z-index: 10;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+.auth-btn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.login-btn {
+    background-color: transparent;
+    color: #0056b3;
+    border: 2px solid #0056b3;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+    .login-btn:hover {
+        background-color: #0056b3;
+        color: white;
+    }
+
+.register-btn {
+    background-color: #0056b3;
+    color: white;
+    border: 2px solid #0056b3;
 }
 
-body {
-  margin-bottom: 60px;
-}
+    .register-btn:hover {
+        background-color: #003d7e;
+    }
