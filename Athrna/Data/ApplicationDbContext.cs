@@ -20,7 +20,7 @@ namespace Athrna.Data
         public DbSet<Bookmark> Bookmarks { get; set; }
         public DbSet<City> Cities { get; set; }
         public DbSet<CulturalInfo> CulturalInfos { get; set; }
-        public DbSet<Administrator> Administrators { get; set; }
+        public DbSet<Administrator> Administrator { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,6 +34,18 @@ namespace Athrna.Data
             modelBuilder.Entity<Client>()
                 .HasIndex(c => c.Email)
                 .IsUnique();
+
+            // Configure the relationship between Guide and City
+            modelBuilder.Entity<Guide>()
+                .HasOne(g => g.City)
+                .WithMany(c => c.Guides)
+                .HasForeignKey(g => g.CityId);
+
+            // Ensure Site no longer has a relationship with Guide
+            modelBuilder.Entity<Site>()
+                .HasOne(s => s.City)
+                .WithMany(c => c.Sites)
+                .HasForeignKey(s => s.CityId);
         }
     }
 }

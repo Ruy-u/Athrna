@@ -1,33 +1,171 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Athrna.Models;
+using Athrna.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace Athrna.Controllers
 {
     public class CityController : Controller
     {
-        // This action will handle the exploration of cities by ID
-        public IActionResult Explore(string id)
+        private readonly ApplicationDbContext _context;
+
+        public CityController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        // GET: City
+        public async Task<IActionResult> Index()
+        {
+            var cities = await _context.Cities.ToListAsync();
+            return View(cities);
+        }
+
+        // GET: City/Explore/madinah
+        public async Task<IActionResult> Explore(string id)
         {
             if (string.IsNullOrEmpty(id))
             {
                 return RedirectToAction("Index", "Home");
             }
 
-            // Validate that the city ID is allowed
-            string[] validCities = new[] { "madinah", "riyadh", "alula" };
-            if (!validCities.Contains(id.ToLower()))
+            // Normalize the city name
+            id = id.ToLower();
+
+            // Get city from database by normalized name
+            var city = await _context.Cities
+                .FirstOrDefaultAsync(c => c.Name.ToLower() == id);
+
+            if (city == null)
             {
                 return NotFound();
             }
 
-            // Create a model for the city (you'd typically get this from a database)
-            var cityModel = new CityViewModel
+            // Get city's historical sites
+            var sites = await _context.Sites
+                .Where(s => s.CityId == city.Id)
+                .Include(s => s.CulturalInfo)
+                .ToListAsync();
+
+            // Get guides for this city
+            var guides = await _context.Guides
+                .Where(g => g.CityId == city.Id)
+                .ToListAsync();
+
+            // Create a view model for the city
+            var viewModel = new CityDetailsViewModel
             {
-                Id = id.ToLower(),
-                Name = char.ToUpper(id[0]) + id.Substring(1)
+                City = city,
+                Sites = sites,
+                Guides = guides
             };
 
-            return View(cityModel);
+            return View(viewModel);
+        }
+
+        // GET: City/Site/5
+        public async Task<IActionResult> Site(int id)
+        {
+            var site = await _context.Sites
+                .Include(s => s.City)
+                .Include(s => s.CulturalInfo)
+                .Include(s => s.Ratings)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (site == null)
+            {
+                return NotFound();
+            }
+
+            return View(site);
+        }
+
+        // POST: City/Bookmark/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Bookmark(int id)
+        {
+            // Check if user is authenticated
+            if (!User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+
+            // Check if bookmark already exists
+            var existingBookmark = await _context.Bookmarks
+                .FirstOrDefaultAsync(b => b.ClientId == userId && b.SiteId == id);
+
+            if (existingBookmark == null)
+            {
+                // Create new bookmark
+                var bookmark = new Bookmark
+                {
+                    ClientId = userId,
+                    SiteId = id
+                };
+
+                _context.Bookmarks.Add(bookmark);
+                await _context.SaveChangesAsync();
+                TempData["Message"] = "Site bookmarked successfully!";
+            }
+            else
+            {
+                // Remove existing bookmark
+                _context.Bookmarks.Remove(existingBookmark);
+                await _context.SaveChangesAsync();
+                TempData["Message"] = "Bookmark removed!";
+            }
+
+            // Redirect back to site details
+            return RedirectToAction("Site", new { id });
+        }
+
+        // POST: City/Rate/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Rate(int siteId, int value, string review)
+        {
+            // Check if user is authenticated
+            if (!User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+
+            // Check if rating already exists
+            var existingRating = await _context.Ratings
+                .FirstOrDefaultAsync(r => r.ClientId == userId && r.SiteId == siteId);
+
+            if (existingRating != null)
+            {
+                // Update existing rating
+                existingRating.Value = value;
+                existingRating.Review = review;
+                _context.Ratings.Update(existingRating);
+            }
+            else
+            {
+                // Create new rating
+                var rating = new Rating
+                {
+                    ClientId = userId,
+                    SiteId = siteId,
+                    Value = value,
+                    Review = review
+                };
+
+                _context.Ratings.Add(rating);
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Message"] = "Rating submitted successfully!";
+
+            // Redirect back to site details
+            return RedirectToAction("Site", new { id = siteId });
         }
     }
 }

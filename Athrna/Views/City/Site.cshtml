@@ -1,0 +1,458 @@
+﻿@model Athrna.Models.Site
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="site-hero">
+    <div class="site-overlay"></div>
+    <div class="container">
+        <h1 class="site-title">@Model.Name</h1>
+        <div class="site-meta">
+            <span class="site-type">@Model.SiteType</span>
+            <span class="site-location">
+                <i class="bi bi-geo-alt"></i> @Model.Location
+            </span>
+            @if (Model.CulturalInfo != null)
+            {
+                <span class="site-year">
+                    <i class="bi bi-calendar"></i> Established: @Model.CulturalInfo.EstablishedDate.Year
+                </span>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Site Description -->
+            <section class="site-description-section">
+                <h2>About @Model.Name</h2>
+                <p>@Model.Description</p>
+
+                @if (Model.CulturalInfo != null)
+                {
+                    <h3 class="mt-4">Cultural Information</h3>
+                    <p>@Model.CulturalInfo.Summary</p>
+                }
+            </section>
+
+            <!-- Ratings and Reviews -->
+            <section class="ratings-section mt-5">
+                <h2>Visitor Reviews</h2>
+
+                @if (Model.Ratings != null && Model.Ratings.Any())
+                {
+                    <div class="rating-summary">
+                        <div class="average-rating">
+                            <span class="rating-value">@Model.Ratings.Average(r => r.Value).ToString("0.0")</span>
+                            <div class="stars">
+                                @{
+                                    var averageRating = Model.Ratings.Average(r => r.Value);
+                                    for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= Math.Floor(averageRating))
+                                        {
+                                            <i class="bi bi-star-fill"></i>
+                                        }
+                                        else if (i <= Math.Ceiling(averageRating) && averageRating % 1 != 0)
+                                        {
+                                            <i class="bi bi-star-half"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-star"></i>
+                                        }
+                                    }
+                                }
+                            </div>
+                            <span class="rating-count">@Model.Ratings.Count() reviews</span>
+                        </div>
+                    </div>
+
+                    <div class="reviews-list mt-4">
+                        @foreach (var rating in Model.Ratings.OrderByDescending(r => r.Id).Take(5))
+                        {
+                            <div class="review-item">
+                                <div class="review-header">
+                                    <div class="review-stars">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= rating.Value)
+                                            {
+                                                <i class="bi bi-star-fill"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-star"></i>
+                                            }
+                                        }
+                                    </div>
+                                    <div class="reviewer-name">
+                                        @(rating.Client?.Username ?? "Anonymous")
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrEmpty(rating.Review))
+                                {
+                                    <div class="review-text">
+                                        @rating.Review
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="no-reviews">
+                        <p>This site doesn't have any reviews yet. Be the first to leave a review!</p>
+                    </div>
+                }
+
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <div class="submit-review-section mt-4">
+                        <h4>Leave Your Review</h4>
+                        <form asp-action="Rate" method="post">
+                            <input type="hidden" name="siteId" value="@Model.Id" />
+
+                            <div class="rating-input mb-3">
+                                <div class="rating-stars">
+                                    @for (int i = 5; i >= 1; i--)
+                                    {
+                                        <input type="radio" id="star@(i)" name="value" value="@i" />
+                                        <label for="star@(i)" title="@i stars"></label>
+                                    }
+                                </div>
+                                <div class="rating-label">Select your rating</div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="review">Your Review (optional)</label>
+                                <textarea id="review" name="review" class="form-control" rows="4" placeholder="Share your experience..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Submit Review</button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div class="login-prompt mt-4">
+                        <p>Please <a asp-controller="Account" asp-action="Login">login</a> to leave a review.</p>
+                    </div>
+                }
+            </section>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="site-sidebar">
+                <!-- Bookmark Button -->
+                <div class="sidebar-widget">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <form asp-action="Bookmark" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-outline-primary btn-block">
+                                <i class="bi bi-bookmark"></i> Bookmark this Site
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-block">
+                            <i class="bi bi-bookmark"></i> Login to Bookmark
+                        </a>
+                    }
+                </div>
+
+                <!-- City Information -->
+                <div class="sidebar-widget">
+                    <h4>Located in</h4>
+                    <div class="city-card">
+                        <img src="/images/Maps/@(Model.City.Name.ToLower()).jpg" alt="@Model.City.Name" class="city-img" onerror="this.onerror=null; this.src='/api/placeholder/300/150';">
+                        <div class="city-info">
+                            <h5>@Model.City.Name</h5>
+                            <p>@Model.City.Country</p>
+                            <a asp-action="Explore" asp-route-id="@Model.City.Name.ToLower()" class="btn btn-sm btn-primary">Explore @Model.City.Name</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nearby Sites -->
+                <div class="sidebar-widget">
+                    <h4>Nearby Sites</h4>
+                    <ul class="nearby-sites">
+                        @if (ViewBag.NearbySites != null)
+                        {
+                            foreach (var site in ViewBag.NearbySites)
+                            {
+                                <li>
+                                    <a asp-action="Site" asp-route-id="@site.Id">@site.Name</a>
+                                    <span class="site-type-badge">@site.SiteType</span>
+                                </li>
+                            }
+                        }
+                        else
+                        {
+                            <li>No nearby sites found.</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        .site-hero {
+            position: relative;
+            height: 400px;
+            background-image: url('/images/sites/@(Model.Name.Replace(" ", "").Replace("'", "").ToLower()).jpg');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .site-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.7));
+            z-index: 1;
+        }
+
+        .site-hero .container {
+            position: relative;
+            z-index: 2;
+            padding-bottom: 2rem;
+        }
+
+        .site-title {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .site-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 1rem;
+        }
+
+        .site-type {
+            background-color: #1a3b29;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+        }
+
+        .site-description-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .ratings-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .rating-summary {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .average-rating {
+            text-align: center;
+        }
+
+        .rating-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #1a3b29;
+        }
+
+        .stars {
+            color: #f8c15c;
+            font-size: 1.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .rating-count {
+            color: #666;
+        }
+
+        .review-item {
+            border-bottom: 1px solid #eee;
+            padding: 1rem 0;
+        }
+
+        .review-item:last-child {
+            border-bottom: none;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .review-stars {
+            color: #f8c15c;
+        }
+
+        .reviewer-name {
+            font-weight: bold;
+        }
+
+        .review-text {
+            color: #555;
+        }
+
+        .rating-input {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .rating-stars {
+            display: inline-block;
+            direction: rtl;
+        }
+
+        .rating-stars input {
+            display: none;
+        }
+
+        .rating-stars label {
+            float: right;
+            cursor: pointer;
+            color: #ccc;
+            font-size: 2rem;
+        }
+
+        .rating-stars label:before {
+            content: '★';
+        }
+
+        .rating-stars input:checked ~ label,
+        .rating-stars label:hover,
+        .rating-stars label:hover ~ label {
+            color: #f8c15c;
+        }
+
+        .site-sidebar {
+            position: sticky;
+            top: 2rem;
+        }
+
+        .sidebar-widget {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .city-card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .city-img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .city-info {
+            text-align: center;
+        }
+
+        .nearby-sites {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nearby-sites li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nearby-sites li:last-child {
+            border-bottom: none;
+        }
+
+        .site-type-badge {
+            background-color: #e9f5ef;
+            color: #1a3b29;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        @@media (max-width: 768px) {
+            .site-title {
+                font-size: 2rem;
+            }
+
+            .site-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .site-sidebar {
+                position: static;
+                margin-top: 2rem;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fix the onerror issue for site hero background
+            const siteHero = document.querySelector('.site-hero');
+            if (siteHero) {
+                const bgImage = getComputedStyle(siteHero).backgroundImage;
+                if (bgImage.includes('url(') && !bgImage.includes('/api/placeholder')) {
+                    const img = new Image();
+                    img.onerror = function() {
+                        siteHero.style.backgroundImage = "url('/api/placeholder/1200/400')";
+                    };
+                    img.src = bgImage.replace(/^url\(['"](.+)['"]\)$/, '$1');
+                }
+            }
+
+            // Show message if present
+        @if (TempData["Message"] != null)
+        {
+            <text>
+                    alert('@TempData["Message"]');
+            </text>
+        }
+        });
+    </script>
+}

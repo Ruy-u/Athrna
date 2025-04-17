@@ -17,5 +17,6 @@ namespace Athrna.Models
 
         // Navigation properties
         public virtual ICollection<Site> Sites { get; set; }
+        public virtual ICollection<Guide> Guides { get; set; } // Added this navigation property
     }
 }

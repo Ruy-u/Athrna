@@ -25,35 +25,22 @@ document.addEventListener('DOMContentLoaded', function () {
         loginForm.addEventListener("submit", (event) => {
             event.preventDefault();
             const username = document.getElementById("username").value;
-            const password = document.getElementById("EncryptedPassword").value;
+            const password = document.getElementById("password").value;
 
-            // Here you would typically send this data to a server using AJAX
-            // For MVC integration, we'll assume an Account controller endpoint
+            // Get the anti-forgery token
+            const tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            let token = '';
+            if (tokenElement) {
+                token = tokenElement.value;
+            }
 
-            fetch('/Account/Login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                },
-                body: JSON.stringify({
-                    username: username,
-                    password: password
-                })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert("Login successful!");
-                        window.location.reload();
-                    } else {
-                        alert("Login failed: " + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("An error occurred during login");
-                });
+            // Create form data to submit
+            const formData = new FormData();
+            formData.append('Username', username);
+            formData.append('Password', password);
+
+            // Redirect to the login page instead of using fetch
+            window.location.href = '/Account/Login';
 
             loginModal.style.display = "none";
         });

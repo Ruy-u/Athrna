@@ -1,0 +1,119 @@
+﻿@model IEnumerable<Athrna.Models.City>
+
+@{
+    ViewData["Title"] = "Manage Cities";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <h6 class="mb-0">Manage Cities</h6>
+                        <a asp-action="CreateCity" class="btn btn-primary btn-sm ms-auto">
+                            <i class="bi bi-plus"></i> Add New City
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">City</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Country</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Sites</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Guides</th>
+                                    <th class="text-secondary opacity-7"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var city in Model.OrderBy(c => c.Name))
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex px-3 py-1">
+                                                <div class="d-flex flex-column justify-content-center">
+                                                    <h6 class="mb-0 text-sm">@city.Name</h6>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <p class="text-sm text-secondary mb-0">@city.Country</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-sm text-secondary mb-0">
+                                                @city.Sites.Count site(s)
+                                            </p>
+                                        </td>
+                                        <td>
+                                            <p class="text-sm text-secondary mb-0">
+                                                @(city.Guides?.Count ?? 0) guide(s)
+                                            </p>
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="d-flex gap-2">
+                                                <a asp-action="EditCity" asp-route-id="@city.Id" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a asp-action="DeleteCity" asp-route-id="@city.Id" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                                <a asp-controller="City" asp-action="Explore" asp-route-id="@city.Name.ToLower()" target="_blank" class="btn btn-sm btn-outline-info">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add client-side filtering functionality
+            const searchBox = document.createElement('input');
+            searchBox.type = 'text';
+            searchBox.className = 'form-control form-control-sm mt-3 mx-3';
+            searchBox.style.width = '300px';
+            searchBox.placeholder = 'Search cities...';
+
+            const cardHeader = document.querySelector('.card-header');
+            cardHeader.appendChild(searchBox);
+
+            const tableRows = document.querySelectorAll('tbody tr');
+
+            searchBox.addEventListener('keyup', function() {
+                const searchTerm = this.value.toLowerCase();
+
+                tableRows.forEach(row => {
+                    const cityName = row.querySelector('h6').textContent.toLowerCase();
+                    const countryName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+
+                    if (cityName.includes(searchTerm) || countryName.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+
+            // Display error message if present
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <text>
+                    alert('@TempData["ErrorMessage"]');
+            </text>
+        }
+        });
+    </script>
+}

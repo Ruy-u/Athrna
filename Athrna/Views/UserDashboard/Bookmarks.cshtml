@@ -1,0 +1,303 @@
+﻿@model IEnumerable<Athrna.Models.Bookmark>
+
+@{
+    ViewData["Title"] = "My Bookmarks";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="container">
+            <h1>My Bookmarks</h1>
+            <p>Manage your saved historical sites.</p>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Dashboard Navigation -->
+        <div class="dashboard-nav mb-4">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Index">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" asp-action="Bookmarks">My Bookmarks</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Ratings">My Ratings</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Profile">My Profile</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Bookmarks List -->
+        <div class="row">
+            <div class="col-12">
+                <div class="dashboard-widget">
+                    <div class="widget-header">
+                        <h2>All Bookmarks</h2>
+                        <div class="search-filter">
+                            <input type="text" id="bookmarkSearch" class="form-control form-control-sm" placeholder="Search bookmarks...">
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        @if (Model.Any())
+                        {
+                            <div class="bookmark-grid">
+                                @foreach (var bookmark in Model.OrderBy(b => b.Site.City.Name).ThenBy(b => b.Site.Name))
+                                {
+                                    <div class="bookmark-card">
+                                        <div class="bookmark-image">
+                                            <img src="/images/sites/@(bookmark.Site.Name.Replace(" ", "").Replace("'", "").ToLower()).jpg"
+                                                 alt="@bookmark.Site.Name"
+                                                 onerror="this.onerror=null; this.src='/api/placeholder/300/200';">
+                                            <div class="bookmark-overlay"></div>
+                                            <div class="bookmark-city">@bookmark.Site.City.Name</div>
+                                        </div>
+                                        <div class="bookmark-content">
+                                            <h3>@bookmark.Site.Name</h3>
+                                            <p class="bookmark-type">@bookmark.Site.SiteType</p>
+                                            <p class="bookmark-description">
+                                                @(bookmark.Site.Description.Length > 100
+                                                    ? bookmark.Site.Description.Substring(0, 100) + "..."
+                                                    : bookmark.Site.Description)
+                                            </p>
+                                            <div class="bookmark-actions">
+                                                <a asp-controller="City" asp-action="Site" asp-route-id="@bookmark.SiteId" class="btn btn-sm btn-primary">
+                                                    View Details
+                                                </a>
+                                                <form asp-action="RemoveBookmark" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@bookmark.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this bookmark?')">
+                                                        Remove
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-content">
+                                <p>You haven't bookmarked any sites yet.</p>
+                                <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Explore Historical Sites</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        .dashboard-container {
+            background-color: #f8f9fa;
+            min-height: calc(100vh - 100px);
+        }
+
+        .dashboard-header {
+            background-color: #1a3b29;
+            color: white;
+            padding: 2rem 0;
+        }
+
+        .dashboard-nav .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .dashboard-nav .nav-link {
+            color: #495057;
+            border: none;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+        }
+
+        .dashboard-nav .nav-link.active {
+            color: #1a3b29;
+            background-color: transparent;
+            border-bottom: 3px solid #1a3b29;
+        }
+
+        .dashboard-widget {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .widget-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .widget-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: #1a3b29;
+        }
+
+        .widget-content {
+            padding: 1.5rem;
+        }
+
+        .search-filter {
+            width: 250px;
+        }
+
+        .bookmark-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .bookmark-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+        }
+
+        .bookmark-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .bookmark-image {
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bookmark-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .bookmark-card:hover .bookmark-image img {
+            transform: scale(1.1);
+        }
+
+        .bookmark-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.5));
+        }
+
+        .bookmark-city {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #1a3b29;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .bookmark-content {
+            padding: 1.25rem;
+        }
+
+        .bookmark-content h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.2rem;
+            color: #1a3b29;
+        }
+
+        .bookmark-type {
+            display: inline-block;
+            background-color: #e9f5ef;
+            color: #1a3b29;
+            border-radius: 20px;
+            padding: 0.2rem 0.75rem;
+            font-size: 0.8rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .bookmark-description {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .bookmark-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .empty-content {
+            text-align: center;
+            padding: 2rem 0;
+            color: #6c757d;
+        }
+
+        @@media (max-width: 768px) {
+            .search-filter {
+                width: 100%;
+                margin-top: 1rem;
+            }
+
+            .widget-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .bookmark-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('bookmarkSearch');
+            const bookmarkCards = document.querySelectorAll('.bookmark-card');
+
+            if (searchInput) {
+                searchInput.addEventListener('keyup', function() {
+                    const searchTerm = this.value.toLowerCase();
+
+                    bookmarkCards.forEach(card => {
+                        const siteName = card.querySelector('h3').textContent.toLowerCase();
+                        const siteType = card.querySelector('.bookmark-type').textContent.toLowerCase();
+                        const cityName = card.querySelector('.bookmark-city').textContent.toLowerCase();
+
+                        if (siteName.includes(searchTerm) || siteType.includes(searchTerm) || cityName.includes(searchTerm)) {
+                            card.style.display = '';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
+            // Show message if present
+        @if (TempData["Message"] != null)
+        {
+            <text>
+                    alert('@TempData["Message"]');
+            </text>
+        }
+        });
+    </script>
+}

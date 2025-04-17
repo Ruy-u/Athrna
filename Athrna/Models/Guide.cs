@@ -9,8 +9,8 @@ namespace Athrna.Models
         public int Id { get; set; }
 
         [Required]
-        [ForeignKey("Site")]
-        public int SiteId { get; set; }
+        [ForeignKey("City")]
+        public int CityId { get; set; } 
 
         [Required]
         [StringLength(100)]
@@ -26,7 +26,7 @@ namespace Athrna.Models
         [EmailAddress]
         public string Email { get; set; }
 
-        // Navigation properties
-        public virtual Site Site { get; set; }
+        // Navigation property updated
+        public virtual City City { get; set; }  
     }
 }

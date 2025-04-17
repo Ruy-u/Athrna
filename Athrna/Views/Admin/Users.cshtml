@@ -1,0 +1,112 @@
+﻿@model IEnumerable<Athrna.Models.Client>
+
+@{
+    ViewData["Title"] = "Manage Users";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <h6 class="mb-0">Manage Users</h6>
+                    </div>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">User</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Email</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Role</th>
+                                    <th class="text-secondary opacity-7"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in Model.OrderBy(u => u.Username))
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex px-3 py-1">
+                                                <div class="d-flex flex-column justify-content-center">
+                                                    <h6 class="mb-0 text-sm">@user.Username</h6>
+                                                    <p class="text-xs text-secondary mb-0">ID: @user.Id</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <p class="text-sm text-secondary mb-0">@user.Email</p>
+                                        </td>
+                                        <td>
+                                            @if (user.Administrator != null)
+                                            {
+                                                <span class="badge bg-gradient-success">Administrator</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-gradient-secondary">User</span>
+                                            }
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="d-flex gap-2">
+                                                <a asp-action="ToggleAdmin" asp-route-id="@user.Id"
+                                                   class="btn btn-sm @(user.Administrator != null ? "btn-outline-danger" : "btn-outline-success")"
+                                                   onclick="return confirm('Are you sure you want to change this user\'s role?')">
+                                                    @if (user.Administrator != null)
+                                                    {
+                                                        <span><i class="bi bi-person"></i> Remove Admin</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span><i class="bi bi-person-check"></i> Make Admin</span>
+                                                    }
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Add client-side filtering functionality
+            const searchBox = document.createElement('input');
+            searchBox.type = 'text';
+            searchBox.className = 'form-control form-control-sm mt-3 mx-3';
+            searchBox.style.width = '300px';
+            searchBox.placeholder = 'Search users...';
+
+            const cardHeader = document.querySelector('.card-header');
+            cardHeader.appendChild(searchBox);
+
+            const tableRows = document.querySelectorAll('tbody tr');
+
+            searchBox.addEventListener('keyup', function () {
+                const searchTerm = this.value.toLowerCase();
+
+                tableRows.forEach(row => {
+                    const userName = row.querySelector('h6').textContent.toLowerCase();
+                    const userEmail = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                    const userRole = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+
+                    if (userName.includes(searchTerm) || userEmail.includes(searchTerm) || userRole.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+}

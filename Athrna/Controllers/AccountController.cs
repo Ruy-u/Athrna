@@ -12,13 +12,12 @@ namespace Athrna.Controllers
     public class AccountController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IPasswordHasher<Client> _passwordHasher;
 
-        public AccountController(ApplicationDbContext context, IPasswordHasher<Client> passwordHasher)
+        public AccountController(ApplicationDbContext context)
         {
             _context = context;
-            _passwordHasher = passwordHasher;
         }
+
         // GET: /Account/Login
         public IActionResult Login()
         {
@@ -30,6 +29,7 @@ namespace Athrna.Controllers
         {
             return View();
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
@@ -48,21 +48,19 @@ namespace Athrna.Controllers
                 return View(model);
             }
 
-            var result = _passwordHasher.VerifyHashedPassword(client, client.EncryptedPassword, model.Password);
-
-            if (result == PasswordVerificationResult.Success)
+            // Direct password comparison instead of hash verification
+            if (client.EncryptedPassword == model.Password)
             {
                 // Create claims for the client
                 var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, client.Username),
-                new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
-                new Claim(ClaimTypes.Email, client.Email)
-            };
+                {
+                    new Claim(ClaimTypes.Name, client.Username),
+                    new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
+                    new Claim(ClaimTypes.Email, client.Email)
+                };
 
                 // Check if client is an administrator
-                var isAdmin = await _context.Administrators.AnyAsync(a => a.ClientId == client.Id);
-                if (isAdmin)
+                var isAdmin = await _context.Administrator.AnyAsync(a => a.ClientId == client.Id); if (isAdmin)
                 {
                     claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
                 }
@@ -112,7 +110,8 @@ namespace Athrna.Controllers
             {
                 Username = model.Username,
                 Email = model.Email,
-                EncryptedPassword = _passwordHasher.HashPassword(null, model.Password)
+                // Store the password directly without hashing
+                EncryptedPassword = model.Password
             };
 
             _context.Client.Add(client);
@@ -121,6 +120,7 @@ namespace Athrna.Controllers
             TempData["SuccessMessage"] = "Registration successful! You can now log in.";
             return RedirectToAction("Login");
         }
+
         // GET: /Account/Logout
         public async Task<IActionResult> Logout()
         {

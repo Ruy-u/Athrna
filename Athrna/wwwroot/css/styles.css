@@ -28,6 +28,13 @@ header {
     align-items: center;
 }
 
+    .logo a {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: white;
+    }
+
     .logo img {
         height: 50px;
         width: auto;
@@ -40,27 +47,90 @@ header {
     font-weight: bold;
 }
 
-.login-btn {
-    background-color: #f8c15c;
-    color: #1a3b29;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
+.header-actions {
+    display: flex;
+    align-items: center;
+}
+
+/* Auth Buttons */
+.auth-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.auth-btn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
     font-weight: bold;
     transition: all 0.3s ease;
 }
 
+.login-btn {
+    background-color: transparent;
+    color: white;
+    border: 2px solid white;
+}
+
     .login-btn:hover {
-        background-color: #e6a93d;
-        transform: translateY(-2px);
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
     }
+
+.register-btn {
+    background-color: #f8c15c;
+    color: #1a3b29;
+    border: 2px solid #f8c15c;
+}
+
+    .register-btn:hover {
+        background-color: #e6a93d;
+        border-color: #e6a93d;
+    }
+
+/* User Menu Styles */
+.user-menu-btn {
+    background: none;
+    border: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .user-menu-btn:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+.user-avatar {
+    width: 35px;
+    height: 35px;
+    background-color: #f8c15c;
+    color: #1a3b29;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.user-name {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
 /* Hero Section */
 .hero {
     text-align: center;
     padding: 3rem 1rem;
-    background-image: linear-gradient( rgba(85, 220, 164, 0.944), rgba(0, 0, 0, 0.5) ), url("/api/placeholder/1200/400");
+    background-image: linear-gradient(rgba(85, 220, 164, 0.944), rgba(0, 0, 0, 0.5)), url("/api/placeholder/1200/400");
     background-size: cover;
     background-position: center;
     color: white;
@@ -156,73 +226,6 @@ footer {
     margin-top: 2rem;
 }
 
-/* Login Modal */
-.login-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background-color: white;
-    padding: 2rem;
-    border-radius: 8px;
-    width: 400px;
-    max-width: 90%;
-}
-
-    .modal-content h2 {
-        margin-bottom: 1.5rem;
-        color: #1a3b29;
-    }
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: bold;
-    }
-
-    .form-group input {
-        width: 100%;
-        padding: 0.5rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-    }
-
-.modal-buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 1.5rem;
-}
-
-    .modal-buttons button {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-.submit-btn {
-    background-color: #1a3b29;
-    color: white;
-}
-
-.close-btn {
-    background-color: #f1f1f1;
-    color: #333;
-}
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .hero h1 {
@@ -235,5 +238,18 @@ footer {
 
     .cards-container {
         padding: 2rem 1rem;
+    }
+
+    .user-name {
+        display: none;
+    }
+
+    .auth-buttons {
+        gap: 10px;
+    }
+
+    .auth-btn {
+        padding: 8px 12px;
+        font-size: 0.9rem;
     }
 }
