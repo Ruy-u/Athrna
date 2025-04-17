@@ -174,7 +174,6 @@
                         <img src="/images/Maps/@(Model.City.Name.ToLower()).jpg" alt="@Model.City.Name" class="city-img" onerror="this.onerror=null; this.src='/api/placeholder/300/150';">
                         <div class="city-info">
                             <h5>@Model.City.Name</h5>
-                            <p>@Model.City.Country</p>
                             <a asp-action="Explore" asp-route-id="@Model.City.Name.ToLower()" class="btn btn-sm btn-primary">Explore @Model.City.Name</a>
                         </div>
                     </div>

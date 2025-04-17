@@ -18,7 +18,7 @@ namespace Athrna.Controllers
         // GET: City
         public async Task<IActionResult> Index()
         {
-            var cities = await _context.Cities.ToListAsync();
+            var cities = await _context.City.ToListAsync();
             return View(cities);
         }
 
@@ -34,7 +34,7 @@ namespace Athrna.Controllers
             id = id.ToLower();
 
             // Get city from database by normalized name
-            var city = await _context.Cities
+            var city = await _context.City
                 .FirstOrDefaultAsync(c => c.Name.ToLower() == id);
 
             if (city == null)
@@ -43,13 +43,13 @@ namespace Athrna.Controllers
             }
 
             // Get city's historical sites
-            var sites = await _context.Sites
+            var sites = await _context.Site
                 .Where(s => s.CityId == city.Id)
                 .Include(s => s.CulturalInfo)
                 .ToListAsync();
 
             // Get guides for this city
-            var guides = await _context.Guides
+            var guides = await _context.Guide
                 .Where(g => g.CityId == city.Id)
                 .ToListAsync();
 
@@ -67,7 +67,7 @@ namespace Athrna.Controllers
         // GET: City/Site/5
         public async Task<IActionResult> Site(int id)
         {
-            var site = await _context.Sites
+            var site = await _context.Site
                 .Include(s => s.City)
                 .Include(s => s.CulturalInfo)
                 .Include(s => s.Ratings)
@@ -95,7 +95,7 @@ namespace Athrna.Controllers
             var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
 
             // Check if bookmark already exists
-            var existingBookmark = await _context.Bookmarks
+            var existingBookmark = await _context.Bookmark
                 .FirstOrDefaultAsync(b => b.ClientId == userId && b.SiteId == id);
 
             if (existingBookmark == null)
@@ -107,14 +107,14 @@ namespace Athrna.Controllers
                     SiteId = id
                 };
 
-                _context.Bookmarks.Add(bookmark);
+                _context.Bookmark.Add(bookmark);
                 await _context.SaveChangesAsync();
                 TempData["Message"] = "Site bookmarked successfully!";
             }
             else
             {
                 // Remove existing bookmark
-                _context.Bookmarks.Remove(existingBookmark);
+                _context.Bookmark.Remove(existingBookmark);
                 await _context.SaveChangesAsync();
                 TempData["Message"] = "Bookmark removed!";
             }
@@ -137,7 +137,7 @@ namespace Athrna.Controllers
             var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
 
             // Check if rating already exists
-            var existingRating = await _context.Ratings
+            var existingRating = await _context.Rating
                 .FirstOrDefaultAsync(r => r.ClientId == userId && r.SiteId == siteId);
 
             if (existingRating != null)
@@ -145,7 +145,7 @@ namespace Athrna.Controllers
                 // Update existing rating
                 existingRating.Value = value;
                 existingRating.Review = review;
-                _context.Ratings.Update(existingRating);
+                _context.Rating.Update(existingRating);
             }
             else
             {
@@ -158,7 +158,7 @@ namespace Athrna.Controllers
                     Review = review
                 };
 
-                _context.Ratings.Add(rating);
+                _context.Rating.Add(rating);
             }
 
             await _context.SaveChangesAsync();

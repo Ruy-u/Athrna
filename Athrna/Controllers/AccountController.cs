@@ -60,7 +60,8 @@ namespace Athrna.Controllers
                 };
 
                 // Check if client is an administrator
-                var isAdmin = await _context.Administrator.AnyAsync(a => a.ClientId == client.Id); if (isAdmin)
+                var isAdmin = await _context.Administrator.AnyAsync(a => a.ClientId == client.Id);
+                if (isAdmin)
                 {
                     claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
                 }
@@ -76,7 +77,15 @@ namespace Athrna.Controllers
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
 
-                return RedirectToAction("Index", "Home");
+                // Check if user is admin and redirect accordingly
+                if (isAdmin)
+                {
+                    return RedirectToAction("Index", "Admin");
+                }
+                else
+                {
+                    return RedirectToAction("Index", "Home");
+                }
             }
 
             ModelState.AddModelError("", "Invalid username or password");

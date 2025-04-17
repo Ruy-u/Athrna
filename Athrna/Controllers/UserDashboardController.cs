@@ -32,14 +32,14 @@ namespace Athrna.Controllers
             }
 
             // Get user's bookmarks with site information
-            var bookmarks = await _context.Bookmarks
+            var bookmarks = await _context.Bookmark
                 .Include(b => b.Site)
                     .ThenInclude(s => s.City)
                 .Where(b => b.ClientId == userId)
                 .ToListAsync();
 
             // Get user's ratings with site information
-            var ratings = await _context.Ratings
+            var ratings = await _context.Rating
                 .Include(r => r.Site)
                     .ThenInclude(s => s.City)
                 .Where(r => r.ClientId == userId)
@@ -62,7 +62,7 @@ namespace Athrna.Controllers
             int userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
 
             // Get user's bookmarks with site information
-            var bookmarks = await _context.Bookmarks
+            var bookmarks = await _context.Bookmark
                 .Include(b => b.Site)
                     .ThenInclude(s => s.City)
                 .Where(b => b.ClientId == userId)
@@ -77,7 +77,7 @@ namespace Athrna.Controllers
             int userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
 
             // Get user's ratings with site information
-            var ratings = await _context.Ratings
+            var ratings = await _context.Rating
                 .Include(r => r.Site)
                     .ThenInclude(s => s.City)
                 .Where(r => r.ClientId == userId)
@@ -93,12 +93,12 @@ namespace Athrna.Controllers
         {
             int userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
 
-            var bookmark = await _context.Bookmarks
+            var bookmark = await _context.Bookmark
                 .FirstOrDefaultAsync(b => b.Id == id && b.ClientId == userId);
 
             if (bookmark != null)
             {
-                _context.Bookmarks.Remove(bookmark);
+                _context.Bookmark.Remove(bookmark);
                 await _context.SaveChangesAsync();
                 TempData["Message"] = "Bookmark removed successfully!";
             }
@@ -113,12 +113,12 @@ namespace Athrna.Controllers
         {
             int userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
 
-            var rating = await _context.Ratings
+            var rating = await _context.Rating
                 .FirstOrDefaultAsync(r => r.Id == id && r.ClientId == userId);
 
             if (rating != null)
             {
-                _context.Ratings.Remove(rating);
+                _context.Rating.Remove(rating);
                 await _context.SaveChangesAsync();
                 TempData["Message"] = "Rating removed successfully!";
             }

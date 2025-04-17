@@ -11,10 +11,6 @@ namespace Athrna.Models
         [StringLength(100)]
         public string Name { get; set; }
 
-        [Required]
-        [StringLength(100)]
-        public string Country { get; set; }
-
         // Navigation properties
         public virtual ICollection<Site> Sites { get; set; }
         public virtual ICollection<Guide> Guides { get; set; } // Added this navigation property

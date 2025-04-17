@@ -16,7 +16,7 @@ namespace Athrna.Services
         public async Task SeedDatabaseAsync()
         {
             // Only seed if database is empty
-            if (await _context.Cities.AnyAsync())
+            if (await _context.City.AnyAsync())
             {
                 return; // Database has been seeded already
             }
@@ -27,27 +27,27 @@ namespace Athrna.Services
                 new Language { Name = "English", Code = "en" },
                 new Language { Name = "Arabic", Code = "ar" }
             };
-            await _context.Languages.AddRangeAsync(languages);
+            await _context.Language.AddRangeAsync(languages);
             await _context.SaveChangesAsync();
 
             // Add cities
             var cities = new List<City>
             {
-                new City { Name = "Madinah", Country = "Saudi Arabia" },
-                new City { Name = "Riyadh", Country = "Saudi Arabia" },
-                new City { Name = "AlUla", Country = "Saudi Arabia" }
+                new City { Name = "Madinah" },
+                new City { Name = "Riyadh" },
+                new City { Name = "AlUla"}
             };
-            await _context.Cities.AddRangeAsync(cities);
+            await _context.City.AddRangeAsync(cities);
             await _context.SaveChangesAsync();
 
             // Retrieve cities by name for referencing
-            var madinah = await _context.Cities.FirstOrDefaultAsync(c => c.Name == "Madinah");
-            var riyadh = await _context.Cities.FirstOrDefaultAsync(c => c.Name == "Riyadh");
-            var alula = await _context.Cities.FirstOrDefaultAsync(c => c.Name == "AlUla");
+            var madinah = await _context.City.FirstOrDefaultAsync(c => c.Name == "Madinah");
+            var riyadh = await _context.City.FirstOrDefaultAsync(c => c.Name == "Riyadh");
+            var alula = await _context.City.FirstOrDefaultAsync(c => c.Name == "AlUla");
 
             // Retrieve languages by code for referencing
-            var english = await _context.Languages.FirstOrDefaultAsync(l => l.Code == "en");
-            var arabic = await _context.Languages.FirstOrDefaultAsync(l => l.Code == "ar");
+            var english = await _context.Language.FirstOrDefaultAsync(l => l.Code == "en");
+            var arabic = await _context.Language.FirstOrDefaultAsync(l => l.Code == "ar");
 
             // Add historical sites for Madinah
             if (madinah != null)
@@ -87,7 +87,7 @@ namespace Athrna.Services
                         SiteType = "Cemetery"
                     }
                 };
-                await _context.Sites.AddRangeAsync(madinahSites);
+                await _context.Site.AddRangeAsync(madinahSites);
                 await _context.SaveChangesAsync();
 
                 // Add guides for Madinah
@@ -110,7 +110,7 @@ namespace Athrna.Services
                         Password = "guide123"
                     }
                 };
-                await _context.Guides.AddRangeAsync(madinahGuides);
+                await _context.Guide.AddRangeAsync(madinahGuides);
                 await _context.SaveChangesAsync();
             }
 
@@ -152,7 +152,7 @@ namespace Athrna.Services
                         SiteType = "Palace"
                     }
                 };
-                await _context.Sites.AddRangeAsync(riyadhSites);
+                await _context.Site.AddRangeAsync(riyadhSites);
                 await _context.SaveChangesAsync();
 
                 // Add guides for Riyadh
@@ -175,7 +175,7 @@ namespace Athrna.Services
                         Password = "guide123"
                     }
                 };
-                await _context.Guides.AddRangeAsync(riyadhGuides);
+                await _context.Guide.AddRangeAsync(riyadhGuides);
                 await _context.SaveChangesAsync();
             }
 
@@ -217,7 +217,7 @@ namespace Athrna.Services
                         SiteType = "Historical Town"
                     }
                 };
-                await _context.Sites.AddRangeAsync(alulaSites);
+                await _context.Site.AddRangeAsync(alulaSites);
                 await _context.SaveChangesAsync();
 
                 // Add guides for AlUla
@@ -240,12 +240,12 @@ namespace Athrna.Services
                         Password = "guide123"
                     }
                 };
-                await _context.Guides.AddRangeAsync(alulaGuides);
+                await _context.Guide.AddRangeAsync(alulaGuides);
                 await _context.SaveChangesAsync();
             }
 
             // Add cultural information for sites
-            var sites = await _context.Sites.ToListAsync();
+            var sites = await _context.Site.ToListAsync();
             foreach (var site in sites)
             {
                 var culturalInfo = new CulturalInfo
@@ -272,7 +272,7 @@ namespace Athrna.Services
                     culturalInfo.Summary = "Hegra was the southernmost settlement of the Nabataean Kingdom, dating from the 1st century BCE to the 1st century CE. It features well-preserved monumental tombs with decorated facades.";
                 }
 
-                await _context.CulturalInfos.AddAsync(culturalInfo);
+                await _context.CulturalInfo.AddAsync(culturalInfo);
                 await _context.SaveChangesAsync();
 
                 // Add translations for cultural info
@@ -293,7 +293,7 @@ namespace Athrna.Services
                             TranslatedSummary = "معلومات ثقافية وتاريخية." // Generic Arabic translation
                         }
                     };
-                    await _context.CulturalInfoTranslations.AddRangeAsync(culturalInfoTranslations);
+                    await _context.CulturalInfoTranslation.AddRangeAsync(culturalInfoTranslations);
                     await _context.SaveChangesAsync();
                 }
             }

@@ -11,16 +11,16 @@ namespace Athrna.Data
         }
 
         public DbSet<Client> Client { get; set; }
-        public DbSet<Site> Sites { get; set; }
-        public DbSet<Language> Languages { get; set; }
-        public DbSet<SiteTranslation> SiteTranslations { get; set; }
-        public DbSet<CulturalInfoTranslation> CulturalInfoTranslations { get; set; }
-        public DbSet<Guide> Guides { get; set; }
-        public DbSet<Rating> Ratings { get; set; }
-        public DbSet<Bookmark> Bookmarks { get; set; }
-        public DbSet<City> Cities { get; set; }
-        public DbSet<CulturalInfo> CulturalInfos { get; set; }
-        public DbSet<Administrator> Administrator { get; set; }
+        public DbSet<Site> Site { get; set; }
+        public DbSet<Language> Language { get; set; }
+        public DbSet<SiteTranslation> SiteTranslation { get; set; }
+        public DbSet<CulturalInfoTranslation> CulturalInfoTranslation { get; set; }
+        public DbSet<Guide> Guide { get; set; }
+        public DbSet<Rating> Rating { get; set; }
+        public DbSet<Bookmark> Bookmark { get; set; }
+        public DbSet<City> City { get; set; }
+        public DbSet<CulturalInfo> CulturalInfo { get; set; }
+        public DbSet<Administrator> Administrator { get; set; }  // Changed from Administrators to Administrator
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -46,6 +46,18 @@ namespace Athrna.Data
                 .HasOne(s => s.City)
                 .WithMany(c => c.Sites)
                 .HasForeignKey(s => s.CityId);
+
+            // Map entity names to singular table names
+            modelBuilder.Entity<City>().ToTable("City");
+            modelBuilder.Entity<Site>().ToTable("Site");
+            modelBuilder.Entity<Language>().ToTable("Language");
+            modelBuilder.Entity<SiteTranslation>().ToTable("SiteTranslation");
+            modelBuilder.Entity<CulturalInfoTranslation>().ToTable("CulturalInfoTranslation");
+            modelBuilder.Entity<Guide>().ToTable("Guide");
+            modelBuilder.Entity<Rating>().ToTable("Rating");
+            modelBuilder.Entity<Bookmark>().ToTable("Bookmark");
+            modelBuilder.Entity<CulturalInfo>().ToTable("CulturalInfo");
+            modelBuilder.Entity<Administrator>().ToTable("Administrator");
         }
     }
 }
