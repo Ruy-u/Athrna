@@ -97,7 +97,7 @@ namespace Athrna.Controllers
         // POST: Admin/EditSite/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditSite(int id, Site site)
+        public async Task<IActionResult> EditSite(int id, Site site, IFormFile imageFile)
         {
             if (id != site.Id)
             {
@@ -108,6 +108,74 @@ namespace Athrna.Controllers
             {
                 try
                 {
+                    // Get the existing site to preserve data not included in the form
+                    var existingSite = await _context.Site
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(s => s.Id == id);
+
+                    if (existingSite == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Handle image upload if a new file is provided
+                    if (imageFile != null && imageFile.Length > 0)
+                    {
+                        // Define allowed file extensions
+                        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+
+                        if (!allowedExtensions.Contains(extension))
+                        {
+                            ModelState.AddModelError("imageFile", "Only image files (jpg, jpeg, png, gif) are allowed.");
+                            ViewBag.Cities = await _context.City.ToListAsync();
+                            return View(site);
+                        }
+
+                        // Check file size (limit to 5MB)
+                        if (imageFile.Length > 5 * 1024 * 1024)
+                        {
+                            ModelState.AddModelError("imageFile", "The file size cannot exceed 5MB.");
+                            ViewBag.Cities = await _context.City.ToListAsync();
+                            return View(site);
+                        }
+
+                        // Generate a unique filename
+                        string uniqueFileName = $"{id}_{Guid.NewGuid().ToString("N")}{extension}";
+                        string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "sites");
+
+                        // Create directory if it doesn't exist
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+
+                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        // Delete old image if it exists in our uploads folder
+                        if (!string.IsNullOrEmpty(existingSite.ImagePath) &&
+                            existingSite.ImagePath.StartsWith("/uploads/sites/") &&
+                            System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingSite.ImagePath.TrimStart('/'))))
+                        {
+                            System.IO.File.Delete(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingSite.ImagePath.TrimStart('/')));
+                        }
+
+                        // Save the new file
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await imageFile.CopyToAsync(fileStream);
+                        }
+
+                        // Update the image path in the site model
+                        site.ImagePath = "/uploads/sites/" + uniqueFileName;
+                    }
+                    else
+                    {
+                        // Keep the existing image if no new one is uploaded
+                        site.ImagePath = existingSite.ImagePath;
+                    }
+
+                    // Update the site entity
                     _context.Update(site);
                     await _context.SaveChangesAsync();
 
@@ -124,7 +192,22 @@ namespace Athrna.Controllers
                             _context.Update(culturalInfo);
                             await _context.SaveChangesAsync();
                         }
+                        else
+                        {
+                            // Create cultural info if it doesn't exist
+                            var newCulturalInfo = new CulturalInfo
+                            {
+                                SiteId = site.Id,
+                                Summary = site.CulturalInfo.Summary,
+                                EstablishedDate = site.CulturalInfo.EstablishedDate
+                            };
+                            _context.CulturalInfo.Add(newCulturalInfo);
+                            await _context.SaveChangesAsync();
+                        }
                     }
+
+                    TempData["SuccessMessage"] = "Site updated successfully!";
+                    return RedirectToAction(nameof(Sites));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -137,7 +220,6 @@ namespace Athrna.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Sites));
             }
 
             ViewBag.Cities = await _context.City.ToListAsync();
@@ -154,12 +236,70 @@ namespace Athrna.Controllers
         // POST: Admin/CreateSite
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateSite(Site site)
+        public async Task<IActionResult> CreateSite(Site site, IFormFile imageFile)
         {
             if (ModelState.IsValid)
             {
-                _context.Site.Add(site);
-                await _context.SaveChangesAsync();
+                // Handle image upload
+                if (imageFile != null && imageFile.Length > 0)
+                {
+                    // Define allowed file extensions
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                    var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+
+                    if (!allowedExtensions.Contains(extension))
+                    {
+                        ModelState.AddModelError("imageFile", "Only image files (jpg, jpeg, png, gif) are allowed.");
+                        ViewBag.Cities = await _context.City.ToListAsync();
+                        return View(site);
+                    }
+
+                    // Check file size (limit to 5MB)
+                    if (imageFile.Length > 5 * 1024 * 1024)
+                    {
+                        ModelState.AddModelError("imageFile", "The file size cannot exceed 5MB.");
+                        ViewBag.Cities = await _context.City.ToListAsync();
+                        return View(site);
+                    }
+
+                    // Add site to database first to get ID
+                    _context.Site.Add(site);
+                    await _context.SaveChangesAsync();
+
+                    // Generate a unique filename using the site ID
+                    string uniqueFileName = $"{site.Id}_{Guid.NewGuid().ToString("N")}{extension}";
+                    string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "sites");
+
+                    // Create directory if it doesn't exist
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    // Save the file
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await imageFile.CopyToAsync(fileStream);
+                    }
+
+                    // Update the image path in the site model
+                    site.ImagePath = "/uploads/sites/" + uniqueFileName;
+                    _context.Update(site);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    // If no image is uploaded, just add the site
+                    _context.Site.Add(site);
+                    await _context.SaveChangesAsync();
+
+                    // Set a default placeholder image
+                    site.ImagePath = "/api/placeholder/400/300";
+                    _context.Update(site);
+                    await _context.SaveChangesAsync();
+                }
 
                 // Create cultural info for the site
                 if (site.CulturalInfo != null)
@@ -175,6 +315,7 @@ namespace Athrna.Controllers
                     await _context.SaveChangesAsync();
                 }
 
+                TempData["SuccessMessage"] = "New site created successfully!";
                 return RedirectToAction(nameof(Sites));
             }
 

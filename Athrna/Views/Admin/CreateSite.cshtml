@@ -1,0 +1,134 @@
+﻿@model Athrna.Models.Site
+
+@{
+    ViewData["Title"] = "Create Site";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <h6 class="mb-0">Create New Historical Site</h6>
+                        <a asp-action="Sites" class="btn btn-outline-secondary btn-sm ms-auto">
+                            <i class="bi bi-arrow-left"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateSite" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-section">
+                                    <h5>Basic Information</h5>
+
+                                    <div class="form-group mb-3">
+                                        <label asp-for="Name" class="form-label">Site Name</label>
+                                        <input asp-for="Name" class="form-control" required />
+                                        <span asp-validation-for="Name" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label for="CityId" class="form-label">City</label>
+                                        <select asp-for="CityId" class="form-control" required>
+                                            <option value="">-- Select City --</option>
+                                            @foreach (var city in ViewBag.Cities)
+                                            {
+                                                <option value="@city.Id">@city.Name</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="CityId" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label asp-for="SiteType" class="form-label">Site Type</label>
+                                        <input asp-for="SiteType" class="form-control" required />
+                                        <span asp-validation-for="SiteType" class="text-danger"></span>
+                                        <small class="form-text text-muted">E.g., Mosque, Fortress, Museum, Archaeological Site, etc.</small>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label asp-for="Location" class="form-label">Location</label>
+                                        <input asp-for="Location" class="form-control" required />
+                                        <span asp-validation-for="Location" class="text-danger"></span>
+                                        <small class="form-text text-muted">Format: Latitude, Longitude (e.g., 24.4672° N, 39.6111° E)</small>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <h5>Site Description</h5>
+
+                                    <div class="form-group mb-3">
+                                        <label asp-for="Description" class="form-label">Description</label>
+                                        <textarea asp-for="Description" class="form-control" rows="6" required></textarea>
+                                        <span asp-validation-for="Description" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-section">
+                                    <h5>Cultural Information</h5>
+
+                                    <div class="form-group mb-3">
+                                        <label for="CulturalInfo.Summary" class="form-label">Cultural Summary</label>
+                                        <textarea name="CulturalInfo.Summary" class="form-control" rows="4"></textarea>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label for="CulturalInfo.EstablishedDate" class="form-label">Established Date</label>
+                                        <input name="CulturalInfo.EstablishedDate" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <h5>Site Image</h5>
+
+                                    <div class="form-group mb-3">
+                                        <label class="form-label">Upload Image</label>
+                                        <input type="file" name="imageFile" class="form-control" accept="image/*">
+                                        <small class="form-text text-muted">Upload an image for this site (optional, max 5MB)</small>
+                                    </div>
+
+                                    <div class="preview-container mt-3" style="display: none;">
+                                        <p>Image preview:</p>
+                                        <img id="imagePreview" src="#" alt="Preview" class="img-thumbnail" style="max-width: 300px; max-height: 200px;" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-4 text-end">
+                            <a asp-action="Sites" class="btn btn-outline-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create Site</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // Image preview functionality
+        document.querySelector('input[name="imageFile"]').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    document.getElementById('imagePreview').src = event.target.result;
+                    document.querySelector('.preview-container').style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+}

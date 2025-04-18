@@ -45,7 +45,14 @@
                     </form>
 
                     <hr />
-
+                    <div class="form-group mb-3">
+                        <label asp-for="Password" class="form-label">Password</label>
+                        <input asp-for="Password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                        <div class="mt-1">
+                            <a asp-action="ForgotPassword" class="text-primary">Forgot password?</a>
+                        </div>
+                    </div>
                     <div class="text-center">
                         <p>
                             Don't have an account?

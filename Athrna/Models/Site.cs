@@ -32,5 +32,7 @@ namespace Athrna.Models
         public virtual ICollection<Rating> Ratings { get; set; }
         public virtual ICollection<Bookmark> Bookmarks { get; set; }
         public virtual CulturalInfo CulturalInfo { get; set; }
+        [Display(Name = "Image")]
+        public string ImagePath { get; set; }
     }
 }

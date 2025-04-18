@@ -136,5 +136,101 @@ namespace Athrna.Controllers
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }
+
+        // GET: /Account/ForgotPassword
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(PasswordResetViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var client = await _context.Client.FirstOrDefaultAsync(c => c.Email == model.Email);
+            if (client == null)
+            {
+                // Don't reveal that the user does not exist
+                // Instead, show a success message as if the reset email was sent
+                TempData["SuccessMessage"] = "If your email is registered, you will receive a password reset link shortly.";
+                return RedirectToAction("Login");
+            }
+
+            // Generate a reset code (in a real app, this would be a secure token)
+            string resetCode = Guid.NewGuid().ToString();
+
+            // Store the reset information in TempData (in a real app, you'd store this in the database with an expiration)
+            TempData["ResetCode"] = resetCode;
+            TempData["ResetEmail"] = model.Email;
+
+            // In a real application, you would:
+            // 1. Store this code in the database with an expiration time
+            // 2. Send an email with a link containing this code
+
+            // For this demo, we'll show a success message and redirect to the reset page
+            TempData["SuccessMessage"] = "Password reset instructions have been sent to your email.";
+
+            // Instead of redirecting to the login page, in a real app you would send an email
+            // For demo purposes, we'll redirect directly to the reset page
+            return RedirectToAction("ResetPassword", new { email = model.Email, code = resetCode });
+        }
+
+        // GET: /Account/ResetPassword
+        public IActionResult ResetPassword(string email, string code)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(code))
+            {
+                TempData["ErrorMessage"] = "Invalid password reset link.";
+                return RedirectToAction("Login");
+            }
+
+            var model = new PasswordResetViewModel
+            {
+                Email = email,
+                ResetCode = code
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(PasswordResetViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Verify reset code (in a real app, you'd verify against a stored token)
+            string savedCode = TempData["ResetCode"]?.ToString();
+            string savedEmail = TempData["ResetEmail"]?.ToString();
+
+            if (model.ResetCode != savedCode || model.Email != savedEmail)
+            {
+                ModelState.AddModelError("", "Invalid or expired password reset link.");
+                return View(model);
+            }
+
+            var client = await _context.Client.FirstOrDefaultAsync(c => c.Email == model.Email);
+            if (client == null)
+            {
+                ModelState.AddModelError("", "Invalid email address.");
+                return View(model);
+            }
+
+            // Update password
+            client.EncryptedPassword = model.NewPassword; // In a real app, hash this!
+            _context.Update(client);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Your password has been reset successfully. You can now log in with your new password.";
+            return RedirectToAction("Login");
+        }
     }
 }

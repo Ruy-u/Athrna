@@ -21,9 +21,14 @@
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="site-card">
                         <div class="site-image">
-                            <img src="/images/sites/@(site.Name.Replace(" ", "").Replace("'", "").ToLower()).jpg"
-                                 alt="@site.Name"
-                                 onerror="this.onerror=null; this.src='/api/placeholder/400/300';">
+                            @if (!string.IsNullOrEmpty(site.ImagePath))
+                            {
+                                <img src="@site.ImagePath" alt="@site.Name">
+                            }
+                            else
+                            {
+                                <img src="/api/placeholder/400/300" alt="@site.Name">
+                            }
                         </div>
                         <div class="site-content">
                             <h3>@site.Name</h3>

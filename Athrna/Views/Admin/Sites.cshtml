@@ -48,6 +48,26 @@
                                             <span class="badge bg-gradient-info">@site.SiteType</span>
                                         </td>
                                         <td>
+                                          <div class="d-flex px-3 py-1">
+                                              <div class="site-thumbnail me-3">
+                                                   @if (!string.IsNullOrEmpty(site.ImagePath))
+                                                   {
+                                                       <img src="@site.ImagePath" alt="@site.Name" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                                   }
+                                                   else
+                                                   {
+                                                       <div class="no-image" style="width: 60px; height: 40px; background-color: #f8f9fa; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                                          <i class="bi bi-image text-muted"></i>
+                                                       </div>
+                                                   }
+                                        </div>
+                                        <div class="d-flex flex-column justify-content-center">
+                                           <h6 class="mb-0 text-sm">@site.Name</h6>
+                                           <p class="text-xs text-secondary mb-0">@site.Location</p>
+                                        </div>
+                                       </div>
+                                      </td>
+                                        <td>
                                             @if (site.CulturalInfo != null)
                                             {
                                                 <p class="text-sm text-secondary mb-0">@site.CulturalInfo.EstablishedDate.Year</p>

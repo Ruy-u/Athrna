@@ -1,0 +1,42 @@
+﻿@model Athrna.Models.SearchViewModel
+
+@{
+    ViewData["Title"] = "Search Results";
+}
+
+<div class="container mt-5">
+    <h1>Search Results for "@Model.Query"</h1>
+
+    @if (!Model.Results.Any())
+    {
+        <div class="alert alert-info mt-4">
+            <p>No results found for your search. Please try different keywords.</p>
+        </div>
+    }
+    else
+    {
+        <p>Found @Model.Results.Count() result(s)</p>
+
+        <div class="row mt-4">
+            @foreach (var site in Model.Results)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <img class="card-img-top" src="/images/sites/@(site.Name.Replace(" ", "").Replace("'", "").ToLower()).jpg"
+                             alt="@site.Name" onerror="this.onerror=null; this.src='/api/placeholder/300/200';">
+                        <div class="card-body">
+                            <h5 class="card-title">@site.Name</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">@site.City.Name</h6>
+                            <p class="card-text">
+                                @(site.Description.Length > 100 ? site.Description.Substring(0, 100) + "..." : site.Description)
+                            </p>
+                        </div>
+                        <div class="card-footer">
+                            <a asp-controller="City" asp-action="Site" asp-route-id="@site.Id" class="btn btn-primary">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

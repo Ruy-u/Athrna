@@ -6,6 +6,14 @@
 
 <div class="site-hero">
     <div class="site-overlay"></div>
+    @if (!string.IsNullOrEmpty(Model.ImagePath))
+    {
+        <img src="@Model.ImagePath" alt="@Model.Name" class="site-hero-img">
+    }
+    else
+    {
+        <img src="/api/placeholder/1200/400" alt="@Model.Name" class="site-hero-img">
+    }
     <div class="container">
         <h1 class="site-title">@Model.Name</h1>
         <div class="site-meta">
@@ -425,6 +433,16 @@
                 position: static;
                 margin-top: 2rem;
             }
+        }
+
+        .site-hero-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
         }
     </style>
 }

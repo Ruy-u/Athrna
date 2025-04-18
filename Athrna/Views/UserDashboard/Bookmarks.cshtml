@@ -49,9 +49,14 @@
                                 {
                                     <div class="bookmark-card">
                                         <div class="bookmark-image">
-                                            <img src="/images/sites/@(bookmark.Site.Name.Replace(" ", "").Replace("'", "").ToLower()).jpg"
-                                                 alt="@bookmark.Site.Name"
-                                                 onerror="this.onerror=null; this.src='/api/placeholder/300/200';">
+                                            @if (!string.IsNullOrEmpty(bookmark.Site.ImagePath))
+                                            {
+                                                <img src="@bookmark.Site.ImagePath" alt="@bookmark.Site.Name">
+                                            }
+                                            else
+                                            {
+                                                <img src="/api/placeholder/300/200" alt="@bookmark.Site.Name">
+                                            }
                                             <div class="bookmark-overlay"></div>
                                             <div class="bookmark-city">@bookmark.Site.City.Name</div>
                                         </div>
