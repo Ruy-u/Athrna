@@ -1,0 +1,50 @@
+﻿@model Athrna.ViewComponents.LanguageSelectorViewModel
+
+<div class="language-selector dropdown">
+    <button class="btn btn-sm dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-globe"></i>
+        @{
+            var currentLanguageName = Model.Languages.FirstOrDefault(l => l.Code == Model.CurrentLanguageCode)?.Name ?? "English";
+        }
+        <span>@currentLanguageName</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+        @foreach (var language in Model.Languages)
+        {
+            <li>
+                <a class="dropdown-item @(language.Code == Model.CurrentLanguageCode ? "active" : "")"
+                   href="@Url.Action("SetLanguage", "Translation", new { code = language.Code })">
+                    @language.Name
+                </a>
+            </li>
+        }
+    </ul>
+</div>
+
+<style>
+    .language-selector {
+        margin-left: 15px;
+    }
+
+        .language-selector .btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+            .language-selector .btn:hover {
+                background-color: rgba(255, 255, 255, 0.2);
+            }
+
+        .language-selector .dropdown-menu {
+            min-width: 150px;
+        }
+
+        .language-selector .dropdown-item.active {
+            background-color: #1a3b29;
+            color: white;
+        }
+</style>

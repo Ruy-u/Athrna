@@ -3,6 +3,7 @@ using Athrna.Models;
 using Athrna.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Athrna.Controllers
 {
@@ -71,11 +72,34 @@ namespace Athrna.Controllers
                 .Include(s => s.City)
                 .Include(s => s.CulturalInfo)
                 .Include(s => s.Ratings)
+                    .ThenInclude(r => r.Client)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (site == null)
             {
                 return NotFound();
+            }
+
+            // Get nearby sites (sites in the same city, excluding current site)
+            var nearbySites = await _context.Site
+                .Where(s => s.CityId == site.CityId && s.Id != site.Id)
+                .Take(3)  // Limit to 3 nearby sites
+                .ToListAsync();
+
+            // Pass nearby sites to the view
+            ViewBag.NearbySites = nearbySites;
+
+            // Check if the site is bookmarked by the current user
+            if (User.Identity.IsAuthenticated)
+            {
+                var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+                ViewBag.IsBookmarked = await _context.Bookmark
+                    .AnyAsync(b => b.ClientId == userId && b.SiteId == id);
+
+                // Check if the user has already rated this site
+                var userRating = await _context.Rating
+                    .FirstOrDefaultAsync(r => r.ClientId == userId && r.SiteId == id);
+                ViewBag.UserRating = userRating;
             }
 
             return View(site);

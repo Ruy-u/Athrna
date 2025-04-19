@@ -27,7 +27,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 // Now build the app
 var app = builder.Build();
 
-// Seed the database
+// Seed the database with initial data if needed
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
