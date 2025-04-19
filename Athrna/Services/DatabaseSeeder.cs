@@ -9,6 +9,9 @@ namespace Athrna.Services
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DatabaseSeeder> _logger;
 
+        // Valid license numbers for guide registration
+        public static readonly string[] ValidLicenseNumbers = { "TR-1234", "TR-5678", "TR-9999" };
+
         public DatabaseSeeder(ApplicationDbContext context, ILogger<DatabaseSeeder> logger)
         {
             _context = context;
@@ -89,7 +92,7 @@ namespace Athrna.Services
                     ImagePath = "/images/sites/masjid_nabwi.jpg",
                     CulturalInfo = new CulturalInfo
                     {
-                        EstablishedDate = new DateTime(622, 1, 1),
+                        EstablishedDate = 622,
                         Summary = "Al-Masjid an-Nabawi is the second holiest mosque in Islam and the final resting place of Prophet Muhammad. Originally built by the Prophet himself, it has undergone numerous expansions throughout Islamic history."
                     }
                 },
@@ -103,7 +106,7 @@ namespace Athrna.Services
                     ImagePath = "/images/sites/quba.jpg",
                     CulturalInfo = new CulturalInfo
                     {
-                        EstablishedDate = new DateTime(622, 1, 1),
+                        EstablishedDate = 622,
                         Summary = "Quba Mosque is the first mosque built in Islamic history. Prophet Muhammad regularly visited this mosque, traveling there on Saturdays, and encouraged others to do so as well."
                     }
                 },
@@ -117,7 +120,7 @@ namespace Athrna.Services
                     ImagePath = "/images/sites/uhud.jpg",
                     CulturalInfo = new CulturalInfo
                     {
-                        EstablishedDate = new DateTime(625, 1, 1),
+                        EstablishedDate = 625,
                         Summary = "The Battle of Uhud was fought on March 23, 625 CE between a force from the Muslim community of Medina and a force from Mecca. It holds important lessons in Islamic history about discipline and following leadership."
                     }
                 }
@@ -136,7 +139,7 @@ namespace Athrna.Services
                     ImagePath = "/images/sites/diriyah.jpg",
                     CulturalInfo = new CulturalInfo
                     {
-                        EstablishedDate = new DateTime(1744, 1, 1),
+                        EstablishedDate = 1744,
                         Summary = "Diriyah is the original home of the Saudi royal family and the capital of the first Saudi state. Its At-Turaif district is a UNESCO World Heritage Site and is being developed into a major cultural tourism destination."
                     }
                 },
@@ -150,7 +153,7 @@ namespace Athrna.Services
                     ImagePath = "/images/sites/masmak.jpg",
                     CulturalInfo = new CulturalInfo
                     {
-                        EstablishedDate = new DateTime(1865, 1, 1),
+                        EstablishedDate = 1865,
                         Summary = "The Masmak Fortress is a symbol of the Saudi unification, where in 1902, King Abdulaziz captured the fortress and began his campaign to unify Saudi Arabia."
                     }
                 }
@@ -169,7 +172,7 @@ namespace Athrna.Services
                     ImagePath = "/images/sites/hegra.jpg",
                     CulturalInfo = new CulturalInfo
                     {
-                        EstablishedDate = new DateTime(-100, 1, 1),
+                        EstablishedDate = -100,
                         Summary = "Hegra is the southernmost settlement of the Nabataean Kingdom and features monumental tombs with elaborate facades similar to those at Petra, but in a better state of preservation."
                     }
                 },
@@ -183,7 +186,7 @@ namespace Athrna.Services
                     ImagePath = "/images/sites/dadan.jpg",
                     CulturalInfo = new CulturalInfo
                     {
-                        EstablishedDate = new DateTime(-800, 1, 1),
+                        EstablishedDate = -800,
                         Summary = "Dadan was a major caravan stopping point and the capital of both the Dadanite and Lihyanite kingdoms. Archaeological excavations continue to reveal more about this important ancient Arabian site."
                     }
                 }

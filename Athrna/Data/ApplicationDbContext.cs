@@ -16,11 +16,12 @@ namespace Athrna.Data
         public DbSet<SiteTranslation> SiteTranslation { get; set; }
         public DbSet<CulturalInfoTranslation> CulturalInfoTranslation { get; set; }
         public DbSet<Guide> Guide { get; set; }
+        public DbSet<GuideApplication> GuideApplication { get; set; } 
         public DbSet<Rating> Rating { get; set; }
         public DbSet<Bookmark> Bookmark { get; set; }
         public DbSet<City> City { get; set; }
         public DbSet<CulturalInfo> CulturalInfo { get; set; }
-        public DbSet<Administrator> Administrator { get; set; }  // Changed from Administrators to Administrator
+        public DbSet<Administrator> Administrator { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -41,6 +42,12 @@ namespace Athrna.Data
                 .WithMany(c => c.Guides)
                 .HasForeignKey(g => g.CityId);
 
+            // Configure the relationship between GuideApplication and City
+            modelBuilder.Entity<GuideApplication>()
+                .HasOne(ga => ga.City)
+                .WithMany()
+                .HasForeignKey(ga => ga.CityId);
+
             // Ensure Site no longer has a relationship with Guide
             modelBuilder.Entity<Site>()
                 .HasOne(s => s.City)
@@ -54,6 +61,7 @@ namespace Athrna.Data
             modelBuilder.Entity<SiteTranslation>().ToTable("SiteTranslation");
             modelBuilder.Entity<CulturalInfoTranslation>().ToTable("CulturalInfoTranslation");
             modelBuilder.Entity<Guide>().ToTable("Guide");
+            modelBuilder.Entity<GuideApplication>().ToTable("GuideApplication");
             modelBuilder.Entity<Rating>().ToTable("Rating");
             modelBuilder.Entity<Bookmark>().ToTable("Bookmark");
             modelBuilder.Entity<CulturalInfo>().ToTable("CulturalInfo");

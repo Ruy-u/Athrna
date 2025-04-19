@@ -50,6 +50,45 @@
                             <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                         </div>
 
+                        <!-- Guide Registration Option -->
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="registerAsGuide" name="RegisterAsGuide" value="true" />
+                            <label class="form-check-label" for="registerAsGuide">Register as a Historical Site Guide</label>
+                        </div>
+
+                        <!-- Guide Details Section (initially hidden) -->
+                        <div id="guideDetailsSection" style="display: none;">
+                            <hr />
+                            <h5 class="mb-3">Guide Information</h5>
+
+                            <div class="form-group mb-3">
+                                <label for="GuideFullName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="GuideFullName" name="GuideFullName" />
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="NationalId" class="form-label">National ID / Iqama Number</label>
+                                <input type="text" class="form-control" id="NationalId" name="NationalId" />
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="GuideCityId" class="form-label">Primary City</label>
+                                <select class="form-select" id="GuideCityId" name="GuideCityId">
+                                    <option value="" selected>-- Select City --</option>
+                                    @foreach (var city in (ViewBag.Cities ?? new List<City>()))
+                                    {
+                                        <option value="@city.Id">@city.Name</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="LicenseNumber" class="form-label">Tourism License Number</label>
+                                <input type="text" class="form-control" id="LicenseNumber" name="LicenseNumber" />
+                                <small class="form-text text-muted">Enter your license number from the Saudi Tourism Authority</small>
+                            </div>
+                        </div>
+
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">Register</button>
                         </div>
@@ -71,4 +110,27 @@
 
 @section Scripts {
     <script src="~/js/form-validation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const guideCheckbox = document.getElementById('registerAsGuide');
+            const guideDetailsSection = document.getElementById('guideDetailsSection');
+
+            // Toggle guide details section visibility
+            guideCheckbox.addEventListener('change', function () {
+                guideDetailsSection.style.display = this.checked ? 'block' : 'none';
+
+                // Make guide fields required when checkbox is checked
+                const guideFields = guideDetailsSection.querySelectorAll('input, select');
+                guideFields.forEach(field => {
+                    if (this.checked) {
+                        field.setAttribute('required', 'required');
+                        field.setAttribute('aria-required', 'true');
+                    } else {
+                        field.removeAttribute('required');
+                        field.removeAttribute('aria-required');
+                    }
+                });
+            });
+        });
+    </script>
 }

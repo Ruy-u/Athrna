@@ -40,6 +40,18 @@
                         <i class="bi bi-people me-2"></i> Users
                     </a>
                 </li>
+                <!-- Add Guide Management Menu Items -->
+                <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "GuideApplications" ? "active" : "")">
+                    <a asp-controller="Admin" asp-action="GuideApplications">
+                        <i class="bi bi-clipboard-check me-2"></i> Guide Applications
+                    </a>
+                </li>
+                <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "ManageGuides" ? "active" : "")">
+                    <a asp-controller="Admin" asp-action="ManageGuides">
+                        <i class="bi bi-person-badge me-2"></i> Manage Guides
+                    </a>
+                </li>
+                <!-- End of Guide Management Menu Items -->
                 <li>
                     <a asp-controller="Home" asp-action="Index">
                         <i class="bi bi-house-door me-2"></i> View Site
@@ -75,12 +87,12 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const sidebarCollapse = document.getElementById('sidebarCollapse');
             const sidebar = document.getElementById('sidebar');
 
             if (sidebarCollapse && sidebar) {
-                sidebarCollapse.addEventListener('click', function() {
+                sidebarCollapse.addEventListener('click', function () {
                     sidebar.classList.toggle('active');
                 });
             }
@@ -89,17 +101,17 @@
         @if (TempData["SuccessMessage"] != null)
         {
             <text>
-                    alert('@TempData["SuccessMessage"]');
+                        alert('@TempData["SuccessMessage"]');
             </text>
         }
 
         @if (TempData["ErrorMessage"] != null)
         {
             <text>
-                    alert('@TempData["ErrorMessage"]');
+                        alert('@TempData["ErrorMessage"]');
             </text>
         }
-        });
+                });
     </script>
     @RenderSection("Scripts", required: false)
 </body>

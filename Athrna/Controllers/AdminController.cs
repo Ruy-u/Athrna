@@ -458,6 +458,200 @@ namespace Athrna.Controllers
             }
             return View(city);
         }
+        // GET: Admin/GuideApplications
+        public async Task<IActionResult> GuideApplications()
+        {
+            var applications = await _context.GuideApplication
+                .Include(g => g.City)
+                .OrderByDescending(g => g.SubmissionDate)
+                .ToListAsync();
+
+            return View(applications);
+        }
+
+        // GET: Admin/GuideApplicationDetail/5
+        public async Task<IActionResult> GuideApplicationDetail(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var application = await _context.GuideApplication
+                .Include(g => g.City)
+                .FirstOrDefaultAsync(g => g.Id == id);
+
+            if (application == null)
+            {
+                return NotFound();
+            }
+
+            return View(application);
+        }
+
+        // POST: Admin/ApproveGuideApplication/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveGuideApplication(int id)
+        {
+            var application = await _context.GuideApplication
+                .Include(g => g.City)
+                .FirstOrDefaultAsync(g => g.Id == id);
+
+            if (application == null)
+            {
+                return NotFound();
+            }
+
+            if (application.Status != ApplicationStatus.Pending)
+            {
+                TempData["ErrorMessage"] = "This application has already been processed.";
+                return RedirectToAction(nameof(GuideApplications));
+            }
+
+            // Create a new Guide entry
+            var guide = new Guide
+            {
+                Email = application.Email,
+                FullName = application.FullName,
+                NationalId = application.NationalId,
+                Password = application.Password, // In a real app, this would be hashed
+                CityId = application.CityId
+            };
+
+            _context.Guide.Add(guide);
+
+            // Update application status
+            application.Status = ApplicationStatus.Approved;
+            application.ReviewDate = DateTime.UtcNow;
+            _context.Update(application);
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Guide application approved successfully!";
+            return RedirectToAction(nameof(GuideApplications));
+        }
+
+        // POST: Admin/RejectGuideApplication/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectGuideApplication(int id, string rejectionReason)
+        {
+            var application = await _context.GuideApplication
+                .FirstOrDefaultAsync(g => g.Id == id);
+
+            if (application == null)
+            {
+                return NotFound();
+            }
+
+            if (application.Status != ApplicationStatus.Pending)
+            {
+                TempData["ErrorMessage"] = "This application has already been processed.";
+                return RedirectToAction(nameof(GuideApplications));
+            }
+
+            // Update application status
+            application.Status = ApplicationStatus.Rejected;
+            application.RejectionReason = rejectionReason;
+            application.ReviewDate = DateTime.UtcNow;
+
+            _context.Update(application);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Guide application rejected successfully.";
+            return RedirectToAction(nameof(GuideApplications));
+        }
+
+        // GET: Admin/ManageGuides
+        public async Task<IActionResult> ManageGuides()
+        {
+            var guides = await _context.Guide
+                .Include(g => g.City)
+                .OrderBy(g => g.FullName)
+                .ToListAsync();
+
+            return View(guides);
+        }
+
+        // GET: Admin/EditGuide/5
+        public async Task<IActionResult> EditGuide(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var guide = await _context.Guide
+                .Include(g => g.City)
+                .FirstOrDefaultAsync(g => g.Id == id);
+
+            if (guide == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+            return View(guide);
+        }
+
+        // POST: Admin/EditGuide/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditGuide(int id, Guide guide)
+        {
+            if (id != guide.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(guide);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "Guide information updated successfully!";
+                    return RedirectToAction(nameof(ManageGuides));
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!GuideExists(guide.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+
+            ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+            return View(guide);
+        }
+
+        // POST: Admin/DeleteGuide/5
+        [HttpPost, ActionName("DeleteGuide")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteGuideConfirmed(int id)
+        {
+            var guide = await _context.Guide.FindAsync(id);
+            if (guide != null)
+            {
+                _context.Guide.Remove(guide);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Guide deleted successfully.";
+            }
+
+            return RedirectToAction(nameof(ManageGuides));
+        }
+
+        private bool GuideExists(int id)
+        {
+            return _context.Guide.Any(e => e.Id == id);
+        }
 
         // GET: Admin/CreateCity
         public IActionResult CreateCity()

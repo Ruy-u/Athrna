@@ -1,0 +1,189 @@
+﻿@model IEnumerable<Athrna.Models.GuideApplication>
+
+@{
+    ViewData["Title"] = "Guide Applications";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <h6 class="mb-0">Guide Applications</h6>
+                    </div>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Applicant</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">City</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">License Number</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Submission Date</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Status</th>
+                                    <th class="text-secondary opacity-7"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var application in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex px-3 py-1">
+                                                <div class="d-flex flex-column justify-content-center">
+                                                    <h6 class="mb-0 text-sm">@application.FullName</h6>
+                                                    <p class="text-xs text-secondary mb-0">@application.Email</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <p class="text-sm text-secondary mb-0">@application.City.Name</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-sm text-secondary mb-0">@application.LicenseNumber</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-sm text-secondary mb-0">@application.SubmissionDate.ToString("yyyy-MM-dd")</p>
+                                        </td>
+                                        <td>
+                                            @switch (application.Status)
+                                            {
+                                                case ApplicationStatus.Pending:
+                                                    <span class="badge bg-warning">Pending Review</span>
+                                                    break;
+                                                case ApplicationStatus.Approved:
+                                                    <span class="badge bg-success">Approved</span>
+                                                    break;
+                                                case ApplicationStatus.Rejected:
+                                                    <span class="badge bg-danger">Rejected</span>
+                                                    break;
+                                            }
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="d-flex gap-2">
+                                                <a asp-action="GuideApplicationDetail" asp-route-id="@application.Id" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+
+                                                @if (application.Status == ApplicationStatus.Pending)
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#approveModal-@application.Id">
+                                                        <i class="bi bi-check-circle"></i> Approve
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal-@application.Id">
+                                                        <i class="bi bi-x-circle"></i> Reject
+                                                    </button>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Approve Modal -->
+                                    <div class="modal fade" id="approveModal-@application.Id" tabindex="-1" aria-labelledby="approveModalLabel-@application.Id" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="approveModalLabel-@application.Id">Approve Guide Application</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Are you sure you want to approve the guide application from <strong>@application.FullName</strong>?</p>
+                                                    <p>This will create a new guide account with the provided information.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <form asp-action="ApproveGuideApplication" method="post">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@application.Id" />
+                                                        <button type="submit" class="btn btn-success">Approve Application</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Reject Modal -->
+                                    <div class="modal fade" id="rejectModal-@application.Id" tabindex="-1" aria-labelledby="rejectModalLabel-@application.Id" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="rejectModalLabel-@application.Id">Reject Guide Application</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form asp-action="RejectGuideApplication" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <div class="modal-body">
+                                                        <input type="hidden" name="id" value="@application.Id" />
+
+                                                        <p>Are you sure you want to reject the guide application from <strong>@application.FullName</strong>?</p>
+
+                                                        <div class="form-group">
+                                                            <label for="rejectionReason-@application.Id" class="form-label">Reason for Rejection</label>
+                                                            <textarea id="rejectionReason-@application.Id" name="rejectionReason" class="form-control" rows="3" required></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-danger">Reject Application</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (!Model.Any())
+                    {
+                        <div class="text-center py-4">
+                            <p class="text-muted">No guide applications found.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add search functionality
+            const searchBox = document.createElement('input');
+            searchBox.type = 'text';
+            searchBox.className = 'form-control form-control-sm mt-3 mx-3';
+            searchBox.style.width = '300px';
+            searchBox.placeholder = 'Search applications...';
+
+            const cardHeader = document.querySelector('.card-header');
+            cardHeader.appendChild(searchBox);
+
+            const tableRows = document.querySelectorAll('tbody tr');
+
+            searchBox.addEventListener('keyup', function() {
+                const searchTerm = this.value.toLowerCase();
+
+                tableRows.forEach(row => {
+                    const applicantName = row.querySelector('h6').textContent.toLowerCase();
+                    const applicantEmail = row.querySelector('p').textContent.toLowerCase();
+                    const cityName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                    const licenseNumber = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+
+                    if (applicantName.includes(searchTerm) ||
+                        applicantEmail.includes(searchTerm) ||
+                        cityName.includes(searchTerm) ||
+                        licenseNumber.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+}

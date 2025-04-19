@@ -1,0 +1,60 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Athrna.Models
+{
+    public class GuideApplication
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string Username { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string Email { get; set; }
+
+        [Required]
+        public string Password { get; set; }
+
+        [Required]
+        [ForeignKey("City")]
+        public int CityId { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string FullName { get; set; }
+
+        [Required]
+        public string NationalId { get; set; }
+
+        [Required]
+        public string LicenseNumber { get; set; }
+
+        [Required]
+        public ApplicationStatus Status { get; set; }
+
+        public string RejectionReason { get; set; }
+
+        public DateTime SubmissionDate { get; set; }
+
+        public DateTime? ReviewDate { get; set; }
+
+        // Navigation property - only relates to City for the selected city
+        public virtual City City { get; set; }
+    }
+
+    public enum ApplicationStatus
+    {
+        [Display(Name = "Pending Review")]
+        Pending,
+
+        [Display(Name = "Approved")]
+        Approved,
+
+        [Display(Name = "Rejected")]
+        Rejected
+    }
+}

@@ -3,7 +3,6 @@ using Athrna.Models;
 using Athrna.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
@@ -28,8 +27,10 @@ namespace Athrna.Controllers
         }
 
         // GET: /Account/Register
-        public IActionResult Register()
+        public async Task<IActionResult> Register()
         {
+            // Get cities for the guide registration dropdown
+            ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
             return View();
         }
 
@@ -104,10 +105,12 @@ namespace Athrna.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model,
+            string GuideFullName, string NationalId, int? GuideCityId, string LicenseNumber, bool RegisterAsGuide = false)
         {
             if (!ModelState.IsValid)
             {
+                ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
                 return View(model);
             }
 
@@ -115,6 +118,7 @@ namespace Athrna.Controllers
             if (!IsValidUsername(model.Username))
             {
                 ModelState.AddModelError("Username", "Username format is invalid. Use only letters, numbers, underscores and hyphens.");
+                ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
                 return View(model);
             }
 
@@ -122,6 +126,7 @@ namespace Athrna.Controllers
             if (await _context.Client.AnyAsync(c => c.Username.ToLower() == model.Username.ToLower()))
             {
                 ModelState.AddModelError("Username", "Username is already taken");
+                ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
                 return View(model);
             }
 
@@ -129,6 +134,7 @@ namespace Athrna.Controllers
             if (await _context.Client.AnyAsync(c => c.Email.ToLower() == model.Email.ToLower()))
             {
                 ModelState.AddModelError("Email", "Email is already registered");
+                ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
                 return View(model);
             }
 
@@ -136,9 +142,71 @@ namespace Athrna.Controllers
             if (!IsStrongPassword(model.Password))
             {
                 ModelState.AddModelError("Password", "Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character");
+                ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
                 return View(model);
             }
 
+            // Validate guide registration fields if registering as guide
+            if (RegisterAsGuide)
+            {
+                if (string.IsNullOrWhiteSpace(GuideFullName))
+                {
+                    ModelState.AddModelError("GuideFullName", "Full name is required for guide registration");
+                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+                    return View(model);
+                }
+
+                if (string.IsNullOrWhiteSpace(NationalId))
+                {
+                    ModelState.AddModelError("NationalId", "National ID / Iqama number is required for guide registration");
+                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+                    return View(model);
+                }
+
+                if (!GuideCityId.HasValue)
+                {
+                    ModelState.AddModelError("GuideCityId", "Please select your primary city");
+                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+                    return View(model);
+                }
+
+                if (string.IsNullOrWhiteSpace(LicenseNumber))
+                {
+                    ModelState.AddModelError("LicenseNumber", "Tourism license number is required for guide registration");
+                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+                    return View(model);
+                }
+
+                // Basic license number format validation (example: TR-1234)
+                if (!Regex.IsMatch(LicenseNumber, @"^TR-\d{4}$"))
+                {
+                    ModelState.AddModelError("LicenseNumber", "Invalid license number format. It should be in the format: TR-XXXX (where X is a digit)");
+                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+                    return View(model);
+                }
+
+                // Check if city exists
+                var cityExists = await _context.City.AnyAsync(c => c.Id == GuideCityId);
+                if (!cityExists)
+                {
+                    ModelState.AddModelError("GuideCityId", "Selected city is invalid");
+                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+                    return View(model);
+                }
+
+                // Verify license number against "valid" licenses
+                // In a real application, this would check against a real database of valid licenses
+                // For demo purposes, we'll use a fixed set of valid numbers
+                string[] validLicenses = { "TR-1234", "TR-5678", "TR-9999" };
+                if (!validLicenses.Contains(LicenseNumber))
+                {
+                    ModelState.AddModelError("LicenseNumber", "The license number is not recognized. Please verify and try again.");
+                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+                    return View(model);
+                }
+            }
+
+            // Create client account for regular registration
             var client = new Client
             {
                 Username = model.Username,
@@ -150,7 +218,32 @@ namespace Athrna.Controllers
             _context.Client.Add(client);
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Registration successful! You can now log in.";
+            // If registering as a guide, create a guide application
+            if (RegisterAsGuide)
+            {
+                var guideApplication = new GuideApplication
+                {
+                    Username = model.Username,
+                    Email = model.Email,
+                    Password = model.Password,
+                    CityId = GuideCityId.Value,
+                    FullName = GuideFullName,
+                    NationalId = NationalId,
+                    LicenseNumber = LicenseNumber,
+                    Status = ApplicationStatus.Pending,
+                    SubmissionDate = DateTime.UtcNow
+                };
+
+                _context.GuideApplication.Add(guideApplication);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Registration successful! Your guide application has been submitted and is pending review.";
+            }
+            else
+            {
+                TempData["SuccessMessage"] = "Registration successful! You can now log in.";
+            }
+
             return RedirectToAction("Login");
         }
 
@@ -190,6 +283,21 @@ namespace Athrna.Controllers
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             _logger.LogInformation("User {Username} logged out", username);
             return RedirectToAction("Index", "Home");
+        }
+
+        // Rest of existing methods...
+        private bool IsValidUsername(string username)
+        {
+            if (string.IsNullOrEmpty(username))
+                return false;
+
+            // Check length (3-50 characters)
+            if (username.Length < 3 || username.Length > 50)
+                return false;
+
+            // Check characters (alphanumeric, underscore, hyphen)
+            Regex regex = new Regex(@"^[a-zA-Z0-9_-]+$");
+            return regex.IsMatch(username);
         }
 
         // GET: /Account/ForgotPassword
@@ -286,19 +394,6 @@ namespace Athrna.Controllers
 
             TempData["SuccessMessage"] = "Your password has been reset successfully. You can now log in with your new password.";
             return RedirectToAction("Login");
-        }
-        private bool IsValidUsername(string username)
-        {
-            if (string.IsNullOrEmpty(username))
-                return false;
-
-            // Check length (3-50 characters)
-            if (username.Length < 3 || username.Length > 50)
-                return false;
-
-            // Check characters (alphanumeric, underscore, hyphen)
-            Regex regex = new Regex(@"^[a-zA-Z0-9_-]+$");
-            return regex.IsMatch(username);
         }
     }
 }

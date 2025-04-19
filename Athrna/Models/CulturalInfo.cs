@@ -15,7 +15,7 @@ namespace Athrna.Models
         public string Summary { get; set; }
 
         [DataType(DataType.Date)]
-        public DateTime EstablishedDate { get; set; }
+        public int EstablishedDate { get; set; }
 
         // Navigation properties
         public virtual Site Site { get; set; }
