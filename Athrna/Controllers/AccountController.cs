@@ -6,16 +6,19 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace Athrna.Controllers
 {
     public class AccountController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(ApplicationDbContext context)
+        public AccountController(ApplicationDbContext context, ILogger<AccountController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: /Account/Login
@@ -38,6 +41,9 @@ namespace Athrna.Controllers
             {
                 return View(model);
             }
+
+            // Add a small delay to prevent timing attacks
+            await Task.Delay(200);
 
             var client = await _context.Client
                 .FirstOrDefaultAsync(c => c.Username == model.Username);
@@ -69,13 +75,17 @@ namespace Athrna.Controllers
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var authProperties = new AuthenticationProperties
                 {
-                    IsPersistent = model.RememberMe
+                    IsPersistent = model.RememberMe,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(model.RememberMe ? 30 : 1)
                 };
 
                 await HttpContext.SignInAsync(
                     CookieAuthenticationDefaults.AuthenticationScheme,
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
+
+                // Add a success log entry
+                _logger.LogInformation($"User {model.Username} logged in successfully");
 
                 // Check if user is admin and redirect accordingly
                 if (isAdmin)
@@ -101,17 +111,31 @@ namespace Athrna.Controllers
                 return View(model);
             }
 
+            // Additional validation checks
+            if (!IsValidUsername(model.Username))
+            {
+                ModelState.AddModelError("Username", "Username format is invalid. Use only letters, numbers, underscores and hyphens.");
+                return View(model);
+            }
+
             // Check if username is already taken
-            if (await _context.Client.AnyAsync(c => c.Username == model.Username))
+            if (await _context.Client.AnyAsync(c => c.Username.ToLower() == model.Username.ToLower()))
             {
                 ModelState.AddModelError("Username", "Username is already taken");
                 return View(model);
             }
 
             // Check if email is already taken
-            if (await _context.Client.AnyAsync(c => c.Email == model.Email))
+            if (await _context.Client.AnyAsync(c => c.Email.ToLower() == model.Email.ToLower()))
             {
                 ModelState.AddModelError("Email", "Email is already registered");
+                return View(model);
+            }
+
+            // Check password strength
+            if (!IsStrongPassword(model.Password))
+            {
+                ModelState.AddModelError("Password", "Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character");
                 return View(model);
             }
 
@@ -130,10 +154,41 @@ namespace Athrna.Controllers
             return RedirectToAction("Login");
         }
 
+        // Add this new method for password strength validation
+        private bool IsStrongPassword(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+                return false;
+
+            // Check length (at least 8 characters)
+            if (password.Length < 8)
+                return false;
+
+            // Check for at least one lowercase letter
+            if (!Regex.IsMatch(password, "[a-z]"))
+                return false;
+
+            // Check for at least one uppercase letter
+            if (!Regex.IsMatch(password, "[A-Z]"))
+                return false;
+
+            // Check for at least one digit
+            if (!Regex.IsMatch(password, "[0-9]"))
+                return false;
+
+            // Check for at least one special character
+            if (!Regex.IsMatch(password, "[^a-zA-Z0-9]"))
+                return false;
+
+            return true;
+        }
+
         // GET: /Account/Logout
         public async Task<IActionResult> Logout()
         {
+            var username = User.Identity.Name;
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            _logger.LogInformation("User {Username} logged out", username);
             return RedirectToAction("Index", "Home");
         }
 
@@ -231,6 +286,19 @@ namespace Athrna.Controllers
 
             TempData["SuccessMessage"] = "Your password has been reset successfully. You can now log in with your new password.";
             return RedirectToAction("Login");
+        }
+        private bool IsValidUsername(string username)
+        {
+            if (string.IsNullOrEmpty(username))
+                return false;
+
+            // Check length (3-50 characters)
+            if (username.Length < 3 || username.Length > 50)
+                return false;
+
+            // Check characters (alphanumeric, underscore, hyphen)
+            Regex regex = new Regex(@"^[a-zA-Z0-9_-]+$");
+            return regex.IsMatch(username);
         }
     }
 }

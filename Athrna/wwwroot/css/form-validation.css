@@ -1,0 +1,40 @@
+﻿.input-group .password-toggle {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.password-strength-meter {
+    margin-top: 5px;
+}
+
+.form-control.is-invalid,
+.was-validated .form-control:invalid {
+    background-image: none;
+    padding-right: 0.75rem;
+}
+
+.form-control.is-valid,
+.was-validated .form-control:valid {
+    background-image: none;
+    padding-right: 0.75rem;
+}
+
+.invalid-feedback {
+    display: block;
+    height: 0;
+    overflow: hidden;
+    transition: height 0.3s ease;
+}
+
+.is-invalid + .invalid-feedback {
+    height: auto;
+    margin-top: 0.25rem;
+}
+
+.form-feedback {
+    margin-bottom: 1rem;
+}
+
+.form-text {
+    font-size: 0.875rem;
+}

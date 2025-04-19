@@ -1,0 +1,193 @@
+﻿<!-- Athrna/Views/Home/Contact.cshtml -->
+@{
+    ViewData["Title"] = "Contact Us";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="h3 mb-0">Contact Us</h1>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4 mb-md-0">
+                            <h2 class="h4">Get in Touch</h2>
+                            <p>We value your feedback and inquiries. Please feel free to contact us using the form or through the contact information provided.</p>
+
+                            <form id="contactForm" aria-label="Contact form">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Your Name</label>
+                                    <input type="text" class="form-control" id="name" required aria-required="true">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" required aria-required="true">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="subject" class="form-label">Subject</label>
+                                    <select class="form-select" id="subject" aria-label="Subject of your message">
+                                        <option value="" selected>Please select...</option>
+                                        <option value="general">General Inquiry</option>
+                                        <option value="feedback">Feedback</option>
+                                        <option value="support">Technical Support</option>
+                                        <option value="accessibility">Accessibility Issue</option>
+                                        <option value="partnerships">Partnerships</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="message" class="form-label">Message</label>
+                                    <textarea class="form-control" id="message" rows="5" required aria-required="true"></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">Send Message</button>
+                            </form>
+
+                            <div id="formSuccess" class="alert alert-success mt-3" role="alert" style="display: none;">
+                                Thank you for your message! We will get back to you soon.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h2 class="h4">Contact Information</h2>
+
+                            <div class="contact-info">
+                                <div class="mb-4">
+                                    <h3 class="h5"><i class="bi bi-geo-alt-fill me-2" aria-hidden="true"></i>Address</h3>
+                                    <address class="mb-0">
+                                        Athrna Heritage Center<br>
+                                        123 King Fahd Road<br>
+                                        Riyadh, Saudi Arabia
+                                    </address>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h3 class="h5"><i class="bi bi-telephone-fill me-2" aria-hidden="true"></i>Phone</h3>
+                                    <p class="mb-0">
+                                        <a href="tel:+966123456789">+966 12 345 6789</a>
+                                    </p>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h3 class="h5"><i class="bi bi-envelope-fill me-2" aria-hidden="true"></i>Email</h3>
+                                    <p class="mb-0">
+                                        <a href="mailto:info@athrna.com">info@athrna.com</a>
+                                    </p>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h3 class="h5"><i class="bi bi-clock-fill me-2" aria-hidden="true"></i>Hours</h3>
+                                    <p class="mb-0">
+                                        Sunday - Thursday: 9:00 AM - 5:00 PM<br>
+                                        Friday - Saturday: Closed
+                                    </p>
+                                </div>
+
+                                <div class="social-media mt-4">
+                                    <h3 class="h5">Follow Us</h3>
+                                    <div class="d-flex gap-3">
+                                        <a href="#" class="social-icon" aria-label="Facebook">
+                                            <i class="bi bi-facebook" aria-hidden="true"></i>
+                                        </a>
+                                        <a href="#" class="social-icon" aria-label="Twitter">
+                                            <i class="bi bi-twitter" aria-hidden="true"></i>
+                                        </a>
+                                        <a href="#" class="social-icon" aria-label="Instagram">
+                                            <i class="bi bi-instagram" aria-hidden="true"></i>
+                                        </a>
+                                        <a href="#" class="social-icon" aria-label="YouTube">
+                                            <i class="bi bi-youtube" aria-hidden="true"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5">
+                        <h2 class="h4 mb-3">Location Map</h2>
+                        <!-- Map placeholder - in a real implementation, this would be an interactive map -->
+                        <div class="map-container" style="height: 300px; background-color: #eee; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <p class="text-muted">Interactive map would be displayed here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Simple form submission handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const contactForm = document.getElementById('contactForm');
+            const formSuccess = document.getElementById('formSuccess');
+
+            if (contactForm) {
+                contactForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    // In a real implementation, you would send the form data to a server
+                    // For demo purposes, we'll just show the success message
+
+                    // Simple validation
+                    const name = document.getElementById('name').value;
+                    const email = document.getElementById('email').value;
+                    const message = document.getElementById('message').value;
+
+                    if (!name || !email || !message) {
+                        alert('Please fill in all required fields');
+                        return;
+                    }
+
+                    // Show success message
+                    contactForm.reset();
+                    formSuccess.style.display = 'block';
+
+                    // Hide success message after 5 seconds
+                    setTimeout(function() {
+                        formSuccess.style.display = 'none';
+                    }, 5000);
+                });
+            }
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .social-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #1a3b29;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-icon:hover, .social-icon:focus {
+            background-color: #f8c15c;
+            color: #1a3b29;
+            transform: translateY(-3px);
+        }
+
+        address {
+            font-style: normal;
+        }
+
+        @@media (max-width: 767.98px) {
+            .contact-info {
+                margin-top: 2rem;
+            }
+        }
+    </style>
+}
