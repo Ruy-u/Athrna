@@ -41,11 +41,11 @@
                             <p class="text-muted">Reviewed on @Model.ReviewDate.Value.ToString("MMMM dd, yyyy")</p>
                         }
 
-                        @if (Model.Status == ApplicationStatus.Rejected && !string.IsNullOrEmpty(Model.RejectionReason))
+                        @if (!string.IsNullOrEmpty(Model.SafeRejectionReason))
                         {
                             <div class="alert alert-danger mt-3">
                                 <h5>Rejection Reason:</h5>
-                                <p>@Model.RejectionReason</p>
+                                <p>@Model.SafeRejectionReason</p>
                             </div>
                         }
                     </div>

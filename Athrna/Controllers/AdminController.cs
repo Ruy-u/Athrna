@@ -12,10 +12,12 @@ namespace Athrna.Controllers
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<AdminController> _logger;
 
-        public AdminController(ApplicationDbContext context)
+        public AdminController(ApplicationDbContext context, ILogger<AdminController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: Admin
@@ -458,15 +460,27 @@ namespace Athrna.Controllers
             }
             return View(city);
         }
+
+
         // GET: Admin/GuideApplications
         public async Task<IActionResult> GuideApplications()
         {
-            var applications = await _context.GuideApplication
-                .Include(g => g.City)
-                .OrderByDescending(g => g.SubmissionDate)
-                .ToListAsync();
+            try
+            {
+                var applications = await _context.GuideApplication
+                    .Include(g => g.City)
+                    .OrderByDescending(g => g.SubmissionDate)
+                    .ToListAsync();
 
-            return View(applications);
+                return View(applications);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading guide applications");
+
+                TempData["ErrorMessage"] = "An error occurred while loading guide applications: " + ex.Message;
+                return RedirectToAction("Index");
+            }
         }
 
         // GET: Admin/GuideApplicationDetail/5
@@ -494,42 +508,55 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveGuideApplication(int id)
         {
-            var application = await _context.GuideApplication
-                .Include(g => g.City)
-                .FirstOrDefaultAsync(g => g.Id == id);
-
-            if (application == null)
+            try
             {
-                return NotFound();
-            }
+                var application = await _context.GuideApplication
+                    .Include(g => g.City)
+                    .FirstOrDefaultAsync(g => g.Id == id);
 
-            if (application.Status != ApplicationStatus.Pending)
-            {
-                TempData["ErrorMessage"] = "This application has already been processed.";
+                if (application == null)
+                {
+                    return NotFound();
+                }
+
+                if (application.Status != ApplicationStatus.Pending)
+                {
+                    TempData["ErrorMessage"] = "This application has already been processed.";
+                    return RedirectToAction(nameof(GuideApplications));
+                }
+
+                // Create a new Guide entry with proper null handling
+                var guide = new Guide
+                {
+                    Email = application.Email ?? "",
+                    FullName = application.FullName ?? "",
+                    NationalId = application.NationalId ?? "",
+                    Password = application.Password ?? "", // In a real app, this would be hashed
+                    CityId = application.CityId
+                };
+
+                _context.Guide.Add(guide);
+
+                // Update application status
+                application.Status = ApplicationStatus.Approved;
+                application.ReviewDate = DateTime.UtcNow;
+                if (application.RejectionReason == null)
+                {
+                    application.RejectionReason = "";
+                }
+                _context.Update(application);
+
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Guide application approved successfully!";
                 return RedirectToAction(nameof(GuideApplications));
             }
-
-            // Create a new Guide entry
-            var guide = new Guide
+            catch (Exception ex)
             {
-                Email = application.Email,
-                FullName = application.FullName,
-                NationalId = application.NationalId,
-                Password = application.Password, // In a real app, this would be hashed
-                CityId = application.CityId
-            };
-
-            _context.Guide.Add(guide);
-
-            // Update application status
-            application.Status = ApplicationStatus.Approved;
-            application.ReviewDate = DateTime.UtcNow;
-            _context.Update(application);
-
-            await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = "Guide application approved successfully!";
-            return RedirectToAction(nameof(GuideApplications));
+                _logger.LogError(ex, "Error approving guide application with ID: {Id}", id);
+                TempData["ErrorMessage"] = "An error occurred while approving the guide application. Please try again.";
+                return RedirectToAction(nameof(GuideApplications));
+            }
         }
 
         // POST: Admin/RejectGuideApplication/5
@@ -553,7 +580,7 @@ namespace Athrna.Controllers
 
             // Update application status
             application.Status = ApplicationStatus.Rejected;
-            application.RejectionReason = rejectionReason;
+            application.RejectionReason = rejectionReason; // This can be null if no reason provided
             application.ReviewDate = DateTime.UtcNow;
 
             _context.Update(application);

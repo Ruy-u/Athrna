@@ -170,146 +170,178 @@ namespace Athrna.Controllers
         public async Task<IActionResult> Register(RegisterViewModel model,
             string GuideFullName, string NationalId, int? GuideCityId, string LicenseNumber, bool RegisterAsGuide = false)
         {
-            if (!ModelState.IsValid)
+            try
             {
+                // Log registration attempt
+                _logger.LogInformation("Registration attempt for username: {Username}, Email: {Email}, RegisterAsGuide: {RegisterAsGuide}",
+                    model.Username, model.Email, RegisterAsGuide);
+
+                // Get cities for the dropdown
                 ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
-                return View(model);
-            }
 
-            // Additional validation checks
-            if (!IsValidUsername(model.Username))
-            {
-                ModelState.AddModelError("Username", "Username format is invalid. Use only letters, numbers, underscores and hyphens.");
-                ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
-                return View(model);
-            }
-
-            // Check if username is already taken
-            if (await _context.Client.AnyAsync(c => c.Username.ToLower() == model.Username.ToLower()))
-            {
-                ModelState.AddModelError("Username", "Username is already taken");
-                ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
-                return View(model);
-            }
-
-            // Check if email is already taken
-            if (await _context.Client.AnyAsync(c => c.Email.ToLower() == model.Email.ToLower()))
-            {
-                ModelState.AddModelError("Email", "Email is already registered");
-                ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
-                return View(model);
-            }
-
-            // Check password strength
-            if (!IsStrongPassword(model.Password))
-            {
-                ModelState.AddModelError("Password", "Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character");
-                ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
-                return View(model);
-            }
-
-            // Validate guide registration fields if registering as guide
-            if (RegisterAsGuide)
-            {
-                if (string.IsNullOrWhiteSpace(GuideFullName))
+                // Clear ModelState errors for guide fields if not registering as guide
+                if (!RegisterAsGuide)
                 {
-                    ModelState.AddModelError("GuideFullName", "Full name is required for guide registration");
-                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+                    ModelState.Remove("GuideFullName");
+                    ModelState.Remove("NationalId");
+                    ModelState.Remove("GuideCityId");
+                    ModelState.Remove("LicenseNumber");
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    // Log validation errors
+                    var validationErrors = string.Join(", ", ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage));
+
+                    _logger.LogWarning("Model validation failed: {Errors}", validationErrors);
+
                     return View(model);
                 }
 
-                if (string.IsNullOrWhiteSpace(NationalId))
+                // Additional validation checks
+                if (!IsValidUsername(model.Username))
                 {
-                    ModelState.AddModelError("NationalId", "National ID / Iqama number is required for guide registration");
-                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+                    _logger.LogWarning("Invalid username format: {Username}", model.Username);
+                    ModelState.AddModelError("Username", "Username format is invalid. Use only letters, numbers, underscores and hyphens.");
                     return View(model);
                 }
 
-                if (!GuideCityId.HasValue)
+                // Check if username is already taken
+                if (await _context.Client.AnyAsync(c => c.Username.ToLower() == model.Username.ToLower()))
                 {
-                    ModelState.AddModelError("GuideCityId", "Please select your primary city");
-                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+                    _logger.LogWarning("Username already taken: {Username}", model.Username);
+                    ModelState.AddModelError("Username", "Username is already taken");
                     return View(model);
                 }
 
-                if (string.IsNullOrWhiteSpace(LicenseNumber))
+                // Check if email is already taken
+                if (await _context.Client.AnyAsync(c => c.Email.ToLower() == model.Email.ToLower()))
                 {
-                    ModelState.AddModelError("LicenseNumber", "Tourism license number is required for guide registration");
-                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+                    _logger.LogWarning("Email already registered: {Email}", model.Email);
+                    ModelState.AddModelError("Email", "Email is already registered");
                     return View(model);
                 }
 
-                // Basic license number format validation (example: TR-1234)
-                if (!Regex.IsMatch(LicenseNumber, @"^TR-\d{4}$"))
+                // Check password strength
+                if (!IsStrongPassword(model.Password))
                 {
-                    ModelState.AddModelError("LicenseNumber", "Invalid license number format. It should be in the format: TR-XXXX (where X is a digit)");
-                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+                    _logger.LogWarning("Password not strong enough for user: {Username}", model.Username);
+                    ModelState.AddModelError("Password", "Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character");
                     return View(model);
                 }
 
-                // Check if city exists
-                var cityExists = await _context.City.AnyAsync(c => c.Id == GuideCityId);
-                if (!cityExists)
+                // Validate guide registration fields ONLY if registering as guide
+                if (RegisterAsGuide)
                 {
-                    ModelState.AddModelError("GuideCityId", "Selected city is invalid");
-                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
-                    return View(model);
+                    _logger.LogInformation("Attempting guide registration for: {Username}", model.Username);
+
+                    if (string.IsNullOrWhiteSpace(GuideFullName))
+                    {
+                        ModelState.AddModelError("GuideFullName", "Full name is required for guide registration");
+                        return View(model);
+                    }
+
+                    if (string.IsNullOrWhiteSpace(NationalId))
+                    {
+                        ModelState.AddModelError("NationalId", "National ID / Iqama number is required for guide registration");
+                        return View(model);
+                    }
+
+                    if (!GuideCityId.HasValue)
+                    {
+                        ModelState.AddModelError("GuideCityId", "Please select your primary city");
+                        return View(model);
+                    }
+
+                    if (string.IsNullOrWhiteSpace(LicenseNumber))
+                    {
+                        ModelState.AddModelError("LicenseNumber", "Tourism license number is required for guide registration");
+                        return View(model);
+                    }
+
+                    // Basic license number format validation (example: TR-1234)
+                    if (!Regex.IsMatch(LicenseNumber, @"^TR-\d{4}$"))
+                    {
+                        ModelState.AddModelError("LicenseNumber", "Invalid license number format. It should be in the format: TR-XXXX (where X is a digit)");
+                        return View(model);
+                    }
+
+                    // Check if city exists
+                    var cityExists = await _context.City.AnyAsync(c => c.Id == GuideCityId);
+                    if (!cityExists)
+                    {
+                        ModelState.AddModelError("GuideCityId", "Selected city is invalid");
+                        return View(model);
+                    }
+
+                    // Verify license number against "valid" licenses
+                    string[] validLicenses = { "TR-1234", "TR-5678", "TR-9999" };
+                    if (!validLicenses.Contains(LicenseNumber))
+                    {
+                        ModelState.AddModelError("LicenseNumber", "The license number is not recognized. Please verify and try again.");
+                        return View(model);
+                    }
                 }
 
-                // Verify license number against "valid" licenses
-                // In a real application, this would check against a real database of valid licenses
-                // For demo purposes, we'll use a fixed set of valid numbers
-                string[] validLicenses = { "TR-1234", "TR-5678", "TR-9999" };
-                if (!validLicenses.Contains(LicenseNumber))
-                {
-                    ModelState.AddModelError("LicenseNumber", "The license number is not recognized. Please verify and try again.");
-                    ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
-                    return View(model);
-                }
-            }
+                // All validation passed, create client account
+                _logger.LogInformation("Creating new client account for: {Username}", model.Username);
 
-            // Create client account for regular registration
-            var client = new Client
-            {
-                Username = model.Username,
-                Email = model.Email,
-                // Store the password directly without hashing
-                EncryptedPassword = model.Password
-            };
-
-            _context.Client.Add(client);
-            await _context.SaveChangesAsync();
-
-            // If registering as a guide, create a guide application
-            if (RegisterAsGuide)
-            {
-                var guideApplication = new GuideApplication
+                var client = new Client
                 {
                     Username = model.Username,
                     Email = model.Email,
-                    Password = model.Password,
-                    CityId = GuideCityId.Value,
-                    FullName = GuideFullName,
-                    NationalId = NationalId,
-                    LicenseNumber = LicenseNumber,
-                    Status = ApplicationStatus.Pending,
-                    SubmissionDate = DateTime.UtcNow
+                    // Store the password directly without hashing
+                    EncryptedPassword = model.Password
                 };
 
-                _context.GuideApplication.Add(guideApplication);
-                await _context.SaveChangesAsync();
+                _context.Client.Add(client);
+                var saveResult = await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "Registration successful! Your guide application has been submitted and is pending review.";
+                _logger.LogInformation("Client saved to database. Result: {Result}", saveResult);
+
+                // If registering as a guide, create a guide application
+                if (RegisterAsGuide)
+                {
+                    _logger.LogInformation("Creating guide application for: {Username}", model.Username);
+
+                    var guideApplication = new GuideApplication
+                    {
+                        Username = model.Username,
+                        Email = model.Email,
+                        Password = model.Password,
+                        CityId = GuideCityId.Value,
+                        FullName = GuideFullName,
+                        NationalId = NationalId,
+                        LicenseNumber = LicenseNumber,
+                        Status = ApplicationStatus.Pending,
+                        SubmissionDate = DateTime.UtcNow,
+                        RejectionReason = "" // Initialize with empty string to prevent null error
+                    };
+
+                    _context.GuideApplication.Add(guideApplication);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "Registration successful! Your guide application has been submitted and is pending review.";
+                    _logger.LogInformation("Guide application created successfully for: {Username}", model.Username);
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = "Registration successful! You can now log in.";
+                    _logger.LogInformation("Standard registration completed for: {Username}", model.Username);
+                }
+
+                return RedirectToAction("Login");
             }
-            else
+            catch (Exception ex)
             {
-                TempData["SuccessMessage"] = "Registration successful! You can now log in.";
+                _logger.LogError(ex, "Error during registration process for user: {Username}", model.Username);
+                ModelState.AddModelError("", "An unexpected error occurred during registration. Please try again.");
+                return View(model);
             }
-
-            return RedirectToAction("Login");
         }
 
-        // Add this new method for password strength validation
         private bool IsStrongPassword(string password)
         {
             if (string.IsNullOrEmpty(password))

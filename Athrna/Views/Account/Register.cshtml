@@ -15,35 +15,29 @@
             </div>
         }
 
-        <form asp-action="Register" method="post" data-validate="true">
-            <div class="form-feedback alert alert-danger" style="display: none;" role="alert"></div>
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form asp-action="Register" method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
 
             <div class="form-group">
                 <label asp-for="Username" class="form-label">Username</label>
-                <input asp-for="Username" class="form-control" id="username" required aria-required="true"
-                       data-pattern-message="Username can only contain letters, numbers, underscores and hyphens" />
-                <div id="username-feedback" class="invalid-feedback"></div>
+                <input asp-for="Username" class="form-control" id="username" required />
                 <span asp-validation-for="Username" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="Email" class="form-label">Email</label>
-                <input asp-for="Email" class="form-control" id="email" required aria-required="true" />
-                <div id="email-feedback" class="invalid-feedback"></div>
+                <input asp-for="Email" class="form-control" id="email" required />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="Password" class="form-label">Password</label>
                 <div class="password-container">
-                    <input asp-for="Password" class="form-control" id="password" required aria-required="true"
-                           data-show-strength="true" />
+                    <input asp-for="Password" class="form-control" id="password" required />
                     <button type="button" class="password-toggle" aria-label="Toggle password visibility">
                         <i class="bi bi-eye"></i>
                     </button>
                 </div>
-                <div id="password-feedback" class="invalid-feedback"></div>
                 <span asp-validation-for="Password" class="text-danger"></span>
                 <div class="password-strength-meter mt-2" style="display: none;">
                     <div class="progress" style="height: 5px;">
@@ -57,12 +51,11 @@
             <div class="form-group">
                 <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
                 <div class="password-container">
-                    <input asp-for="ConfirmPassword" class="form-control" id="confirmPassword" required aria-required="true" />
+                    <input asp-for="ConfirmPassword" class="form-control" id="confirmPassword" required />
                     <button type="button" class="password-toggle" aria-label="Toggle password visibility">
                         <i class="bi bi-eye"></i>
                     </button>
                 </div>
-                <div id="confirmPassword-feedback" class="invalid-feedback"></div>
                 <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
             </div>
 
@@ -78,29 +71,33 @@
 
                 <div class="form-group">
                     <label for="GuideFullName" class="form-label">Full Name</label>
-                    <input type="text" class="form-control" id="GuideFullName" name="GuideFullName" />
+                    <input type="text" class="form-control guide-field" id="GuideFullName" name="GuideFullName" />
+                    <span class="text-danger field-validation-valid" data-valmsg-for="GuideFullName" data-valmsg-replace="true"></span>
                 </div>
 
                 <div class="form-group">
                     <label for="NationalId" class="form-label">National ID / Iqama Number</label>
-                    <input type="text" class="form-control" id="NationalId" name="NationalId" />
+                    <input type="text" class="form-control guide-field" id="NationalId" name="NationalId" />
+                    <span class="text-danger field-validation-valid" data-valmsg-for="NationalId" data-valmsg-replace="true"></span>
                 </div>
 
                 <div class="form-group">
                     <label for="GuideCityId" class="form-label">Primary City</label>
-                    <select class="form-select" id="GuideCityId" name="GuideCityId">
+                    <select class="form-select guide-field" id="GuideCityId" name="GuideCityId">
                         <option value="" selected>-- Select City --</option>
                         @foreach (var city in (ViewBag.Cities ?? new List<City>()))
                         {
                             <option value="@city.Id">@city.Name</option>
                         }
                     </select>
+                    <span class="text-danger field-validation-valid" data-valmsg-for="GuideCityId" data-valmsg-replace="true"></span>
                 </div>
 
                 <div class="form-group">
                     <label for="LicenseNumber" class="form-label">Tourism License Number</label>
-                    <input type="text" class="form-control" id="LicenseNumber" name="LicenseNumber" />
-                    <small class="form-text text-muted">Enter your license number from the Saudi Tourism Authority</small>
+                    <input type="text" class="form-control guide-field" id="LicenseNumber" name="LicenseNumber" placeholder="TR-1234" />
+                    <small class="form-text text-muted">Enter your license number from the Saudi Tourism Authority (format: TR-XXXX)</small>
+                    <span class="text-danger field-validation-valid" data-valmsg-for="LicenseNumber" data-valmsg-replace="true"></span>
                 </div>
             </div>
 
@@ -117,50 +114,53 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/form-validation.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Toggle guide details section visibility
             const guideCheckbox = document.getElementById('registerAsGuide');
             const guideDetailsSection = document.getElementById('guideDetailsSection');
+            const guideFields = document.querySelectorAll('.guide-field');
 
             if (guideCheckbox && guideDetailsSection) {
                 guideCheckbox.addEventListener('change', function () {
                     guideDetailsSection.style.display = this.checked ? 'block' : 'none';
 
                     // Make guide fields required when checkbox is checked
-                    const guideFields = guideDetailsSection.querySelectorAll('input, select');
                     guideFields.forEach(field => {
                         if (this.checked) {
                             field.setAttribute('required', 'required');
-                            field.setAttribute('aria-required', 'true');
                         } else {
                             field.removeAttribute('required');
-                            field.removeAttribute('aria-required');
+                            // Clear validation errors when unchecked
+                            field.classList.remove('is-invalid');
+                            const errorSpan = field.nextElementSibling;
+                            if (errorSpan && errorSpan.classList.contains('text-danger')) {
+                                errorSpan.textContent = '';
+                            }
                         }
                     });
                 });
             }
 
-                    // Password visibility toggle
-        document.querySelectorAll('.password-toggle').forEach(button => {
-            button.addEventListener('click', function() {
-                const input = this.previousElementSibling;
-                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                input.setAttribute('type', type);
+            // Password visibility toggle
+            document.querySelectorAll('.password-toggle').forEach(button => {
+                button.addEventListener('click', function () {
+                    const input = this.previousElementSibling;
+                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                    input.setAttribute('type', type);
 
-                const icon = this.querySelector('i');
-                if (type === 'text') {
-                    icon.classList.remove('bi-eye');
-                    icon.classList.add('bi-eye-slash');
-                } else {
-                    icon.classList.remove('bi-eye-slash');
-                    icon.classList.add('bi-eye');
-                }
+                    const icon = this.querySelector('i');
+                    if (type === 'text') {
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    } else {
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    }
+                });
             });
-        });
 
-            // Password strength meter
+            // Simple password strength meter
             const passwordField = document.getElementById('password');
             const strengthMeter = document.querySelector('.password-strength-meter');
             const progressBar = document.querySelector('.progress-bar');
@@ -168,12 +168,12 @@
 
             if (passwordField && strengthMeter && progressBar && strengthText) {
                 // Show strength meter when password field is focused
-                passwordField.addEventListener('focus', function() {
+                passwordField.addEventListener('focus', function () {
                     strengthMeter.style.display = 'block';
                 });
 
                 // Update strength meter on input
-                passwordField.addEventListener('input', function() {
+                passwordField.addEventListener('input', function () {
                     const password = this.value;
                     let strength = 0;
 
@@ -204,6 +204,17 @@
                     }
                 });
             }
+
+            // Form validation - Clear errors in guide section if not registering as guide
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function (e) {
+                if (!guideCheckbox.checked) {
+                    // If not registering as guide, clear any validation errors in the guide section
+                    guideFields.forEach(field => {
+                        field.value = '';  // Clear the field values
+                    });
+                }
+            });
         });
     </script>
 }
