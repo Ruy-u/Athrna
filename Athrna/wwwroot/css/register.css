@@ -1,0 +1,189 @@
+﻿/* Enhanced Registration Page Styles */
+
+/* Main container for registration */
+.registration-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* Header styling */
+.registration-header {
+    background-color: #0d6efd;
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* Form content area */
+.registration-form-content {
+    padding: 2rem;
+}
+
+/* Form group styling */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #495057;
+}
+
+/* Input styling */
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+    .form-control:focus {
+        color: #495057;
+        background-color: #fff;
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+/* Password input container */
+.password-container {
+    position: relative;
+}
+
+/* Password toggle button */
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0.25rem;
+    z-index: 5;
+}
+
+    .password-toggle:hover {
+        color: #495057;
+    }
+
+/* Checkbox styling */
+.form-check {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.form-check-input {
+    margin-left: -1.5rem;
+    margin-top: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+}
+
+.form-check-label {
+    margin-bottom: 0;
+    font-weight: normal;
+}
+
+/* Registration button */
+.register-btn {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+}
+
+    .register-btn:hover {
+        background-color: #0b5ed7;
+    }
+
+/* Login link section */
+.login-link-section {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.login-link {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+    .login-link:hover {
+        text-decoration: underline;
+    }
+
+/* Guide registration section - hidden by default */
+#guideDetailsSection {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .registration-container {
+        margin: 1rem;
+        max-width: none;
+    }
+
+    .registration-form-content {
+        padding: 1.5rem;
+    }
+}
+
+/* Animation for validation feedback */
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-5px);
+    }
+
+    20%, 40%, 60%, 80% {
+        transform: translateX(5px);
+    }
+}
+
+.is-invalid {
+    border-color: #dc3545 !important;
+    animation: shake 0.5s;
+}
+
+    .is-invalid + .invalid-feedback {
+        display: block;
+        color: #dc3545;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+    }
+
+/* Validation success */
+.is-valid {
+    border-color: #28a745 !important;
+}

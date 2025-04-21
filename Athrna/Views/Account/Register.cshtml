@@ -3,108 +3,116 @@
     ViewData["Title"] = "Register";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Create an Account</h4>
+<div class="registration-container">
+    <div class="registration-header">
+        Create an Account
+    </div>
+    <div class="registration-form-content">
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger" role="alert">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <form asp-action="Register" method="post" data-validate="true">
+            <div class="form-feedback alert alert-danger" style="display: none;" role="alert"></div>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="Username" class="form-label">Username</label>
+                <input asp-for="Username" class="form-control" id="username" required aria-required="true"
+                       data-pattern-message="Username can only contain letters, numbers, underscores and hyphens" />
+                <div id="username-feedback" class="invalid-feedback"></div>
+                <span asp-validation-for="Username" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" id="email" required aria-required="true" />
+                <div id="email-feedback" class="invalid-feedback"></div>
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password" class="form-label">Password</label>
+                <div class="password-container">
+                    <input asp-for="Password" class="form-control" id="password" required aria-required="true"
+                           data-show-strength="true" />
+                    <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                        <i class="bi bi-eye"></i>
+                    </button>
                 </div>
-                <div class="card-body">
-                    <form asp-action="Register" method="post" data-validate="true">
-                        <div class="form-feedback alert alert-danger" style="display: none;" role="alert"></div>
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-                        <div class="form-group mb-3">
-                            <label asp-for="Username" class="form-label"></label>
-                            <input asp-for="Username" class="form-control" id="username" required aria-required="true"
-                                   data-pattern-message="Username can only contain letters, numbers, underscores and hyphens" />
-                            <div id="username-feedback" class="invalid-feedback"></div>
-                            <span asp-validation-for="Username" class="text-danger"></span>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label asp-for="Email" class="form-label"></label>
-                            <input asp-for="Email" class="form-control" id="email" required aria-required="true" />
-                            <div id="email-feedback" class="invalid-feedback"></div>
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label asp-for="Password" class="form-label"></label>
-                            <div class="input-group">
-                                <input asp-for="Password" class="form-control" id="password" required aria-required="true"
-                                       data-show-strength="true" data-toggle-visibility="true" />
-                            </div>
-                            <div id="password-feedback" class="invalid-feedback"></div>
-                            <span asp-validation-for="Password" class="text-danger"></span>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label asp-for="ConfirmPassword" class="form-label"></label>
-                            <div class="input-group">
-                                <input asp-for="ConfirmPassword" class="form-control" id="confirmPassword" required aria-required="true"
-                                       data-toggle-visibility="true" />
-                            </div>
-                            <div id="confirmPassword-feedback" class="invalid-feedback"></div>
-                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                        </div>
-
-                        <!-- Guide Registration Option -->
-                        <div class="form-check mb-3">
-                            <input type="checkbox" class="form-check-input" id="registerAsGuide" name="RegisterAsGuide" value="true" />
-                            <label class="form-check-label" for="registerAsGuide">Register as a Historical Site Guide</label>
-                        </div>
-
-                        <!-- Guide Details Section (initially hidden) -->
-                        <div id="guideDetailsSection" style="display: none;">
-                            <hr />
-                            <h5 class="mb-3">Guide Information</h5>
-
-                            <div class="form-group mb-3">
-                                <label for="GuideFullName" class="form-label">Full Name</label>
-                                <input type="text" class="form-control" id="GuideFullName" name="GuideFullName" />
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <label for="NationalId" class="form-label">National ID / Iqama Number</label>
-                                <input type="text" class="form-control" id="NationalId" name="NationalId" />
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <label for="GuideCityId" class="form-label">Primary City</label>
-                                <select class="form-select" id="GuideCityId" name="GuideCityId">
-                                    <option value="" selected>-- Select City --</option>
-                                    @foreach (var city in (ViewBag.Cities ?? new List<City>()))
-                                    {
-                                        <option value="@city.Id">@city.Name</option>
-                                    }
-                                </select>
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <label for="LicenseNumber" class="form-label">Tourism License Number</label>
-                                <input type="text" class="form-control" id="LicenseNumber" name="LicenseNumber" />
-                                <small class="form-text text-muted">Enter your license number from the Saudi Tourism Authority</small>
-                            </div>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Register</button>
-                        </div>
-                    </form>
-
-                    <hr />
-
-                    <div class="text-center">
-                        <p>
-                            Already have an account?
-                            <a asp-action="Login">Login here</a>
-                        </p>
+                <div id="password-feedback" class="invalid-feedback"></div>
+                <span asp-validation-for="Password" class="text-danger"></span>
+                <div class="password-strength-meter mt-2" style="display: none;">
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar" role="progressbar" style="width: 0%;"
+                             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
+                    <small class="form-text mt-1">Password strength: <span class="strength-text">Weak</span></small>
                 </div>
             </div>
-        </div>
+
+            <div class="form-group">
+                <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+                <div class="password-container">
+                    <input asp-for="ConfirmPassword" class="form-control" id="confirmPassword" required aria-required="true" />
+                    <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                <div id="confirmPassword-feedback" class="invalid-feedback"></div>
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <!-- Guide Registration Option -->
+            <div class="form-check mb-4">
+                <input type="checkbox" class="form-check-input" id="registerAsGuide" name="RegisterAsGuide" value="true" />
+                <label class="form-check-label" for="registerAsGuide">Register as a Historical Site Guide</label>
+            </div>
+
+            <!-- Guide Details Section (initially hidden) -->
+            <div id="guideDetailsSection" style="display: none;">
+                <h5 class="mb-3">Guide Information</h5>
+
+                <div class="form-group">
+                    <label for="GuideFullName" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="GuideFullName" name="GuideFullName" />
+                </div>
+
+                <div class="form-group">
+                    <label for="NationalId" class="form-label">National ID / Iqama Number</label>
+                    <input type="text" class="form-control" id="NationalId" name="NationalId" />
+                </div>
+
+                <div class="form-group">
+                    <label for="GuideCityId" class="form-label">Primary City</label>
+                    <select class="form-select" id="GuideCityId" name="GuideCityId">
+                        <option value="" selected>-- Select City --</option>
+                        @foreach (var city in (ViewBag.Cities ?? new List<City>()))
+                        {
+                            <option value="@city.Id">@city.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="LicenseNumber" class="form-label">Tourism License Number</label>
+                    <input type="text" class="form-control" id="LicenseNumber" name="LicenseNumber" />
+                    <small class="form-text text-muted">Enter your license number from the Saudi Tourism Authority</small>
+                </div>
+            </div>
+
+            <button type="submit" class="register-btn">Register</button>
+
+            <div class="login-link-section">
+                <p>
+                    Already have an account?
+                    <a href="#" class="login-link login-btn">Login here</a>
+                </p>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -112,25 +120,90 @@
     <script src="~/js/form-validation.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Toggle guide details section visibility
             const guideCheckbox = document.getElementById('registerAsGuide');
             const guideDetailsSection = document.getElementById('guideDetailsSection');
 
-            // Toggle guide details section visibility
-            guideCheckbox.addEventListener('change', function () {
-                guideDetailsSection.style.display = this.checked ? 'block' : 'none';
+            if (guideCheckbox && guideDetailsSection) {
+                guideCheckbox.addEventListener('change', function () {
+                    guideDetailsSection.style.display = this.checked ? 'block' : 'none';
 
-                // Make guide fields required when checkbox is checked
-                const guideFields = guideDetailsSection.querySelectorAll('input, select');
-                guideFields.forEach(field => {
-                    if (this.checked) {
-                        field.setAttribute('required', 'required');
-                        field.setAttribute('aria-required', 'true');
+                    // Make guide fields required when checkbox is checked
+                    const guideFields = guideDetailsSection.querySelectorAll('input, select');
+                    guideFields.forEach(field => {
+                        if (this.checked) {
+                            field.setAttribute('required', 'required');
+                            field.setAttribute('aria-required', 'true');
+                        } else {
+                            field.removeAttribute('required');
+                            field.removeAttribute('aria-required');
+                        }
+                    });
+                });
+            }
+
+                    // Password visibility toggle
+        document.querySelectorAll('.password-toggle').forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+
+                const icon = this.querySelector('i');
+                if (type === 'text') {
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                } else {
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+            });
+        });
+
+            // Password strength meter
+            const passwordField = document.getElementById('password');
+            const strengthMeter = document.querySelector('.password-strength-meter');
+            const progressBar = document.querySelector('.progress-bar');
+            const strengthText = document.querySelector('.strength-text');
+
+            if (passwordField && strengthMeter && progressBar && strengthText) {
+                // Show strength meter when password field is focused
+                passwordField.addEventListener('focus', function() {
+                    strengthMeter.style.display = 'block';
+                });
+
+                // Update strength meter on input
+                passwordField.addEventListener('input', function() {
+                    const password = this.value;
+                    let strength = 0;
+
+                    if (password.length >= 8) strength += 20;
+                    if (password.length >= 12) strength += 10;
+                    if (/[a-z]/.test(password)) strength += 10;
+                    if (/[A-Z]/.test(password)) strength += 20;
+                    if (/\d/.test(password)) strength += 20;
+                    if (/[^a-zA-Z0-9]/.test(password)) strength += 20;
+
+                    // Update progress bar
+                    progressBar.style.width = `${strength}%`;
+                    progressBar.setAttribute('aria-valuenow', strength);
+
+                    // Update text and color
+                    if (strength < 40) {
+                        progressBar.className = 'progress-bar bg-danger';
+                        strengthText.textContent = 'Weak';
+                        strengthText.className = 'text-danger';
+                    } else if (strength < 70) {
+                        progressBar.className = 'progress-bar bg-warning';
+                        strengthText.textContent = 'Moderate';
+                        strengthText.className = 'text-warning';
                     } else {
-                        field.removeAttribute('required');
-                        field.removeAttribute('aria-required');
+                        progressBar.className = 'progress-bar bg-success';
+                        strengthText.textContent = 'Strong';
+                        strengthText.className = 'text-success';
                     }
                 });
-            });
+            }
         });
     </script>
 }

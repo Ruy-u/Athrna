@@ -102,6 +102,68 @@ namespace Athrna.Controllers
             ModelState.AddModelError("", "Invalid username or password");
             return View(model);
         }
+        // POST: /Account/LoginAjax
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginAjax(LoginViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Invalid form submission" });
+            }
+
+            // Add a small delay to prevent timing attacks
+            await Task.Delay(200);
+
+            var client = await _context.Client
+                .FirstOrDefaultAsync(c => c.Username == model.Username);
+
+            if (client == null)
+            {
+                return Json(new { success = false, message = "Invalid username or password" });
+            }
+
+            // Direct password comparison instead of hash verification
+            if (client.EncryptedPassword == model.Password)
+            {
+                // Create claims for the client
+                var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, client.Username),
+            new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
+            new Claim(ClaimTypes.Email, client.Email)
+        };
+
+                // Check if client is an administrator
+                var isAdmin = await _context.Administrator.AnyAsync(a => a.ClientId == client.Id);
+                if (isAdmin)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
+                }
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = model.RememberMe,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(model.RememberMe ? 30 : 1)
+                };
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity),
+                    authProperties);
+
+                // Add a success log entry
+                _logger.LogInformation($"User {model.Username} logged in successfully via AJAX");
+
+                // Return different redirect URL based on user role
+                string redirectUrl = isAdmin ? "/Admin" : "/";
+
+                return Json(new { success = true, redirectUrl });
+            }
+
+            return Json(new { success = false, message = "Invalid username or password" });
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
