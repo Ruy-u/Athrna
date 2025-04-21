@@ -465,22 +465,13 @@ namespace Athrna.Controllers
         // GET: Admin/GuideApplications
         public async Task<IActionResult> GuideApplications()
         {
-            try
-            {
+
                 var applications = await _context.GuideApplication
                     .Include(g => g.City)
                     .OrderByDescending(g => g.SubmissionDate)
                     .ToListAsync();
 
                 return View(applications);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading guide applications");
-
-                TempData["ErrorMessage"] = "An error occurred while loading guide applications: " + ex.Message;
-                return RedirectToAction("Index");
-            }
         }
 
         // GET: Admin/GuideApplicationDetail/5
