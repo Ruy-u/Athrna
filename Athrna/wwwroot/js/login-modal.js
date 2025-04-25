@@ -1,4 +1,19 @@
-﻿// login-modal.js
+﻿// Get elements
+const loginModal = document.getElementById('loginModal');
+const loginButtons = document.querySelectorAll('.login-btn');
+const loginForm = document.getElementById('loginModalForm');
+const errorMessage = document.getElementById('loginErrorMessage');
+const captchaInput = document.getElementById('captchaInput');
+const captchaImage = document.getElementById('captchaImage');
+const refreshCaptchaBtn = document.getElementById('refreshCaptcha');
+const passwordToggle = document.querySelector('.password-toggle');
+
+// Create Bootstrap modal instance if modal exists
+let modal = null;
+if (loginModal) {
+    modal = new bootstrap.Modal(loginModal);
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     // Submit login form via AJAX
     if (loginForm) {
@@ -140,53 +155,39 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('modalUsername').focus();
         });
     }
-}); Get elements
-const loginModal = document.getElementById('loginModal');
-const loginButtons = document.querySelectorAll('.login-btn');
-const loginForm = document.getElementById('loginModalForm');
-const errorMessage = document.getElementById('loginErrorMessage');
-const captchaInput = document.getElementById('captchaInput');
-const captchaImage = document.getElementById('captchaImage');
-const refreshCaptchaBtn = document.getElementById('refreshCaptcha');
-const passwordToggle = document.querySelector('.password-toggle');
 
-// Create Bootstrap modal instance if modal exists
-let modal = null;
-if (loginModal) {
-    modal = new bootstrap.Modal(loginModal);
-}
+    // Show login modal when login button is clicked
+    if (loginButtons.length > 0 && loginModal) {
+        loginButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (modal) {
+                    modal.show();
 
-// Show login modal when login button is clicked
-if (loginButtons) {
-    loginButtons.forEach(button => {
-        button.addEventListener('click', function (e) {
-            e.preventDefault();
-            if (modal) {
-                modal.show();
-
-                // Generate new CAPTCHA
-                if (captchaImage) {
-                    generateCaptcha();
+                    // Generate new CAPTCHA
+                    if (captchaImage) {
+                        generateCaptcha();
+                    }
                 }
+            });
+        });
+    }
+
+    // Toggle password visibility
+    if (passwordToggle) {
+        passwordToggle.addEventListener('click', function () {
+            const input = document.getElementById('modalPassword');
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+
+            const icon = this.querySelector('i');
+            if (type === 'text') {
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
             }
         });
-    });
-}
-
-// Toggle password visibility
-if (passwordToggle) {
-    passwordToggle.addEventListener('click', function () {
-        const input = document.getElementById('modalPassword');
-        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-        input.setAttribute('type', type);
-
-        const icon = this.querySelector('i');
-        if (type === 'text') {
-            icon.classList.remove('bi-eye');
-            icon.classList.add('bi-eye-slash');
-        } else {
-            icon.classList.remove('bi-eye-slash');
-            icon.classList.add('bi-eye');
-        }
-    });
-}
+    }
+});
