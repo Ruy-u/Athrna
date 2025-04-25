@@ -1,0 +1,146 @@
+﻿@{
+    ViewData["Title"] = "Email Configuration Test";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="h3 mb-0">Email Configuration Test</h1>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success">
+                            @TempData["SuccessMessage"]
+                        </div>
+                    }
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger">
+                            @TempData["ErrorMessage"]
+                        </div>
+                    }
+
+                    <h3>Current Configuration</h3>
+                    <div class="alert @(ViewBag.EmailConfig.SmtpServer == "Not configured" ? "alert-warning" : "alert-info")">
+                        <ul>
+                            <li><strong>SMTP Server:</strong> @ViewBag.EmailConfig.SmtpServer</li>
+                            <li><strong>SMTP Port:</strong> @ViewBag.EmailConfig.SmtpPort</li>
+                            <li><strong>Username:</strong> @ViewBag.EmailConfig.Username</li>
+                            <li><strong>Password:</strong> @(ViewBag.EmailConfig.PasswordConfigured ? "Configured" : "Not configured")</li>
+                            <li><strong>From Email:</strong> @ViewBag.EmailConfig.FromEmail</li>
+                        </ul>
+
+                        @if (ViewBag.EmailConfig.SmtpServer == "Not configured" || !ViewBag.EmailConfig.PasswordConfigured)
+                        {
+                            <div class="mt-2">
+                                <strong>Missing Configuration: </strong> Please update your appsettings.json file with the correct email settings:
+                                <pre class="bg-light p-3 mt-2">
+    "Email": {
+      "SmtpServer": "smtp.gmail.com",
+      "SmtpPort": 587,
+      "Username": "your-gmail-account@gmail.com",
+      "Password": "your-app-password",
+      "From": "Athrna Support &lt;your-gmail-account@gmail.com&gt;"
+    }
+                                    </pre>
+                            </div>
+                        }
+                    </div>
+
+                    <h3>Email Templates</h3>
+                    <div class="alert @(ViewBag.TemplateDirectoryExists ? "alert-info" : "alert-warning")">
+                        <ul>
+                            <li><strong>Templates Directory:</strong> @(ViewBag.TemplateDirectoryExists ? "Exists" : "Not found")</li>
+                            <li><strong>Password Reset Template:</strong> @(ViewBag.PasswordResetTemplateExists ? "Exists" : "Not found")</li>
+                            <li><strong>Email Verification Template:</strong> @(ViewBag.VerificationTemplateExists ? "Exists" : "Not found")</li>
+                        </ul>
+
+                        @if (!ViewBag.TemplateDirectoryExists || !ViewBag.PasswordResetTemplateExists || !ViewBag.VerificationTemplateExists)
+                        {
+                            <div class="mt-2">
+                                <form asp-action="CreateTemplates" method="post">
+                                    <button type="submit" class="btn btn-warning">Create Missing Templates</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+
+                    <h3>Send Test Email</h3>
+                    <div class="card">
+                        <div class="card-body">
+                            <form asp-action="SendTestEmail" method="post">
+                                <div class="mb-3">
+                                    <label for="recipientEmail" class="form-label">Recipient Email</label>
+                                    <input type="email" class="form-control" id="recipientEmail" name="recipientEmail" required
+                                           placeholder="Enter email address to receive test email">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Send Test Email</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <h3 class="mt-4">Troubleshooting Tips</h3>
+                    <div class="accordion" id="troubleshootingAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOne">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                    Gmail App Password Setup
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p>To use Gmail for sending emails, you need to set up an "App Password":</p>
+                                    <ol>
+                                        <li>Go to your <a href="https://myaccount.google.com/security" target="_blank">Google Account Security</a> page</li>
+                                        <li>Enable 2-Step Verification if not already enabled</li>
+                                        <li>Go to "App passwords" (under "Signing in to Google")</li>
+                                        <li>Create a new app password for "Athrna Application"</li>
+                                        <li>Copy the 16-character password that appears</li>
+                                        <li>Use this password in your appsettings.json file</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingTwo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    Common SMTP Errors
+                                </button>
+                            </h2>
+                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Authentication Failure:</strong> Check that your username and app password are correct.</p>
+                                    <p><strong>Connection Timeout:</strong> Your server might be blocking outgoing SMTP connections. Try using port 587.</p>
+                                    <p><strong>Invalid Sender:</strong> Make sure the "From" email matches the Gmail account you're using.</p>
+                                    <p><strong>Rate Limiting:</strong> Gmail limits the number of emails you can send. For production, consider a service like SendGrid.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingThree">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                    Application Logs
+                                </button>
+                            </h2>
+                            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p>Check your application logs for detailed error information. Look for entries from:</p>
+                                    <ul>
+                                        <li><code>EmailService</code></li>
+                                        <li><code>AccountController</code></li>
+                                        <li><code>TestEmailController</code></li>
+                                    </ul>
+                                    <p>The logs will contain detailed information about any errors encountered during the email sending process.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

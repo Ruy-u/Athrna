@@ -1,0 +1,43 @@
+﻿@{
+    ViewData["Title"] = "Verification Failed";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Email Verification Failed</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-exclamation-circle text-danger" style="font-size: 3rem;"></i>
+                    </div>
+
+                    <h5 class="text-center mb-3">Oops! Verification Failed</h5>
+
+                    <p class="text-center">
+                        @(ViewBag.ErrorMessage ?? "We couldn't verify your email address. The verification link may have expired or is invalid.")
+                    </p>
+
+                    <div class="alert alert-info mt-4">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="bi bi-info-circle-fill" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0">
+                                    You can <a asp-action="ResendVerificationEmail">request a new verification email</a> to complete your account setup.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <a asp-action="Login" class="btn btn-primary">Return to Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

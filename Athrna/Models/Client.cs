@@ -18,6 +18,9 @@ namespace Athrna.Models
         [EmailAddress]
         public string Email { get; set; }
 
+        // New property for email verification
+        public bool IsEmailVerified { get; set; } = false;
+
         // Navigation properties
         public virtual ICollection<Rating> Ratings { get; set; }
         public virtual ICollection<Bookmark> Bookmarks { get; set; }

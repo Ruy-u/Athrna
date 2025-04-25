@@ -1,21 +1,17 @@
-using Athrna.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Athrna.Data;
 using Athrna.Services;
 using Athrna.Middleware;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Register database context
+// Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Register the database seeder service
-builder.Services.AddScoped<DatabaseSeeder>();
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -24,28 +20,22 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/Account/Login";
         options.LogoutPath = "/Account/Logout";
         options.AccessDeniedPath = "/Account/AccessDenied";
-        options.ExpireTimeSpan = TimeSpan.FromDays(7);
-        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
     });
 
-// Now build the app
-var app = builder.Build();
+// Register DataProtection for token generation
+builder.Services.AddDataProtection();
 
-// Seed the database with initial data if needed
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var seeder = services.GetRequiredService<DatabaseSeeder>();
-        seeder.SeedDatabaseAsync().Wait();
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
-    }
-}
+// Register email services
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<PasswordResetTokenService>();
+
+// Register database seeder
+builder.Services.AddScoped<DatabaseSeeder>();
+
+var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -55,20 +45,33 @@ if (!app.Environment.IsDevelopment())
 }
 else
 {
-    // In development, use our custom exception handling middleware
-    app.UseMiddleware<ExceptionHandlingMiddleware>();
+    app.UseDeveloperExceptionPage();
 }
-app.UseStatusCodePagesWithReExecute("/Home/HandleError", "?statusCode={0}");
+
+// Add custom exception handling middleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
 
-// Add these in the correct order
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// Ensure email templates exist
+await EmailTemplateSetupHelper.EnsureEmailTemplateExists(app.Environment);
+await EmailVerificationHelper.EnsureEmailVerificationTemplateExists(app.Environment);
+
+// Seed the database
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+    await seeder.SeedDatabaseAsync();
+}
 
 app.Run();

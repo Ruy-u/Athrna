@@ -1,160 +1,192 @@
-﻿/**
- * Enhanced Login Modal Functionality with CAPTCHA
- */
+﻿// login-modal.js
 document.addEventListener('DOMContentLoaded', function () {
-    // Get elements
-    const loginModal = document.getElementById('loginModal');
-    const loginForm = document.getElementById('loginModalForm');
-    const loginErrorMessage = document.getElementById('loginErrorMessage');
-    const captchaDisplay = document.getElementById('captchaImage');
-    const captchaInput = document.getElementById('captchaInput');
-    const refreshCaptchaButton = document.getElementById('refreshCaptcha');
-    const passwordToggle = document.querySelector('.password-toggle');
-    const passwordField = document.getElementById('modalPassword');
-
-    // Initialize variables
-    let captchaText = '';
-
-    // Handle login button click in the navbar
-    const loginButtons = document.querySelectorAll('.login-btn');
-    loginButtons.forEach(button => {
-        button.addEventListener('click', function (e) {
-            e.preventDefault();
-            // Bootstrap 5 method to show modal
-            const modalElement = new bootstrap.Modal(loginModal);
-            modalElement.show();
-            // Generate new CAPTCHA
-            generateCaptcha();
-        });
-    });
-
-    // Generate a random CAPTCHA string
-    function generateCaptchaText(length = 6) {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
-    }
-
-    // Display CAPTCHA in the image element
-    function generateCaptcha() {
-        if (!captchaDisplay) return;
-
-        captchaText = generateCaptchaText();
-        captchaDisplay.textContent = captchaText;
-
-        // Clear any previous CAPTCHA input
-        if (captchaInput) {
-            captchaInput.value = '';
-        }
-    }
-
-    // Refresh CAPTCHA when button is clicked
-    if (refreshCaptchaButton) {
-        refreshCaptchaButton.addEventListener('click', function () {
-            generateCaptcha();
-        });
-    }
-
-    // Toggle password visibility
-    if (passwordToggle && passwordField) {
-        passwordToggle.addEventListener('click', function () {
-            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordField.setAttribute('type', type);
-
-            // Update icon
-            const icon = this.querySelector('i');
-            if (type === 'text') {
-                icon.classList.remove('bi-eye');
-                icon.classList.add('bi-eye-slash');
-            } else {
-                icon.classList.remove('bi-eye-slash');
-                icon.classList.add('bi-eye');
-            }
-        });
-    }
-
-    // Form submission
+    // Submit login form via AJAX
     if (loginForm) {
         loginForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            // Basic validation
-            const username = document.getElementById('modalUsername').value;
-            const password = document.getElementById('modalPassword').value;
-            const rememberMe = document.getElementById('modalRememberMe').checked;
-            const captchaInputValue = captchaInput.value;
-
-            // Reset validation state
-            this.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-            loginErrorMessage.classList.add('d-none');
-
-            // Validate username
-            if (!username) {
-                document.getElementById('modalUsername').classList.add('is-invalid');
+            // Validate form
+            if (!this.checkValidity()) {
+                e.stopPropagation();
+                this.classList.add('was-validated');
                 return;
             }
 
-            // Validate password
-            if (!password) {
-                document.getElementById('modalPassword').classList.add('is-invalid');
-                return;
-            }
+            const formData = new FormData(this);
+            const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
-            // Validate CAPTCHA
-            if (!captchaInputValue || captchaInputValue.toLowerCase() !== captchaText.toLowerCase()) {
-                captchaInput.classList.add('is-invalid');
-                captchaInput.nextElementSibling.textContent = 'CAPTCHA does not match. Please try again.';
-                generateCaptcha(); // Generate new CAPTCHA after failed attempt
-                return;
-            }
-
-            // Get CSRF token
-            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-
-            // Prepare form data
-            const formData = new FormData();
-            formData.append('Username', username);
-            formData.append('Password', password);
-            formData.append('RememberMe', rememberMe);
-            formData.append('__RequestVerificationToken', token);
-
-            // Send login request
             fetch('/Account/LoginAjax', {
                 method: 'POST',
+                body: formData,
                 headers: {
-                    'RequestVerificationToken': token
-                },
-                body: formData
+                    'RequestVerificationToken': antiForgeryToken
+                }
             })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Redirect or refresh page on success
-                        window.location.reload();
+                        // Redirect to specified URL
+                        window.location.href = data.redirectUrl;
                     } else {
-                        // Show error message
-                        loginErrorMessage.textContent = data.message || 'Invalid username or password.';
-                        loginErrorMessage.classList.remove('d-none');
-                        generateCaptcha(); // Generate new CAPTCHA after failed attempt
+                        // Check if email verification is required
+                        if (data.requireVerification) {
+                            // Show verification required message with link
+                            errorMessage.classList.remove('d-none');
+                            errorMessage.classList.remove('alert-danger');
+                            errorMessage.classList.add('alert-warning');
+                            errorMessage.innerHTML = `Please verify your email address before logging in. <a href="${data.verificationUrl}">Resend verification email</a>`;
+                        } else {
+                            // Show regular error message
+                            errorMessage.classList.remove('d-none');
+                            errorMessage.classList.add('alert-danger');
+                            errorMessage.classList.remove('alert-warning');
+                            errorMessage.textContent = data.message;
+                        }
+
+                        // Generate new CAPTCHA
+                        if (captchaImage) {
+                            generateCaptcha();
+                        }
                     }
                 })
                 .catch(error => {
-                    console.error('Login error:', error);
-                    loginErrorMessage.textContent = 'An error occurred during login. Please try again.';
-                    loginErrorMessage.classList.remove('d-none');
-                    generateCaptcha(); // Generate new CAPTCHA after error
+                    console.error('Error during login:', error);
+                    errorMessage.classList.remove('d-none');
+                    errorMessage.textContent = 'An error occurred. Please try again.';
                 });
         });
     }
 
-    // Generate CAPTCHA when modal is shown
+    // Generate and refresh CAPTCHA
+    function generateCaptcha() {
+        if (captchaImage) {
+            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+            let captchaText = '';
+
+            // Generate 6 random characters
+            for (let i = 0; i < 6; i++) {
+                captchaText += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            // Create canvas for CAPTCHA
+            const canvas = document.createElement('canvas');
+            canvas.width = 150;
+            canvas.height = 50;
+            const ctx = canvas.getContext('2d');
+
+            // Fill background
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Add noise (dots)
+            for (let i = 0; i < 100; i++) {
+                ctx.fillStyle = `rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255},0.2)`;
+                ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 2, 2);
+            }
+
+            // Add lines for noise
+            for (let i = 0; i < 4; i++) {
+                ctx.strokeStyle = `rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255},0.5)`;
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.stroke();
+            }
+
+            // Draw CAPTCHA text
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Add each character with slight rotation for security
+            for (let i = 0; i < captchaText.length; i++) {
+                const x = 20 + i * 20;
+                const y = canvas.height / 2 + Math.random() * 8 - 4;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate((Math.random() * 0.4) - 0.2); // Rotate between -0.2 and 0.2 radians
+                ctx.fillText(captchaText[i], 0, 0);
+                ctx.restore();
+            }
+
+            // Replace content of captchaImage with canvas
+            captchaImage.innerHTML = '';
+            captchaImage.appendChild(canvas);
+
+            // Store CAPTCHA text in a data attribute (in a real app, store this on the server)
+            captchaImage.dataset.captchaText = captchaText;
+        }
+    }
+
+    // Handle refresh CAPTCHA button
+    if (refreshCaptchaBtn) {
+        refreshCaptchaBtn.addEventListener('click', function () {
+            generateCaptcha();
+            if (captchaInput) {
+                captchaInput.value = '';
+                captchaInput.focus();
+            }
+        });
+    }
+
+    // Initialize CAPTCHA when login modal is shown
     if (loginModal) {
         loginModal.addEventListener('shown.bs.modal', function () {
-            generateCaptcha();
+            if (captchaImage) {
+                generateCaptcha();
+            }
+            // Focus on username field
             document.getElementById('modalUsername').focus();
         });
     }
-});
+}); Get elements
+const loginModal = document.getElementById('loginModal');
+const loginButtons = document.querySelectorAll('.login-btn');
+const loginForm = document.getElementById('loginModalForm');
+const errorMessage = document.getElementById('loginErrorMessage');
+const captchaInput = document.getElementById('captchaInput');
+const captchaImage = document.getElementById('captchaImage');
+const refreshCaptchaBtn = document.getElementById('refreshCaptcha');
+const passwordToggle = document.querySelector('.password-toggle');
+
+// Create Bootstrap modal instance if modal exists
+let modal = null;
+if (loginModal) {
+    modal = new bootstrap.Modal(loginModal);
+}
+
+// Show login modal when login button is clicked
+if (loginButtons) {
+    loginButtons.forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (modal) {
+                modal.show();
+
+                // Generate new CAPTCHA
+                if (captchaImage) {
+                    generateCaptcha();
+                }
+            }
+        });
+    });
+}
+
+// Toggle password visibility
+if (passwordToggle) {
+    passwordToggle.addEventListener('click', function () {
+        const input = document.getElementById('modalPassword');
+        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+        input.setAttribute('type', type);
+
+        const icon = this.querySelector('i');
+        if (type === 'text') {
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    });
+}

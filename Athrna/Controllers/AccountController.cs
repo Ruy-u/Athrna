@@ -6,31 +6,36 @@ using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
+using Athrna.Services;
 
 namespace Athrna.Controllers
 {
+    // Inherit from the partial class that contains password reset methods
     public class AccountController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AccountController> _logger;
+        private readonly IEmailService _emailService;
+        private readonly PasswordResetTokenService _tokenService;
+        private readonly IHostEnvironment _hostEnvironment;
 
-        public AccountController(ApplicationDbContext context, ILogger<AccountController> logger)
+        public AccountController(
+            ApplicationDbContext context,
+            ILogger<AccountController> logger,
+            IEmailService emailService,
+            PasswordResetTokenService tokenService,
+            IHostEnvironment hostEnvironment)
         {
             _context = context;
             _logger = logger;
+            _emailService = emailService;
+            _tokenService = tokenService;
+            _hostEnvironment = hostEnvironment;
         }
 
         // GET: /Account/Login
         public IActionResult Login()
         {
-            return View();
-        }
-
-        // GET: /Account/Register
-        public async Task<IActionResult> Register()
-        {
-            // Get cities for the guide registration dropdown
-            ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
             return View();
         }
 
@@ -58,13 +63,22 @@ namespace Athrna.Controllers
             // Direct password comparison instead of hash verification
             if (client.EncryptedPassword == model.Password)
             {
+                // Check if email is verified
+                if (!client.IsEmailVerified)
+                {
+                    _logger.LogWarning("Login attempt with unverified email for user: {Username}", model.Username);
+                    ModelState.AddModelError("", "Please verify your email address before logging in. " +
+                        $"<a href='{Url.Action("ResendVerificationEmail", new { email = client.Email })}'>Resend verification email</a>");
+                    return View(model);
+                }
+
                 // Create claims for the client
                 var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, client.Username),
-                    new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
-                    new Claim(ClaimTypes.Email, client.Email)
-                };
+        {
+            new Claim(ClaimTypes.Name, client.Username),
+            new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
+            new Claim(ClaimTypes.Email, client.Email)
+        };
 
                 // Check if client is an administrator
                 var isAdmin = await _context.Administrator.AnyAsync(a => a.ClientId == client.Id);
@@ -102,7 +116,7 @@ namespace Athrna.Controllers
             ModelState.AddModelError("", "Invalid username or password");
             return View(model);
         }
-        // POST: /Account/LoginAjax
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginAjax(LoginViewModel model)
@@ -126,6 +140,21 @@ namespace Athrna.Controllers
             // Direct password comparison instead of hash verification
             if (client.EncryptedPassword == model.Password)
             {
+                // Check if email is verified
+                if (!client.IsEmailVerified)
+                {
+                    _logger.LogWarning("AJAX login attempt with unverified email for user: {Username}", model.Username);
+                    var verificationUrl = Url.Action("ResendVerificationEmail", "Account", new { email = client.Email });
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Please verify your email address before logging in.",
+                        requireVerification = true,
+                        email = client.Email,
+                        verificationUrl = verificationUrl
+                    });
+                }
+
                 // Create claims for the client
                 var claims = new List<Claim>
         {
@@ -165,10 +194,18 @@ namespace Athrna.Controllers
             return Json(new { success = false, message = "Invalid username or password" });
         }
 
+        // GET: /Account/Register
+        public async Task<IActionResult> Register()
+        {
+            // Get cities for the guide registration dropdown
+            ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+            return View();
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model,
-            string GuideFullName, string NationalId, int? GuideCityId, string LicenseNumber, bool RegisterAsGuide = false)
+    string GuideFullName, string NationalId, int? GuideCityId, string LicenseNumber, bool RegisterAsGuide = false)
         {
             try
             {
@@ -237,6 +274,8 @@ namespace Athrna.Controllers
                 {
                     _logger.LogInformation("Attempting guide registration for: {Username}", model.Username);
 
+                    // Guide validation code...
+                    // (Keeping the existing validation code here)
                     if (string.IsNullOrWhiteSpace(GuideFullName))
                     {
                         ModelState.AddModelError("GuideFullName", "Full name is required for guide registration");
@@ -293,7 +332,9 @@ namespace Athrna.Controllers
                     Username = model.Username,
                     Email = model.Email,
                     // Store the password directly without hashing
-                    EncryptedPassword = model.Password
+                    EncryptedPassword = model.Password,
+                    // Set email as not verified initially
+                    IsEmailVerified = false
                 };
 
                 _context.Client.Add(client);
@@ -323,16 +364,28 @@ namespace Athrna.Controllers
                     _context.GuideApplication.Add(guideApplication);
                     await _context.SaveChangesAsync();
 
-                    TempData["SuccessMessage"] = "Registration successful! Your guide application has been submitted and is pending review.";
+                    TempData["SuccessMessage"] = "Registration successful! Your guide application has been submitted and is pending review. Please check your email to verify your account.";
                     _logger.LogInformation("Guide application created successfully for: {Username}", model.Username);
                 }
                 else
                 {
-                    TempData["SuccessMessage"] = "Registration successful! You can now log in.";
+                    TempData["SuccessMessage"] = "Registration successful! Please check your email to verify your account.";
                     _logger.LogInformation("Standard registration completed for: {Username}", model.Username);
                 }
 
-                return RedirectToAction("Login");
+                // Send verification email
+                try
+                {
+                    await SendVerificationEmail(client);
+                    _logger.LogInformation("Verification email sent to {Email} for new registration", client.Email);
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't prevent registration completion
+                    _logger.LogError(ex, "Failed to send verification email to {Email}", client.Email);
+                }
+
+                return RedirectToAction("RegisterConfirmation", new { email = client.Email });
             }
             catch (Exception ex)
             {
@@ -379,7 +432,6 @@ namespace Athrna.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // Rest of existing methods...
         private bool IsValidUsername(string username)
         {
             if (string.IsNullOrEmpty(username))
@@ -394,6 +446,7 @@ namespace Athrna.Controllers
             return regex.IsMatch(username);
         }
 
+
         // GET: /Account/ForgotPassword
         public IActionResult ForgotPassword()
         {
@@ -402,54 +455,109 @@ namespace Athrna.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ForgotPassword(PasswordResetViewModel model)
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
             if (!ModelState.IsValid)
             {
+                // Log validation errors
+                var errors = string.Join(", ", ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage));
+                _logger.LogWarning("Validation errors: {Errors}", errors);
                 return View(model);
             }
+
+            // Always show success message regardless of whether the email exists
+            // This is a security measure to prevent user enumeration
+            TempData["InfoMessage"] = "If your email is registered, you will receive a password reset link shortly.";
+            _logger.LogInformation("Setting TempData InfoMessage about password reset");
 
             var client = await _context.Client.FirstOrDefaultAsync(c => c.Email == model.Email);
             if (client == null)
             {
-                // Don't reveal that the user does not exist
-                // Instead, show a success message as if the reset email was sent
-                TempData["SuccessMessage"] = "If your email is registered, you will receive a password reset link shortly.";
-                return RedirectToAction("Login");
+                _logger.LogWarning("Password reset requested for non-existent email: {Email}", model.Email);
+                return RedirectToAction("ForgotPasswordConfirmation");
             }
 
-            // Generate a reset code (in a real app, this would be a secure token)
-            string resetCode = Guid.NewGuid().ToString();
+            _logger.LogInformation("Found client with ID {ClientId} for email {Email}", client.Id, model.Email);
 
-            // Store the reset information in TempData (in a real app, you'd store this in the database with an expiration)
-            TempData["ResetCode"] = resetCode;
-            TempData["ResetEmail"] = model.Email;
+            try
+            {
+                // Generate reset token
+                _logger.LogInformation("Generating reset token for {Email}", model.Email);
+                string token = _tokenService.GenerateToken(model.Email);
 
-            // In a real application, you would:
-            // 1. Store this code in the database with an expiration time
-            // 2. Send an email with a link containing this code
+                // Create reset URL
+                var resetUrl = Url.Action("ResetPassword", "Account",
+                    new { email = model.Email, token = token },
+                    protocol: HttpContext.Request.Scheme);
+                _logger.LogInformation("Generated reset URL: {ResetUrl}", resetUrl);
 
-            // For this demo, we'll show a success message and redirect to the reset page
-            TempData["SuccessMessage"] = "Password reset instructions have been sent to your email.";
+                // Read email template
+                string templatePath = Path.Combine(_hostEnvironment.ContentRootPath, "EmailTemplates", "PasswordReset.html");
+                _logger.LogInformation("Looking for template at: {TemplatePath}", templatePath);
 
-            // Instead of redirecting to the login page, in a real app you would send an email
-            // For demo purposes, we'll redirect directly to the reset page
-            return RedirectToAction("ResetPassword", new { email = model.Email, code = resetCode });
+                string emailTemplate;
+
+                if (System.IO.File.Exists(templatePath))
+                {
+                    _logger.LogInformation("Email template found, reading content");
+                    emailTemplate = await System.IO.File.ReadAllTextAsync(templatePath);
+                }
+                else
+                {
+                    _logger.LogWarning("Email template not found at {TemplatePath}, using fallback template", templatePath);
+                    // Fallback to a simple email if template doesn't exist
+                    emailTemplate = GetPasswordResetEmailTemplate();
+                }
+
+                // Replace placeholder with actual reset link
+                _logger.LogInformation("Replacing placeholders in email template");
+                string emailBody = emailTemplate.Replace("{ResetLink}", resetUrl);
+
+                // Send email
+                _logger.LogInformation("Attempting to send email to {Email}", model.Email);
+                bool emailSent = await _emailService.SendEmailAsync(
+                    model.Email,
+                    "Athrna - Password Reset Request",
+                    emailBody);
+
+                if (!emailSent)
+                {
+                    _logger.LogError("Failed to send password reset email to {Email}", model.Email);
+                    ModelState.AddModelError("", "Failed to send password reset email. Please try again later.");
+                    return View(model);
+                }
+
+                _logger.LogInformation("Password reset link sent successfully to {Email}", model.Email);
+                return RedirectToAction("ForgotPasswordConfirmation");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing password reset for {Email}: {ErrorMessage}", model.Email, ex.Message);
+                ModelState.AddModelError("", "An error occurred. Please try again later.");
+                return View(model);
+            }
+        }
+
+        // GET: /Account/ForgotPasswordConfirmation
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
         }
 
         // GET: /Account/ResetPassword
-        public IActionResult ResetPassword(string email, string code)
+        public IActionResult ResetPassword(string email, string token)
         {
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(code))
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
             {
-                TempData["ErrorMessage"] = "Invalid password reset link.";
-                return RedirectToAction("Login");
+                return RedirectToAction("Error", "Home");
             }
 
             var model = new PasswordResetViewModel
             {
                 Email = email,
-                ResetCode = code
+                Token = token
             };
 
             return View(model);
@@ -464,29 +572,220 @@ namespace Athrna.Controllers
                 return View(model);
             }
 
-            // Verify reset code (in a real app, you'd verify against a stored token)
-            string savedCode = TempData["ResetCode"]?.ToString();
-            string savedEmail = TempData["ResetEmail"]?.ToString();
+            // Validate token
+            var (isValid, email) = _tokenService.ValidateToken(model.Token);
 
-            if (model.ResetCode != savedCode || model.Email != savedEmail)
+            if (!isValid || email != model.Email)
             {
-                ModelState.AddModelError("", "Invalid or expired password reset link.");
+                _logger.LogWarning("Invalid or expired password reset token for {Email}", model.Email);
+                ModelState.AddModelError("", "Invalid or expired password reset link. Please request a new one.");
                 return View(model);
             }
 
             var client = await _context.Client.FirstOrDefaultAsync(c => c.Email == model.Email);
             if (client == null)
             {
+                _logger.LogWarning("Password reset attempted for non-existent email: {Email}", model.Email);
                 ModelState.AddModelError("", "Invalid email address.");
                 return View(model);
             }
 
+            // Validate password strength
+            if (!IsStrongPassword(model.NewPassword))
+            {
+                ModelState.AddModelError("NewPassword", "Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character");
+                return View(model);
+            }
+
             // Update password
-            client.EncryptedPassword = model.NewPassword; // In a real app, hash this!
+            client.EncryptedPassword = model.NewPassword; // In a real app, this should be hashed!
             _context.Update(client);
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Password successfully reset for {Email}", model.Email);
             TempData["SuccessMessage"] = "Your password has been reset successfully. You can now log in with your new password.";
+            return RedirectToAction("Login");
+        }
+
+        // Utility methods
+        private string GetPasswordResetEmailTemplate()
+        {
+            return @"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <title>Password Reset Request</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 20px; }
+        .button { display: inline-block; background-color: #1a3b29; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h2>Password Reset Request</h2>
+        <p>Hello,</p>
+        <p>We received a request to reset your password for your Athrna account. To reset your password, please click the link below:</p>
+        <p><a href='{ResetLink}' class='button'>Reset Your Password</a></p>
+        <p>If the button above doesn't work, copy and paste this URL into your browser:</p>
+        <p>{ResetLink}</p>
+        <p>This link will expire in 24 hours. If you did not request a password reset, please ignore this email.</p>
+        <p>Thank you,<br>The Athrna Team</p>
+    </div>
+</body>
+</html>";
+        }
+        private async Task SendVerificationEmail(Client client)
+        {
+            try
+            {
+                // Generate verification token
+                string token = _tokenService.GenerateToken(client.Email);
+
+                // Create verification URL
+                var verificationUrl = Url.Action("VerifyEmail", "Account",
+                    new { email = client.Email, token = token },
+                    protocol: HttpContext.Request.Scheme);
+
+                // Read email template
+                string templatePath = Path.Combine(_hostEnvironment.ContentRootPath, "EmailTemplates", "EmailVerification.html");
+                string emailTemplate;
+
+                if (System.IO.File.Exists(templatePath))
+                {
+                    emailTemplate = await System.IO.File.ReadAllTextAsync(templatePath);
+                }
+                else
+                {
+                    // Fallback to a generated template
+                    emailTemplate = EmailVerificationHelper.GenerateVerificationEmailTemplate("{VerificationLink}", "{Username}");
+                }
+
+                // Replace placeholders with actual values
+                emailTemplate = emailTemplate
+                    .Replace("{VerificationLink}", verificationUrl)
+                    .Replace("{Username}", client.Username);
+
+                // Send email
+                bool emailSent = await _emailService.SendEmailAsync(
+                    client.Email,
+                    "Athrna - Verify Your Email Address",
+                    emailTemplate);
+
+                if (!emailSent)
+                {
+                    _logger.LogError("Failed to send verification email to {Email}", client.Email);
+                    throw new Exception("Failed to send verification email");
+                }
+
+                _logger.LogInformation("Verification email sent to {Email}", client.Email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending verification email to {Email}", client.Email);
+                throw; // Re-throw to let caller handle it
+            }
+        }
+        // GET: /Account/VerifyEmail
+        public async Task<IActionResult> VerifyEmail(string email, string token)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+            {
+                _logger.LogWarning("Empty email or token in VerifyEmail request");
+                return RedirectToAction("Error", "Home", new { message = "Invalid verification link." });
+            }
+
+            // Validate token
+            var (isValid, tokenEmail) = _tokenService.ValidateToken(token);
+
+            if (!isValid || tokenEmail != email)
+            {
+                _logger.LogWarning("Invalid or expired email verification token for {Email}", email);
+                ViewBag.ErrorMessage = "Invalid or expired verification link. Please request a new one.";
+                return View("VerificationFailed");
+            }
+
+            var client = await _context.Client.FirstOrDefaultAsync(c => c.Email == email);
+            if (client == null)
+            {
+                _logger.LogWarning("Email verification attempted for non-existent email: {Email}", email);
+                ViewBag.ErrorMessage = "Account not found. Please register again.";
+                return View("VerificationFailed");
+            }
+
+            // Check if already verified
+            if (client.IsEmailVerified)
+            {
+                _logger.LogInformation("Email already verified for {Email}", email);
+                ViewBag.Message = "Your email has already been verified. You can log in to your account.";
+                return View("EmailVerificationSuccess");
+            }
+
+            // Mark user as verified in the database
+            client.IsEmailVerified = true;
+            _context.Update(client);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Email successfully verified for {Email}", email);
+            return View("EmailVerificationSuccess");
+        }
+
+        // GET: /Account/RegisterConfirmation
+        public IActionResult RegisterConfirmation(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View(email);
+        }
+        // GET: /Account/ResendVerificationEmail
+        [HttpGet]
+        [ActionName("ResendVerificationEmail")]
+        public IActionResult ResendVerificationEmail_Get(string email = null)
+        {
+            ViewBag.Email = email;
+            return View("ResendVerificationEmail");
+        }
+
+        // POST: /Account/ResendVerificationEmail
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("ResendVerificationEmail")]
+        public async Task<IActionResult> ResendVerificationEmail_Post(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                ModelState.AddModelError("", "Email is required");
+                return View("ResendVerificationEmail");
+            }
+
+            TempData["InfoMessage"] = "If your email is registered, you will receive a verification link shortly.";
+
+            var client = await _context.Client.FirstOrDefaultAsync(c => c.Email == email);
+            if (client == null)
+            {
+                _logger.LogWarning("Verification email requested for non-existent email: {Email}", email);
+                return RedirectToAction("Login");
+            }
+
+            if (client.IsEmailVerified)
+            {
+                TempData["InfoMessage"] = "Your email is already verified. You can login.";
+                return RedirectToAction("Login");
+            }
+
+            try
+            {
+                await SendVerificationEmail(client);
+                _logger.LogInformation("Verification email resent to {Email}", client.Email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to resend verification email to {Email}", client.Email);
+            }
+
             return RedirectToAction("Login");
         }
     }
