@@ -86,6 +86,15 @@ namespace Athrna.Controllers
                 .Take(3)  // Limit to 3 nearby sites
                 .ToListAsync();
 
+            // Get available guides for this city
+            var guides = await _context.Guide
+                .Where(g => g.CityId == site.CityId)
+                .Include(g => g.City)  // Include City information for guides
+                .ToListAsync();
+
+            // Pass guides to the view
+            ViewBag.Guides = guides;
+
             // Pass nearby sites to the view
             ViewBag.NearbySites = nearbySites;
 
