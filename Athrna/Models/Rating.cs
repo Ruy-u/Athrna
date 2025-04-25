@@ -20,8 +20,7 @@ namespace Athrna.Models
         [Range(1, 5)]
         public int Value { get; set; }
 
-        public string Review { get; set; }
-
+        public string? Review { get; set; }
         // Navigation properties
         public virtual Client Client { get; set; }
         public virtual Site Site { get; set; }

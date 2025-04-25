@@ -23,7 +23,9 @@ namespace Athrna.Controllers
         // GET: Admin
         public async Task<IActionResult> Index()
         {
-            var statistics = new AdminDashboardViewModel
+            try
+            {
+                var statistics = new AdminDashboardViewModel
             {
                 TotalSites = await _context.Site.CountAsync(),
                 TotalUsers = await _context.Client.CountAsync(),
@@ -39,6 +41,13 @@ namespace Athrna.Controllers
             };
 
             return View(statistics);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading dashboard.");
+                TempData["ErrorMessage"] = "An error occurred loading the dashboard.";
+                return RedirectToAction("Error", "Home");
+            }
         }
 
         // GET: Admin/Sites
