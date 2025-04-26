@@ -1,0 +1,30 @@
+﻿@{
+    ViewData["Title"] = "Email Verification Successful";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Email Verification Successful</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                    </div>
+
+                    <h5 class="text-center mb-3">Your Email Has Been Verified!</h5>
+
+                    <p class="text-center">
+                        @(ViewBag.Message ?? "Your email has been successfully verified! You can now log in to your account and enjoy all the features of Athrna.")
+                    </p>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <a asp-action="Login" class="btn btn-primary">Log in to Your Account</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

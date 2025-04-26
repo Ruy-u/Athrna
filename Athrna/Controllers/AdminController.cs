@@ -105,7 +105,6 @@ namespace Athrna.Controllers
             return View(site);
         }
 
-        // POST: Admin/EditSite/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditSite(int id, Site site, IFormFile imageFile)
@@ -198,7 +197,7 @@ namespace Athrna.Controllers
 
                         if (culturalInfo != null)
                         {
-                            culturalInfo.Summary = site.CulturalInfo.Summary;
+                            culturalInfo.Summary = site.CulturalInfo.Summary ?? string.Empty;
                             culturalInfo.EstablishedDate = site.CulturalInfo.EstablishedDate;
                             _context.Update(culturalInfo);
                             await _context.SaveChangesAsync();
@@ -209,7 +208,7 @@ namespace Athrna.Controllers
                             var newCulturalInfo = new CulturalInfo
                             {
                                 SiteId = site.Id,
-                                Summary = site.CulturalInfo.Summary,
+                                Summary = site.CulturalInfo.Summary ?? string.Empty,
                                 EstablishedDate = site.CulturalInfo.EstablishedDate
                             };
                             _context.CulturalInfo.Add(newCulturalInfo);
@@ -231,6 +230,11 @@ namespace Athrna.Controllers
                         throw;
                     }
                 }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error updating site with ID {SiteId}", id);
+                    ModelState.AddModelError("", "An error occurred while updating the site: " + ex.Message);
+                }
             }
 
             ViewBag.Cities = await _context.City.ToListAsync();
@@ -244,92 +248,130 @@ namespace Athrna.Controllers
             return View();
         }
 
-        // POST: Admin/CreateSite
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateSite(Site site, IFormFile imageFile)
         {
-            if (ModelState.IsValid)
+            try
             {
-                // Handle image upload
-                if (imageFile != null && imageFile.Length > 0)
-                {
-                    // Define allowed file extensions
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                    var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+                _logger.LogInformation("Creating new site: {Name}", site.Name);
 
-                    if (!allowedExtensions.Contains(extension))
+                if (ModelState.IsValid)
+                {
+                    // Ensure required properties are valid
+                    if (string.IsNullOrEmpty(site.Name))
                     {
-                        ModelState.AddModelError("imageFile", "Only image files (jpg, jpeg, png, gif) are allowed.");
+                        ModelState.AddModelError("Name", "Site name is required.");
                         ViewBag.Cities = await _context.City.ToListAsync();
                         return View(site);
                     }
 
-                    // Check file size (limit to 5MB)
-                    if (imageFile.Length > 5 * 1024 * 1024)
-                    {
-                        ModelState.AddModelError("imageFile", "The file size cannot exceed 5MB.");
-                        ViewBag.Cities = await _context.City.ToListAsync();
-                        return View(site);
-                    }
+                    // First add the site to the database without CulturalInfo
+                    var culturalInfoToAdd = site.CulturalInfo; // Store it temporarily
+                    site.CulturalInfo = null; // Detach it from the site object
 
-                    // Add site to database first to get ID
+                    // Add the site
                     _context.Site.Add(site);
                     await _context.SaveChangesAsync();
 
-                    // Generate a unique filename using the site ID
-                    string uniqueFileName = $"{site.Id}_{Guid.NewGuid().ToString("N")}{extension}";
-                    string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "sites");
+                    _logger.LogInformation("Site added to database with ID: {Id}", site.Id);
 
-                    // Create directory if it doesn't exist
-                    if (!Directory.Exists(uploadsFolder))
+                    // Handle image upload
+                    if (imageFile != null && imageFile.Length > 0)
                     {
-                        Directory.CreateDirectory(uploadsFolder);
+                        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+
+                        if (!allowedExtensions.Contains(extension))
+                        {
+                            ModelState.AddModelError("imageFile", "Only image files (jpg, jpeg, png, gif) are allowed.");
+                            ViewBag.Cities = await _context.City.ToListAsync();
+                            return View(site);
+                        }
+
+                        if (imageFile.Length > 5 * 1024 * 1024)
+                        {
+                            ModelState.AddModelError("imageFile", "The file size cannot exceed 5MB.");
+                            ViewBag.Cities = await _context.City.ToListAsync();
+                            return View(site);
+                        }
+
+                        try
+                        {
+                            // Generate a unique filename
+                            string uniqueFileName = $"{site.Id}_{Guid.NewGuid().ToString("N")}{extension}";
+                            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "sites");
+
+                            // Create directory if it doesn't exist
+                            if (!Directory.Exists(uploadsFolder))
+                            {
+                                Directory.CreateDirectory(uploadsFolder);
+                            }
+
+                            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                            // Save the file
+                            using (var fileStream = new FileStream(filePath, FileMode.Create))
+                            {
+                                await imageFile.CopyToAsync(fileStream);
+                            }
+
+                            // Update the image path in the site model
+                            site.ImagePath = "/uploads/sites/" + uniqueFileName;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error saving image file for site ID: {Id}", site.Id);
+                            site.ImagePath = "/api/placeholder/400/300"; // Use placeholder if image upload fails
+                        }
+                    }
+                    else
+                    {
+                        // Set default placeholder image
+                        site.ImagePath = "/api/placeholder/400/300";
                     }
 
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    // Update the site with the image path
+                    _context.Update(site);
+                    await _context.SaveChangesAsync();
 
-                    // Save the file
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    _logger.LogInformation("Site image path updated: {Path}", site.ImagePath);
+
+                    // Now add the cultural info
+                    if (culturalInfoToAdd != null)
                     {
-                        await imageFile.CopyToAsync(fileStream);
+                        try
+                        {
+                            var culturalInfo = new CulturalInfo
+                            {
+                                SiteId = site.Id,
+                                Summary = culturalInfoToAdd.Summary ?? string.Empty,
+                                EstablishedDate = culturalInfoToAdd.EstablishedDate
+                            };
+
+                            _context.CulturalInfo.Add(culturalInfo);
+                            await _context.SaveChangesAsync();
+
+                            _logger.LogInformation("Cultural info added for site ID: {Id}", site.Id);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error adding cultural info for site ID: {Id}", site.Id);
+                            // Site is already created, so don't block the process
+                        }
                     }
 
-                    // Update the image path in the site model
-                    site.ImagePath = "/uploads/sites/" + uniqueFileName;
-                    _context.Update(site);
-                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "New site created successfully!";
+                    return RedirectToAction(nameof(Sites));
                 }
-                else
-                {
-                    // If no image is uploaded, just add the site
-                    _context.Site.Add(site);
-                    await _context.SaveChangesAsync();
-
-                    // Set a default placeholder image
-                    site.ImagePath = "/api/placeholder/400/300";
-                    _context.Update(site);
-                    await _context.SaveChangesAsync();
-                }
-
-                // Create cultural info for the site
-                if (site.CulturalInfo != null)
-                {
-                    var culturalInfo = new CulturalInfo
-                    {
-                        SiteId = site.Id,
-                        Summary = site.CulturalInfo.Summary,
-                        EstablishedDate = site.CulturalInfo.EstablishedDate
-                    };
-
-                    _context.CulturalInfo.Add(culturalInfo);
-                    await _context.SaveChangesAsync();
-                }
-
-                TempData["SuccessMessage"] = "New site created successfully!";
-                return RedirectToAction(nameof(Sites));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating new site: {Error}", ex.Message);
+                ModelState.AddModelError("", $"An error occurred while creating the site: {ex.Message}");
             }
 
+            // If we get here, something went wrong
             ViewBag.Cities = await _context.City.ToListAsync();
             return View(site);
         }
@@ -342,19 +384,28 @@ namespace Athrna.Controllers
                 return NotFound();
             }
 
-            var site = await _context.Site
-                .Include(s => s.City)
-                .Include(s => s.Bookmarks)
-                .Include(s => s.Ratings)
-                .Include(s => s.CulturalInfo)
-                .FirstOrDefaultAsync(s => s.Id == id);
-
-            if (site == null)
+            try
             {
-                return NotFound();
-            }
+                var site = await _context.Site
+                    .Include(s => s.City)
+                    .Include(s => s.Bookmarks)
+                    .Include(s => s.Ratings)
+                    .Include(s => s.CulturalInfo)
+                    .FirstOrDefaultAsync(s => s.Id == id);
 
-            return View(site);
+                if (site == null)
+                {
+                    return NotFound();
+                }
+
+                return View(site);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving site with ID {Id} for deletion", id);
+                TempData["ErrorMessage"] = "An error occurred while retrieving the site.";
+                return RedirectToAction(nameof(Sites));
+            }
         }
 
         // POST: Admin/DeleteSite/5
@@ -362,58 +413,93 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteSiteConfirmed(int id)
         {
-            // First delete related cultural info
-            var culturalInfo = await _context.CulturalInfo
-                .FirstOrDefaultAsync(c => c.SiteId == id);
-
-            if (culturalInfo != null)
+            try
             {
-                _context.CulturalInfo.Remove(culturalInfo);
-                await _context.SaveChangesAsync();
+                // First delete related cultural info
+                var culturalInfo = await _context.CulturalInfo
+                    .FirstOrDefaultAsync(c => c.SiteId == id);
+
+                if (culturalInfo != null)
+                {
+                    _context.CulturalInfo.Remove(culturalInfo);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Then delete related translations
+                var translations = await _context.SiteTranslation
+                    .Where(t => t.SiteId == id)
+                    .ToListAsync();
+
+                if (translations.Any())
+                {
+                    _context.SiteTranslation.RemoveRange(translations);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Delete related bookmarks
+                var bookmarks = await _context.Bookmark
+                    .Where(b => b.SiteId == id)
+                    .ToListAsync();
+
+                if (bookmarks.Any())
+                {
+                    _context.Bookmark.RemoveRange(bookmarks);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Delete related ratings
+                var ratings = await _context.Rating
+                    .Where(r => r.SiteId == id)
+                    .ToListAsync();
+
+                if (ratings.Any())
+                {
+                    _context.Rating.RemoveRange(ratings);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Finally delete the site
+                var site = await _context.Site.FindAsync(id);
+                if (site != null)
+                {
+                    // Delete the site image file if it exists and is not a placeholder
+                    if (!string.IsNullOrEmpty(site.ImagePath) &&
+                        site.ImagePath.StartsWith("/uploads/sites/") &&
+                        !site.ImagePath.Contains("placeholder"))
+                    {
+                        var imagePath = Path.Combine(
+                            Directory.GetCurrentDirectory(),
+                            "wwwroot",
+                            site.ImagePath.TrimStart('/'));
+
+                        if (System.IO.File.Exists(imagePath))
+                        {
+                            try
+                            {
+                                System.IO.File.Delete(imagePath);
+                            }
+                            catch (Exception ex)
+                            {
+                                // Log error but continue with deletion
+                                _logger.LogError(ex, "Error deleting site image file: {Path}", imagePath);
+                            }
+                        }
+                    }
+
+                    _context.Site.Remove(site);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "Site deleted successfully!";
+                }
+
+                return RedirectToAction(nameof(Sites));
             }
-
-            // Then delete related translations
-            var translations = await _context.SiteTranslation
-                .Where(t => t.SiteId == id)
-                .ToListAsync();
-
-            if (translations.Any())
+            catch (Exception ex)
             {
-                _context.SiteTranslation.RemoveRange(translations);
-                await _context.SaveChangesAsync();
+                _logger.LogError(ex, "Error deleting site with ID {Id}", id);
+                TempData["ErrorMessage"] = "An error occurred while deleting the site. Please try again.";
+                return RedirectToAction(nameof(Sites));
             }
-
-            // Delete related bookmarks
-            var bookmarks = await _context.Bookmark
-                .Where(b => b.SiteId == id)
-                .ToListAsync();
-
-            if (bookmarks.Any())
-            {
-                _context.Bookmark.RemoveRange(bookmarks);
-                await _context.SaveChangesAsync();
-            }
-
-            // Delete related ratings
-            var ratings = await _context.Rating
-                .Where(r => r.SiteId == id)
-                .ToListAsync();
-
-            if (ratings.Any())
-            {
-                _context.Rating.RemoveRange(ratings);
-                await _context.SaveChangesAsync();
-            }
-
-            // Finally delete the site
-            var site = await _context.Site.FindAsync(id);
-            if (site != null)
-            {
-                _context.Site.Remove(site);
-                await _context.SaveChangesAsync();
-            }
-
-            return RedirectToAction(nameof(Sites));
         }
 
         // GET: Admin/EditCity/5

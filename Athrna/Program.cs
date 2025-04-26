@@ -32,10 +32,14 @@ builder.Services.AddDataProtection();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<PasswordResetTokenService>();
 
-// Register database seeder
-builder.Services.AddScoped<DatabaseSeeder>();
-
 var app = builder.Build();
+
+// Ensure database exists with correct schema
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.EnsureCreated();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -66,12 +70,5 @@ app.MapControllerRoute(
 // Ensure email templates exist
 await EmailTemplateSetupHelper.EnsureEmailTemplateExists(app.Environment);
 await EmailVerificationHelper.EnsureEmailVerificationTemplateExists(app.Environment);
-
-// Seed the database
-using (var scope = app.Services.CreateScope())
-{
-    var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
-    await seeder.SeedDatabaseAsync();
-}
 
 app.Run();

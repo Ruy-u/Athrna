@@ -1,0 +1,95 @@
+﻿@model Athrna.Models.Site
+
+@{
+    ViewData["Title"] = "Delete Site";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <h6 class="mb-0">Confirm Delete</h6>
+                        <a asp-action="Sites" class="btn btn-outline-secondary btn-sm ms-auto">
+                            <i class="bi bi-arrow-left"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5>Are you sure you want to delete this site?</h5>
+                        <p class="mb-0">This action cannot be undone. All related data (ratings, bookmarks, cultural information) will also be deleted.</p>
+                    </div>
+
+                    <div class="site-details mb-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                                {
+                                    <img src="@Model.ImagePath" alt="@Model.Name" class="img-thumbnail mb-3" style="max-width: 100%;">
+                                }
+                                else
+                                {
+                                    <img src="/api/placeholder/400/300" alt="@Model.Name" class="img-thumbnail mb-3" style="max-width: 100%;">
+                                }
+                            </div>
+                            <div class="col-md-8">
+                                <h4>@Model.Name</h4>
+                                <p><strong>City:</strong> @Model.City.Name</p>
+                                <p><strong>Type:</strong> @Model.SiteType</p>
+                                <p><strong>Location:</strong> @Model.Location</p>
+
+                                @if (Model.CulturalInfo != null)
+                                {
+                                    <p><strong>Established:</strong> @Model.CulturalInfo.EstablishedDate</p>
+                                }
+
+                                <p><strong>Description:</strong> @Model.Description</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="related-data mb-4">
+                        <h5>Related Data</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Bookmarks</h6>
+                                        <p class="card-text">@(Model.Bookmarks?.Count() ?? 0) bookmarks will be deleted</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Ratings</h6>
+                                        <p class="card-text">@(Model.Ratings?.Count() ?? 0) ratings will be deleted</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Cultural Information</h6>
+                                        <p class="card-text">@(Model.CulturalInfo != null ? "Will be deleted" : "None")</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form asp-action="DeleteSite" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <div class="form-group d-flex justify-content-between">
+                            <a asp-action="Sites" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-danger">Delete Site</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

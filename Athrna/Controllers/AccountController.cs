@@ -10,7 +10,6 @@ using Athrna.Services;
 
 namespace Athrna.Controllers
 {
-    // Inherit from the partial class that contains password reset methods
     public class AccountController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -74,11 +73,11 @@ namespace Athrna.Controllers
 
                 // Create claims for the client
                 var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, client.Username),
-            new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
-            new Claim(ClaimTypes.Email, client.Email)
-        };
+                {
+                    new Claim(ClaimTypes.Name, client.Username),
+                    new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
+                    new Claim(ClaimTypes.Email, client.Email)
+                };
 
                 // Check if client is an administrator
                 var isAdmin = await _context.Administrator.AnyAsync(a => a.ClientId == client.Id);
@@ -157,11 +156,11 @@ namespace Athrna.Controllers
 
                 // Create claims for the client
                 var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, client.Username),
-            new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
-            new Claim(ClaimTypes.Email, client.Email)
-        };
+                {
+                    new Claim(ClaimTypes.Name, client.Username),
+                    new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
+                    new Claim(ClaimTypes.Email, client.Email)
+                };
 
                 // Check if client is an administrator
                 var isAdmin = await _context.Administrator.AnyAsync(a => a.ClientId == client.Id);
@@ -205,7 +204,7 @@ namespace Athrna.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model,
-    string GuideFullName, string NationalId, int? GuideCityId, string LicenseNumber, bool RegisterAsGuide = false)
+            string GuideFullName, string NationalId, int? GuideCityId, string LicenseNumber, bool RegisterAsGuide = false)
         {
             try
             {
@@ -446,7 +445,6 @@ namespace Athrna.Controllers
             return regex.IsMatch(username);
         }
 
-
         // GET: /Account/ForgotPassword
         public IActionResult ForgotPassword()
         {
@@ -572,6 +570,9 @@ namespace Athrna.Controllers
                 return View(model);
             }
 
+            // Log the reset attempt
+            _logger.LogInformation("Password reset attempt for email: {Email}", model.Email);
+
             // Validate token
             var (isValid, email) = _tokenService.ValidateToken(model.Token);
 
@@ -597,14 +598,23 @@ namespace Athrna.Controllers
                 return View(model);
             }
 
-            // Update password
-            client.EncryptedPassword = model.NewPassword; // In a real app, this should be hashed!
-            _context.Update(client);
-            await _context.SaveChangesAsync();
+            try
+            {
+                // Update password
+                client.EncryptedPassword = model.NewPassword; // In a real app, this would be hashed!
+                _context.Update(client);
+                await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Password successfully reset for {Email}", model.Email);
-            TempData["SuccessMessage"] = "Your password has been reset successfully. You can now log in with your new password.";
-            return RedirectToAction("Login");
+                _logger.LogInformation("Password successfully reset for {Email}", model.Email);
+                TempData["SuccessMessage"] = "Your password has been reset successfully. You can now log in with your new password.";
+                return RedirectToAction("Login");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password for {Email}", model.Email);
+                ModelState.AddModelError("", "An error occurred while resetting your password. Please try again later.");
+                return View(model);
+            }
         }
 
         // Utility methods
@@ -635,6 +645,7 @@ namespace Athrna.Controllers
 </body>
 </html>";
         }
+
         private async Task SendVerificationEmail(Client client)
         {
             try
@@ -686,6 +697,7 @@ namespace Athrna.Controllers
                 throw; // Re-throw to let caller handle it
             }
         }
+
         // GET: /Account/VerifyEmail
         public async Task<IActionResult> VerifyEmail(string email, string token)
         {
@@ -740,6 +752,7 @@ namespace Athrna.Controllers
 
             return View(email);
         }
+
         // GET: /Account/ResendVerificationEmail
         [HttpGet]
         [ActionName("ResendVerificationEmail")]
@@ -790,3 +803,4 @@ namespace Athrna.Controllers
         }
     }
 }
+
