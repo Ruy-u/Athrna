@@ -250,55 +250,88 @@ namespace Athrna.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateSite(Site site, IFormFile imageFile)
+        public async Task<IActionResult> CreateSite(
+            string Name,
+            int CityId,
+            string SiteType,
+            string Location,
+            string Description,
+            string CulturalSummary,
+            int? EstablishedDate,
+            IFormFile imageFile)
         {
+            // Log incoming data
+            _logger.LogInformation("Creating site with Name: {Name}, CityId: {CityId}, SiteType: {SiteType}",
+                Name, CityId, SiteType);
+            _logger.LogInformation("Cultural info: Summary length: {SummaryLength}, EstablishedDate: {EstablishedDate}",
+                CulturalSummary?.Length ?? 0, EstablishedDate);
+
             try
             {
-                _logger.LogInformation("Creating new site: {Name}", site.Name);
-
-                if (ModelState.IsValid)
+                // Create and validate Site object manually
+                if (string.IsNullOrEmpty(Name) || CityId <= 0 || string.IsNullOrEmpty(Location) || string.IsNullOrEmpty(Description))
                 {
-                    // Ensure required properties are valid
-                    if (string.IsNullOrEmpty(site.Name))
-                    {
+                    _logger.LogWarning("Missing required fields");
+
+                    if (string.IsNullOrEmpty(Name))
                         ModelState.AddModelError("Name", "Site name is required.");
-                        ViewBag.Cities = await _context.City.ToListAsync();
-                        return View(site);
-                    }
 
-                    // First add the site to the database without CulturalInfo
-                    var culturalInfoToAdd = site.CulturalInfo; // Store it temporarily
-                    site.CulturalInfo = null; // Detach it from the site object
+                    if (CityId <= 0)
+                        ModelState.AddModelError("CityId", "Please select a valid city.");
 
-                    // Add the site
-                    _context.Site.Add(site);
-                    await _context.SaveChangesAsync();
+                    if (string.IsNullOrEmpty(Location))
+                        ModelState.AddModelError("Location", "Location is required.");
 
-                    _logger.LogInformation("Site added to database with ID: {Id}", site.Id);
+                    if (string.IsNullOrEmpty(Description))
+                        ModelState.AddModelError("Description", "Description is required.");
 
-                    // Handle image upload
-                    if (imageFile != null && imageFile.Length > 0)
+                    ViewBag.Cities = await _context.City.ToListAsync();
+
+                    // Create a model to return to the view
+                    var siteModel = new Site
                     {
-                        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
-
-                        if (!allowedExtensions.Contains(extension))
+                        Name = Name,
+                        CityId = CityId,
+                        SiteType = SiteType,
+                        Location = Location,
+                        Description = Description,
+                        CulturalInfo = new CulturalInfo
                         {
-                            ModelState.AddModelError("imageFile", "Only image files (jpg, jpeg, png, gif) are allowed.");
-                            ViewBag.Cities = await _context.City.ToListAsync();
-                            return View(site);
+                            Summary = CulturalSummary,
+                            EstablishedDate = EstablishedDate ?? 0
                         }
+                    };
 
-                        if (imageFile.Length > 5 * 1024 * 1024)
-                        {
-                            ModelState.AddModelError("imageFile", "The file size cannot exceed 5MB.");
-                            ViewBag.Cities = await _context.City.ToListAsync();
-                            return View(site);
-                        }
+                    return View(siteModel);
+                }
 
+                // All validation passed - create the site directly
+                var site = new Site
+                {
+                    Name = Name,
+                    CityId = CityId,
+                    SiteType = SiteType ?? "",
+                    Location = Location,
+                    Description = Description,
+                    // Set default image placeholder
+                    ImagePath = "/api/placeholder/400/300"
+                };
+
+                // Create the site first without cultural info
+                _context.Site.Add(site);
+                var result = await _context.SaveChangesAsync();
+                _logger.LogInformation("Site created, ID: {Id}, Result: {Result}", site.Id, result);
+
+                // Handle image upload if provided
+                if (imageFile != null && imageFile.Length > 0)
+                {
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                    var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+
+                    if (allowedExtensions.Contains(extension) && imageFile.Length <= 5 * 1024 * 1024)
+                    {
                         try
                         {
-                            // Generate a unique filename
                             string uniqueFileName = $"{site.Id}_{Guid.NewGuid().ToString("N")}{extension}";
                             string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "sites");
 
@@ -318,62 +351,76 @@ namespace Athrna.Controllers
 
                             // Update the image path in the site model
                             site.ImagePath = "/uploads/sites/" + uniqueFileName;
+
+                            // Save the updated image path
+                            _context.Update(site);
+                            await _context.SaveChangesAsync();
+
+                            _logger.LogInformation("Image saved successfully: {Path}", site.ImagePath);
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "Error saving image file for site ID: {Id}", site.Id);
-                            site.ImagePath = "/api/placeholder/400/300"; // Use placeholder if image upload fails
+                            _logger.LogError(ex, "Error saving image file");
                         }
                     }
                     else
                     {
-                        // Set default placeholder image
-                        site.ImagePath = "/api/placeholder/400/300";
+                        _logger.LogWarning("Invalid image - extension: {Extension}, size: {Size}",
+                            extension, imageFile.Length);
                     }
-
-                    // Update the site with the image path
-                    _context.Update(site);
-                    await _context.SaveChangesAsync();
-
-                    _logger.LogInformation("Site image path updated: {Path}", site.ImagePath);
-
-                    // Now add the cultural info
-                    if (culturalInfoToAdd != null)
-                    {
-                        try
-                        {
-                            var culturalInfo = new CulturalInfo
-                            {
-                                SiteId = site.Id,
-                                Summary = culturalInfoToAdd.Summary ?? string.Empty,
-                                EstablishedDate = culturalInfoToAdd.EstablishedDate
-                            };
-
-                            _context.CulturalInfo.Add(culturalInfo);
-                            await _context.SaveChangesAsync();
-
-                            _logger.LogInformation("Cultural info added for site ID: {Id}", site.Id);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Error adding cultural info for site ID: {Id}", site.Id);
-                            // Site is already created, so don't block the process
-                        }
-                    }
-
-                    TempData["SuccessMessage"] = "New site created successfully!";
-                    return RedirectToAction(nameof(Sites));
                 }
+
+                // Add cultural info if provided
+                if (!string.IsNullOrEmpty(CulturalSummary) || EstablishedDate.HasValue)
+                {
+                    try
+                    {
+                        var culturalInfo = new CulturalInfo
+                        {
+                            SiteId = site.Id,
+                            Summary = CulturalSummary ?? "",
+                            EstablishedDate = EstablishedDate ?? 0
+                        };
+
+                        _context.CulturalInfo.Add(culturalInfo);
+                        result = await _context.SaveChangesAsync();
+
+                        _logger.LogInformation("Cultural info added, Result: {Result}", result);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error adding cultural info");
+                    }
+                }
+
+                // Success - redirect to sites list
+                TempData["SuccessMessage"] = "New site created successfully!";
+                return RedirectToAction(nameof(Sites));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating new site: {Error}", ex.Message);
-                ModelState.AddModelError("", $"An error occurred while creating the site: {ex.Message}");
-            }
+                _logger.LogError(ex, "Error creating site: {Error}", ex.Message);
+                ModelState.AddModelError("", $"An unexpected error occurred: {ex.Message}");
 
-            // If we get here, something went wrong
-            ViewBag.Cities = await _context.City.ToListAsync();
-            return View(site);
+                ViewBag.Cities = await _context.City.ToListAsync();
+
+                // Create a model to return to the view
+                var siteModel = new Site
+                {
+                    Name = Name,
+                    CityId = CityId,
+                    SiteType = SiteType,
+                    Location = Location,
+                    Description = Description,
+                    CulturalInfo = new CulturalInfo
+                    {
+                        Summary = CulturalSummary,
+                        EstablishedDate = EstablishedDate ?? 0
+                    }
+                };
+
+                return View(siteModel);
+            }
         }
 
         // GET: Admin/DeleteSite/5
@@ -501,7 +548,6 @@ namespace Athrna.Controllers
                 return RedirectToAction(nameof(Sites));
             }
         }
-
         // GET: Admin/EditCity/5
         public async Task<IActionResult> EditCity(int? id)
         {
@@ -526,36 +572,76 @@ namespace Athrna.Controllers
         // POST: Admin/EditCity/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditCity(int id, City city)
+        public async Task<IActionResult> EditCity(int id, string Name)
         {
-            if (id != city.Id)
+            if (string.IsNullOrEmpty(Name))
+            {
+                ModelState.AddModelError("Name", "City name is required");
+                var city = await _context.City.FindAsync(id);
+                return View(city);
+            }
+
+            if (id <= 0)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            try
             {
-                try
+                _logger.LogInformation("Updating city ID {Id} with name: {Name}", id, Name);
+
+                // Check if city exists
+                var city = await _context.City.FindAsync(id);
+                if (city == null)
                 {
-                    _context.Update(city);
-                    await _context.SaveChangesAsync();
+                    _logger.LogWarning("City not found with ID: {Id}", id);
+                    return NotFound();
                 }
-                catch (DbUpdateConcurrencyException)
+
+                // Check if new name conflicts with existing city (other than this one)
+                var existingCity = await _context.City.FirstOrDefaultAsync(c =>
+                    c.Id != id && c.Name.ToLower() == Name.ToLower());
+
+                if (existingCity != null)
                 {
-                    if (!CityExists(city.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    ModelState.AddModelError("Name", "A city with this name already exists");
+                    return View(city);
                 }
+
+                // Update city name
+                city.Name = Name;
+
+                _context.Update(city);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("City updated successfully");
+                TempData["SuccessMessage"] = "City updated successfully!";
+
                 return RedirectToAction(nameof(Cities));
             }
-            return View(city);
+            catch (DbUpdateConcurrencyException ex)
+            {
+                if (!CityExists(id))
+                {
+                    _logger.LogWarning("City not found with ID: {Id}", id);
+                    return NotFound();
+                }
+                else
+                {
+                    _logger.LogError(ex, "Concurrency error updating city: {Id}", id);
+                    ModelState.AddModelError("", "The city was modified by another user. Please try again.");
+                    var city = await _context.City.FindAsync(id);
+                    return View(city);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating city: {Error}", ex.Message);
+                ModelState.AddModelError("", $"An error occurred while updating the city: {ex.Message}");
+                var city = await _context.City.FindAsync(id);
+                return View(city);
+            }
         }
-
 
         // GET: Admin/GuideApplications
         public async Task<IActionResult> GuideApplications()
@@ -766,6 +852,8 @@ namespace Athrna.Controllers
             return _context.Guide.Any(e => e.Id == id);
         }
 
+        // CITY MANAGEMENT FUNCTIONS FOR ADMINCONTROLLER
+
         // GET: Admin/CreateCity
         public IActionResult CreateCity()
         {
@@ -775,15 +863,45 @@ namespace Athrna.Controllers
         // POST: Admin/CreateCity
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateCity(City city)
+        public async Task<IActionResult> CreateCity(string Name)
         {
-            if (ModelState.IsValid)
+            if (string.IsNullOrEmpty(Name))
             {
+                ModelState.AddModelError("Name", "City name is required");
+                return View();
+            }
+
+            try
+            {
+                _logger.LogInformation("Creating new city: {Name}", Name);
+
+                // Check if city with same name already exists
+                var existingCity = await _context.City.FirstOrDefaultAsync(c => c.Name.ToLower() == Name.ToLower());
+                if (existingCity != null)
+                {
+                    ModelState.AddModelError("Name", "A city with this name already exists");
+                    return View();
+                }
+
+                var city = new City
+                {
+                    Name = Name
+                };
+
                 _context.City.Add(city);
                 await _context.SaveChangesAsync();
+
+                _logger.LogInformation("City created successfully with ID: {Id}", city.Id);
+                TempData["SuccessMessage"] = "City created successfully!";
+
                 return RedirectToAction(nameof(Cities));
             }
-            return View(city);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating city: {Error}", ex.Message);
+                ModelState.AddModelError("", $"An error occurred while creating the city: {ex.Message}");
+                return View();
+            }
         }
 
         // GET: Admin/DeleteCity/5
@@ -794,23 +912,40 @@ namespace Athrna.Controllers
                 return NotFound();
             }
 
-            var city = await _context.City
-                .FirstOrDefaultAsync(c => c.Id == id);
-
-            if (city == null)
+            try
             {
-                return NotFound();
+                var city = await _context.City
+                    .FirstOrDefaultAsync(c => c.Id == id);
+
+                if (city == null)
+                {
+                    return NotFound();
+                }
+
+                // Check if there are sites associated with this city
+                var hasSites = await _context.Site.AnyAsync(s => s.CityId == id);
+                if (hasSites)
+                {
+                    TempData["ErrorMessage"] = "Cannot delete this city because there are sites associated with it. Delete the sites first.";
+                    return RedirectToAction(nameof(Cities));
+                }
+
+                // Check if there are guides associated with this city
+                var hasGuides = await _context.Guide.AnyAsync(g => g.CityId == id);
+                if (hasGuides)
+                {
+                    TempData["ErrorMessage"] = "Cannot delete this city because there are guides associated with it. Reassign the guides first.";
+                    return RedirectToAction(nameof(Cities));
+                }
+
+                return View(city);
             }
-
-            // Check if there are sites associated with this city
-            var hasSites = await _context.Site.AnyAsync(s => s.CityId == id);
-            if (hasSites)
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Cannot delete this city because there are sites associated with it. Delete the sites first.";
+                _logger.LogError(ex, "Error retrieving city for deletion: {Id}", id);
+                TempData["ErrorMessage"] = "An error occurred while retrieving the city.";
                 return RedirectToAction(nameof(Cities));
             }
-
-            return View(city);
         }
 
         // POST: Admin/DeleteCity/5
@@ -818,34 +953,50 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteCityConfirmed(int id)
         {
-            // Check again if there are sites associated with this city
-            var hasSites = await _context.Site.AnyAsync(s => s.CityId == id);
-            if (hasSites)
+            try
             {
-                TempData["ErrorMessage"] = "Cannot delete this city because there are sites associated with it. Delete the sites first.";
-                return RedirectToAction(nameof(Cities));
-            }
+                _logger.LogInformation("Attempting to delete city ID: {Id}", id);
 
-            // Delete related guides
-            var guides = await _context.Guide
-                .Where(g => g.CityId == id)
-                .ToListAsync();
+                // Check again if there are sites or guides associated with this city
+                var hasSites = await _context.Site.AnyAsync(s => s.CityId == id);
+                if (hasSites)
+                {
+                    _logger.LogWarning("Cannot delete city {Id} - has associated sites", id);
+                    TempData["ErrorMessage"] = "Cannot delete this city because there are sites associated with it. Delete the sites first.";
+                    return RedirectToAction(nameof(Cities));
+                }
 
-            if (guides.Any())
-            {
-                _context.Guide.RemoveRange(guides);
-                await _context.SaveChangesAsync();
-            }
+                var hasGuides = await _context.Guide.AnyAsync(g => g.CityId == id);
+                if (hasGuides)
+                {
+                    _logger.LogWarning("Cannot delete city {Id} - has associated guides", id);
+                    TempData["ErrorMessage"] = "Cannot delete this city because there are guides associated with it. Reassign the guides first.";
+                    return RedirectToAction(nameof(Cities));
+                }
 
-            // Delete the city
-            var city = await _context.City.FindAsync(id);
-            if (city != null)
-            {
+                // Get the city
+                var city = await _context.City.FindAsync(id);
+                if (city == null)
+                {
+                    _logger.LogWarning("City not found with ID: {Id}", id);
+                    return NotFound();
+                }
+
+                // Delete the city
                 _context.City.Remove(city);
                 await _context.SaveChangesAsync();
-            }
 
-            return RedirectToAction(nameof(Cities));
+                _logger.LogInformation("City deleted successfully: {Id}", id);
+                TempData["SuccessMessage"] = "City deleted successfully!";
+
+                return RedirectToAction(nameof(Cities));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting city: {Id}", id);
+                TempData["ErrorMessage"] = "An error occurred while deleting the city. Please try again.";
+                return RedirectToAction(nameof(Cities));
+            }
         }
 
         // GET: Admin/ToggleAdmin/5

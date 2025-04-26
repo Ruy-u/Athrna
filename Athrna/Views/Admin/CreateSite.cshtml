@@ -18,42 +18,60 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <form asp-action="CreateSite" method="post" enctype="multipart/form-data">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <!-- Show validation summary and TempData messages -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                        </div>
+                    }
 
+                    <form asp-action="CreateSite" method="post" enctype="multipart/form-data">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-section">
                                     <h5>Basic Information</h5>
 
                                     <div class="form-group mb-3">
-                                        <label asp-for="Name" class="form-label">Site Name</label>
-                                        <input asp-for="Name" class="form-control" required />
+                                        <label for="Name" class="form-label">Site Name</label>
+                                        <input type="text" id="Name" name="Name" value="@Model?.Name" class="form-control" required />
                                         <span asp-validation-for="Name" class="text-danger"></span>
                                     </div>
 
                                     <div class="form-group mb-3">
                                         <label for="CityId" class="form-label">City</label>
-                                        <select asp-for="CityId" class="form-control" required>
+                                        <select id="CityId" name="CityId" class="form-control" required>
                                             <option value="">-- Select City --</option>
                                             @foreach (var city in ViewBag.Cities)
                                             {
-                                                <option value="@city.Id">@city.Name</option>
+                                                if (Model != null && Model.CityId == city.Id)
+                                                {
+                                                    <option value="@city.Id" selected>@city.Name</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@city.Id">@city.Name</option>
+                                                }
                                             }
                                         </select>
                                         <span asp-validation-for="CityId" class="text-danger"></span>
                                     </div>
 
                                     <div class="form-group mb-3">
-                                        <label asp-for="SiteType" class="form-label">Site Type</label>
-                                        <input asp-for="SiteType" class="form-control" required />
+                                        <label for="SiteType" class="form-label">Site Type</label>
+                                        <input type="text" id="SiteType" name="SiteType" value="@Model?.SiteType" class="form-control" required />
                                         <span asp-validation-for="SiteType" class="text-danger"></span>
                                         <small class="form-text text-muted">E.g., Mosque, Fortress, Museum, Archaeological Site, etc.</small>
                                     </div>
 
                                     <div class="form-group mb-3">
-                                        <label asp-for="Location" class="form-label">Location</label>
-                                        <input asp-for="Location" class="form-control" required />
+                                        <label for="Location" class="form-label">Location</label>
+                                        <input type="text" id="Location" name="Location" value="@Model?.Location" class="form-control" required />
                                         <span asp-validation-for="Location" class="text-danger"></span>
                                         <small class="form-text text-muted">Format: Latitude, Longitude (e.g., 24.4672° N, 39.6111° E)</small>
                                     </div>
@@ -63,8 +81,8 @@
                                     <h5>Site Description</h5>
 
                                     <div class="form-group mb-3">
-                                        <label asp-for="Description" class="form-label">Description</label>
-                                        <textarea asp-for="Description" class="form-control" rows="6" required></textarea>
+                                        <label for="Description" class="form-label">Description</label>
+                                        <textarea id="Description" name="Description" class="form-control" rows="6" required>@Model?.Description</textarea>
                                         <span asp-validation-for="Description" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -75,13 +93,13 @@
                                     <h5>Cultural Information</h5>
 
                                     <div class="form-group mb-3">
-                                        <label for="CulturalInfo.Summary" class="form-label">Cultural Summary</label>
-                                        <textarea name="CulturalInfof.Summary" class="form-control" rows="4"></textarea>
+                                        <label for="CulturalSummary" class="form-label">Cultural Summary</label>
+                                        <textarea id="CulturalSummary" name="CulturalSummary" class="form-control" rows="4">@Model?.CulturalInfo?.Summary</textarea>
                                     </div>
 
                                     <div class="form-group mb-3">
-                                        <label for="CulturalInfo.EstablishedDate" class="form-label">Established Date</label>
-                                        <input name="CulturalInfo.EstablishedDate" class="form-control" type="number" min="1" max="9999" placeholder="e.g., 1320" />
+                                        <label for="EstablishedDate" class="form-label">Established Date</label>
+                                        <input id="EstablishedDate" name="EstablishedDate" class="form-control" type="number" min="1" max="9999" placeholder="e.g., 1320" value="@(Model?.CulturalInfo?.EstablishedDate > 0 ? Model.CulturalInfo.EstablishedDate : null)" />
                                     </div>
                                 </div>
 
@@ -103,7 +121,7 @@
                         </div>
 
                         <div class="form-group mt-4 text-end">
-                            <a asp-action="Sites" class="btn btn-outline-secondary me-2">Cancel</a>
+                            <button type="button" class="btn btn-outline-secondary me-2" onclick="location.href='@Url.Action("Sites")'">Cancel</button>
                             <button type="submit" class="btn btn-primary">Create Site</button>
                         </div>
                     </form>
@@ -129,6 +147,31 @@
                 }
                 reader.readAsDataURL(file);
             }
+        });
+
+        // Form validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            
+            form.addEventListener('submit', function(e) {
+                let isValid = true;
+                const requiredFields = ['Name', 'CityId', 'SiteType', 'Location', 'Description'];
+                
+                requiredFields.forEach(fieldName => {
+                    const field = document.getElementById(fieldName);
+                    if (!field.value.trim()) {
+                        isValid = false;
+                        field.classList.add('is-invalid');
+                    } else {
+                        field.classList.remove('is-invalid');
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields');
+                }
+            });
         });
     </script>
 }
