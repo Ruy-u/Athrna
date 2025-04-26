@@ -164,7 +164,7 @@ namespace Athrna.Controllers
 
                         // Delete old image if it exists in our uploads folder
                         if (!string.IsNullOrEmpty(existingSite.ImagePath) &&
-                            existingSite.ImagePath.StartsWith("/uploads/sites/") &&
+                            existingSite.ImagePath.StartsWith("/images/sites/") &&
                             System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingSite.ImagePath.TrimStart('/'))))
                         {
                             System.IO.File.Delete(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingSite.ImagePath.TrimStart('/')));
@@ -177,7 +177,7 @@ namespace Athrna.Controllers
                         }
 
                         // Update the image path in the site model
-                        site.ImagePath = "/uploads/sites/" + uniqueFileName;
+                        site.ImagePath = "/images/sites/" + uniqueFileName;
                     }
                     else
                     {
@@ -333,7 +333,7 @@ namespace Athrna.Controllers
                         try
                         {
                             string uniqueFileName = $"{site.Id}_{Guid.NewGuid().ToString("N")}{extension}";
-                            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "sites");
+                            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "sites");
 
                             // Create directory if it doesn't exist
                             if (!Directory.Exists(uploadsFolder))
