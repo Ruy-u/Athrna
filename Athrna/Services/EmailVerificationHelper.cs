@@ -5,7 +5,7 @@ namespace Athrna.Services
 {
     public static class EmailVerificationHelper
     {
-        public static string GenerateVerificationEmailTemplate(string verificationLink, string username)
+        public static string GenerateVerificationEmailTemplate(string verificationLink, string username, string additionalMessage = "")
         {
             StringBuilder template = new StringBuilder();
 
@@ -58,6 +58,12 @@ namespace Athrna.Services
             template.AppendLine("            color: #6c757d;");
             template.AppendLine("            text-align: center;");
             template.AppendLine("        }");
+            template.AppendLine("        .additional-message {");
+            template.AppendLine("            background-color: #f0f7f4;");
+            template.AppendLine("            border-left: 4px solid #1a3b29;");
+            template.AppendLine("            padding: 10px 15px;");
+            template.AppendLine("            margin: 15px 0;");
+            template.AppendLine("        }");
             template.AppendLine("    </style>");
             template.AppendLine("</head>");
             template.AppendLine("<body>");
@@ -78,6 +84,15 @@ namespace Athrna.Services
             template.AppendLine("        ");
             template.AppendLine("        <p>If the button above doesn't work, copy and paste this URL into your browser:</p>");
             template.AppendLine($"        <p style=\"word-break: break-all;\">{verificationLink}</p>");
+            template.AppendLine("        ");
+
+            if (!string.IsNullOrEmpty(additionalMessage))
+            {
+                template.AppendLine("        <div class=\"additional-message\">");
+                template.AppendLine($"            {additionalMessage}");
+                template.AppendLine("        </div>");
+            }
+
             template.AppendLine("        ");
             template.AppendLine("        <p>This link will expire in 24 hours. If you did not create an account with Athrna, please ignore this email.</p>");
             template.AppendLine("        ");
@@ -108,7 +123,7 @@ namespace Athrna.Services
             // Only create the template file if it doesn't already exist
             if (!File.Exists(templatePath))
             {
-                string template = GenerateVerificationEmailTemplate("{VerificationLink}", "{Username}");
+                string template = GenerateVerificationEmailTemplate("{VerificationLink}", "{Username}", "{AdditionalMessage}");
                 await File.WriteAllTextAsync(templatePath, template);
             }
         }

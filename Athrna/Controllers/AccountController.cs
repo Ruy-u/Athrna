@@ -363,12 +363,12 @@ namespace Athrna.Controllers
                     _context.GuideApplication.Add(guideApplication);
                     await _context.SaveChangesAsync();
 
-                    TempData["SuccessMessage"] = "Registration successful! Your guide application has been submitted and is pending review. Please check your email to verify your account.";
+                    ViewBag.SuccessMessage = "Registration successful! Your guide application has been submitted and is pending review. Please check your email to verify your account.";
                     _logger.LogInformation("Guide application created successfully for: {Username}", model.Username);
                 }
                 else
                 {
-                    TempData["SuccessMessage"] = "Registration successful! Please check your email to verify your account.";
+                    ViewBag.SuccessMessage = "Registration successful! Please check your email to verify your account.";
                     _logger.LogInformation("Standard registration completed for: {Username}", model.Username);
                 }
 
@@ -382,9 +382,12 @@ namespace Athrna.Controllers
                 {
                     // Log error but don't prevent registration completion
                     _logger.LogError(ex, "Failed to send verification email to {Email}", client.Email);
+                    ViewBag.EmailWarning = "Registration was successful, but we encountered an issue sending the verification email. Please contact support if you don't receive an email within 24 hours.";
                 }
 
-                return RedirectToAction("RegisterConfirmation", new { email = client.Email });
+                // Clear form fields after successful registration
+                ModelState.Clear();
+                return View(new RegisterViewModel());
             }
             catch (Exception ex)
             {
@@ -669,13 +672,26 @@ namespace Athrna.Controllers
                 else
                 {
                     // Fallback to a generated template
-                    emailTemplate = EmailVerificationHelper.GenerateVerificationEmailTemplate("{VerificationLink}", "{Username}");
+                    emailTemplate = EmailVerificationHelper.GenerateVerificationEmailTemplate("{VerificationLink}", "{Username}", "{AdditionalMessage}");
+                }
+
+                // Check if user is a guide applicant to add custom message
+                string additionalMessage = "";
+                var guideApplication = await _context.GuideApplication
+                    .FirstOrDefaultAsync(g => g.Email == client.Email);
+
+                if (guideApplication != null)
+                {
+                    additionalMessage = "<p><strong>Your guide application has been submitted and is pending review.</strong></p>" +
+                        "<p>Please note that your guide status will be reviewed by our administrators. " +
+                        "You will receive a separate email notification when your application is approved or if additional information is needed.</p>";
                 }
 
                 // Replace placeholders with actual values
                 emailTemplate = emailTemplate
                     .Replace("{VerificationLink}", verificationUrl)
-                    .Replace("{Username}", client.Username);
+                    .Replace("{Username}", client.Username)
+                    .Replace("{AdditionalMessage}", additionalMessage);
 
                 // Send email
                 bool emailSent = await _emailService.SendEmailAsync(

@@ -32,7 +32,7 @@
         // Common steps
         const emailField = document.querySelector('#email');
         const emailValue = emailField ? emailField.value : 'your email';
-        
+
         whatNextList.innerHTML = `
             <li>Check your email (${emailValue}) for a verification link</li>
             <li>Click the verification link to activate your account</li>
@@ -167,54 +167,4 @@
             }
         });
     }
-    
-    // Add CSS for registration success styling
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes highlight-pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); background-color: #c3e6cb; }
-            100% { transform: scale(1); }
-        }
-        
-        .highlight {
-            animation: highlight-pulse 2s ease;
-        }
-        
-        .registration-success-section {
-            margin-top: 20px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        .success-icon {
-            font-size: 48px;
-            color: #28a745;
-            margin-bottom: 15px;
-        }
-        
-        .what-next-list {
-            text-align: left;
-            max-width: 500px;
-            margin: 20px auto;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        .what-next-list li {
-            margin-bottom: 10px;
-            position: relative;
-            padding-left: 25px;
-        }
-        
-        .what-next-list li::before {
-            content: "→";
-            position: absolute;
-            left: 0;
-            color: #1a3b29;
-            font-weight: bold;
-        }
-    `;
-    document.head.appendChild(style);
 });

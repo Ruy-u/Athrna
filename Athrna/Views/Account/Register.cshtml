@@ -3,11 +3,29 @@
     ViewData["Title"] = "Register";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/register-success.css" />
+}
+
 <div class="registration-container">
     <div class="registration-header">
         Create an Account
     </div>
     <div class="registration-form-content">
+        @if (ViewBag.SuccessMessage != null)
+        {
+            <div class="alert alert-success" role="alert">
+                @ViewBag.SuccessMessage
+            </div>
+        }
+
+        @if (ViewBag.EmailWarning != null)
+        {
+            <div class="alert alert-warning" role="alert">
+                @ViewBag.EmailWarning
+            </div>
+        }
+
         @if (TempData["ErrorMessage"] != null)
         {
             <div class="alert alert-danger" role="alert">
@@ -114,107 +132,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Toggle guide details section visibility
-            const guideCheckbox = document.getElementById('registerAsGuide');
-            const guideDetailsSection = document.getElementById('guideDetailsSection');
-            const guideFields = document.querySelectorAll('.guide-field');
-
-            if (guideCheckbox && guideDetailsSection) {
-                guideCheckbox.addEventListener('change', function () {
-                    guideDetailsSection.style.display = this.checked ? 'block' : 'none';
-
-                    // Make guide fields required when checkbox is checked
-                    guideFields.forEach(field => {
-                        if (this.checked) {
-                            field.setAttribute('required', 'required');
-                        } else {
-                            field.removeAttribute('required');
-                            // Clear validation errors when unchecked
-                            field.classList.remove('is-invalid');
-                            const errorSpan = field.nextElementSibling;
-                            if (errorSpan && errorSpan.classList.contains('text-danger')) {
-                                errorSpan.textContent = '';
-                            }
-                        }
-                    });
-                });
-            }
-
-            // Password visibility toggle
-            document.querySelectorAll('.password-toggle').forEach(button => {
-                button.addEventListener('click', function () {
-                    const input = this.previousElementSibling;
-                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                    input.setAttribute('type', type);
-
-                    const icon = this.querySelector('i');
-                    if (type === 'text') {
-                        icon.classList.remove('bi-eye');
-                        icon.classList.add('bi-eye-slash');
-                    } else {
-                        icon.classList.remove('bi-eye-slash');
-                        icon.classList.add('bi-eye');
-                    }
-                });
-            });
-
-            // Simple password strength meter
-            const passwordField = document.getElementById('password');
-            const strengthMeter = document.querySelector('.password-strength-meter');
-            const progressBar = document.querySelector('.progress-bar');
-            const strengthText = document.querySelector('.strength-text');
-
-            if (passwordField && strengthMeter && progressBar && strengthText) {
-                // Show strength meter when password field is focused
-                passwordField.addEventListener('focus', function () {
-                    strengthMeter.style.display = 'block';
-                });
-
-                // Update strength meter on input
-                passwordField.addEventListener('input', function () {
-                    const password = this.value;
-                    let strength = 0;
-
-                    if (password.length >= 8) strength += 20;
-                    if (password.length >= 12) strength += 10;
-                    if (/[a-z]/.test(password)) strength += 10;
-                    if (/[A-Z]/.test(password)) strength += 20;
-                    if (/\d/.test(password)) strength += 20;
-                    if (/[^a-zA-Z0-9]/.test(password)) strength += 20;
-
-                    // Update progress bar
-                    progressBar.style.width = `${strength}%`;
-                    progressBar.setAttribute('aria-valuenow', strength);
-
-                    // Update text and color
-                    if (strength < 40) {
-                        progressBar.className = 'progress-bar bg-danger';
-                        strengthText.textContent = 'Weak';
-                        strengthText.className = 'text-danger';
-                    } else if (strength < 70) {
-                        progressBar.className = 'progress-bar bg-warning';
-                        strengthText.textContent = 'Moderate';
-                        strengthText.className = 'text-warning';
-                    } else {
-                        progressBar.className = 'progress-bar bg-success';
-                        strengthText.textContent = 'Strong';
-                        strengthText.className = 'text-success';
-                    }
-                });
-            }
-
-            // Form validation - Clear errors in guide section if not registering as guide
-            const form = document.querySelector('form');
-            form.addEventListener('submit', function (e) {
-                if (!guideCheckbox.checked) {
-                    // If not registering as guide, clear any validation errors in the guide section
-                    guideFields.forEach(field => {
-                        field.value = '';  // Clear the field values
-                    });
-                }
-            });
-        });
-    </script>
+    <script src="~/js/register.js"></script>
 }
