@@ -1,0 +1,218 @@
+﻿/* RTL Support for Arabic language */
+
+/* Base RTL layout adjustments */
+html[dir="rtl"] {
+    text-align: right;
+}
+
+    /* Header RTL adjustments */
+    html[dir="rtl"] .logo {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+        html[dir="rtl"] .logo img {
+            margin-right: 0;
+            margin-left: 15px;
+        }
+
+    html[dir="rtl"] .search-bar {
+        margin-right: 0;
+        margin-left: 20px;
+    }
+
+    html[dir="rtl"] .header-actions {
+        margin-left: 0;
+        margin-right: auto;
+    }
+
+    html[dir="rtl"] .user-avatar {
+        margin-right: 0;
+        margin-left: 10px;
+    }
+
+    /* Card RTL adjustments */
+    html[dir="rtl"] .card-content {
+        text-align: right;
+    }
+
+    /* Map RTL adjustments */
+    html[dir="rtl"] .site-info {
+        left: auto;
+        right: 20px;
+        text-align: right;
+    }
+
+    /* Sidebar RTL adjustments */
+    html[dir="rtl"] .sidebar-widget {
+        text-align: right;
+    }
+
+    html[dir="rtl"] .nearby-sites li,
+    html[dir="rtl"] .hours-list li,
+    html[dir="rtl"] .fees-list li {
+        flex-direction: row-reverse;
+    }
+
+    /* Form RTL adjustments */
+    html[dir="rtl"] .form-label {
+        text-align: right;
+    }
+
+    html[dir="rtl"] .form-check {
+        padding-right: 1.5rem;
+        padding-left: 0;
+    }
+
+    html[dir="rtl"] .form-check-input {
+        margin-right: -1.5rem;
+        margin-left: 0;
+    }
+
+    /* Bootstrap overrides for RTL */
+    html[dir="rtl"] .ms-auto {
+        margin-right: auto !important;
+        margin-left: 0 !important;
+    }
+
+    html[dir="rtl"] .me-auto {
+        margin-left: auto !important;
+        margin-right: 0 !important;
+    }
+
+    html[dir="rtl"] .ms-1 {
+        margin-right: 0.25rem !important;
+        margin-left: 0 !important;
+    }
+
+    html[dir="rtl"] .ms-2 {
+        margin-right: 0.5rem !important;
+        margin-left: 0 !important;
+    }
+
+    html[dir="rtl"] .ms-3 {
+        margin-right: 1rem !important;
+        margin-left: 0 !important;
+    }
+
+    html[dir="rtl"] .me-1 {
+        margin-left: 0.25rem !important;
+        margin-right: 0 !important;
+    }
+
+    html[dir="rtl"] .me-2 {
+        margin-left: 0.5rem !important;
+        margin-right: 0 !important;
+    }
+
+    html[dir="rtl"] .me-3 {
+        margin-left: 1rem !important;
+        margin-right: 0 !important;
+    }
+
+    html[dir="rtl"] .ps-2 {
+        padding-right: 0.5rem !important;
+        padding-left: 0 !important;
+    }
+
+    html[dir="rtl"] .pe-2 {
+        padding-left: 0.5rem !important;
+        padding-right: 0 !important;
+    }
+
+    /* Modal RTL adjustments */
+    html[dir="rtl"] .modal-header .btn-close {
+        margin: calc(-.5 * var(--bs-modal-header-padding-y)) auto calc(-.5 * var(--bs-modal-header-padding-y)) calc(-.5 * var(--bs-modal-header-padding-x));
+    }
+
+    /* Input groups RTL adjustments */
+    html[dir="rtl"] .input-group > .form-control:not(:last-child),
+    html[dir="rtl"] .input-group > .form-select:not(:last-child) {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-top-right-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+    }
+
+    html[dir="rtl"] .input-group > .input-group-text:not(:last-child) {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-top-right-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+    }
+
+    html[dir="rtl"] .input-group > .form-control:not(:first-child),
+    html[dir="rtl"] .input-group > .form-select:not(:first-child) {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border-top-left-radius: 0.375rem;
+        border-bottom-left-radius: 0.375rem;
+    }
+
+    html[dir="rtl"] .input-group > .input-group-text:not(:first-child) {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border-top-left-radius: 0.375rem;
+        border-bottom-left-radius: 0.375rem;
+    }
+
+    /* Specific components RTL adjustments */
+    html[dir="rtl"] .rating-stars {
+        direction: ltr; /* Keep rating stars direction LTR for consistency */
+        display: inline-block;
+    }
+
+    html[dir="rtl"] .dashboard-widget .widget-header {
+        text-align: right;
+    }
+
+    html[dir="rtl"] .stat-card {
+        text-align: right;
+    }
+
+    /* Dropdown menu RTL adjustments */
+    html[dir="rtl"] .dropdown-menu {
+        text-align: right;
+    }
+
+    html[dir="rtl"] .dropdown-item {
+        text-align: right;
+    }
+
+    html[dir="rtl"] .dropdown-menu-end {
+        right: auto;
+        left: 0;
+    }
+
+    /* Admin dashboard RTL adjustments */
+    html[dir="rtl"] #sidebar {
+        right: 0;
+        left: auto;
+    }
+
+    html[dir="rtl"] #content {
+        right: auto;
+        left: 0;
+    }
+
+    html[dir="rtl"] .admin-user-info {
+        margin-right: auto;
+        margin-left: 0;
+    }
+
+/* Mobile responsive RTL adjustments */
+@media (max-width: 768px) {
+    html[dir="rtl"] .mobile-menu-toggle {
+        margin-right: 0;
+        margin-left: 1rem;
+    }
+
+    html[dir="rtl"] .search-toggle {
+        margin-left: 0;
+        margin-right: auto;
+    }
+
+    html[dir="rtl"] .site-meta {
+        align-items: flex-end;
+    }
+}
