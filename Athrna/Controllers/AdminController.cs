@@ -107,138 +107,159 @@ namespace Athrna.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditSite(int id, Site site, IFormFile imageFile)
+        public async Task<IActionResult> EditSite(int id, IFormCollection form, IFormFile imageFile)
         {
-            if (id != site.Id)
+            // Log what we received
+            _logger.LogInformation("EditSite POST received for ID: {0}", id);
+            foreach (var key in form.Keys)
             {
-                return NotFound();
+                _logger.LogInformation("Form field: {0} = {1}", key, form[key]);
             }
 
-            if (ModelState.IsValid)
+            try
             {
+                // Get existing site with all related data
+                var site = await _context.Site
+                    .Include(s => s.CulturalInfo)
+                    .FirstOrDefaultAsync(s => s.Id == id);
+
+                if (site == null)
+                {
+                    _logger.LogWarning("Site not found with ID: {0}", id);
+                    return NotFound();
+                }
+
+                // Update basic site properties directly from form
+                site.Name = form["Name"];
+                site.CityId = int.Parse(form["CityId"]);
+                site.SiteType = form["SiteType"];
+                site.Location = form["Location"];
+                site.Description = form["Description"];
+
+                // Process cultural info
+                var culturalInfoSummary = form["CulturalInfo.Summary"].ToString();
+                int culturalInfoDate = 0;
+                if (int.TryParse(form["CulturalInfo.EstablishedDate"], out culturalInfoDate))
+                {
+                    _logger.LogInformation("Parsed cultural info date: {0}", culturalInfoDate);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to parse cultural info date: {0}", form["CulturalInfo.EstablishedDate"]);
+                }
+
+                // Update or create CulturalInfo
+                if (site.CulturalInfo != null)
+                {
+                    _logger.LogInformation("Updating existing CulturalInfo with ID: {0}", site.CulturalInfo.Id);
+                    site.CulturalInfo.Summary = culturalInfoSummary;
+                    site.CulturalInfo.EstablishedDate = culturalInfoDate;
+                }
+                else
+                {
+                    _logger.LogInformation("Creating new CulturalInfo for site ID: {0}", site.Id);
+                    site.CulturalInfo = new CulturalInfo
+                    {
+                        SiteId = site.Id,
+                        Summary = culturalInfoSummary,
+                        EstablishedDate = culturalInfoDate
+                    };
+                }
+
+                // Handle image upload if provided
+                if (imageFile != null && imageFile.Length > 0)
+                {
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                    var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+
+                    if (!allowedExtensions.Contains(extension))
+                    {
+                        ViewBag.Cities = await _context.City.ToListAsync();
+                        return View(site);
+                    }
+
+                    if (imageFile.Length > 5 * 1024 * 1024)
+                    {
+                        ViewBag.Cities = await _context.City.ToListAsync();
+                        return View(site);
+                    }
+
+                    // Generate unique filename
+                    string uniqueFileName = $"{id}_{Guid.NewGuid().ToString("N")}{extension}";
+                    string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "sites");
+
+                    // Create directory if it doesn't exist
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    // Delete old image if it exists
+                    if (!string.IsNullOrEmpty(site.ImagePath) &&
+                        site.ImagePath.StartsWith("/uploads/sites/") &&
+                        System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", site.ImagePath.TrimStart('/'))))
+                    {
+                        try
+                        {
+                            System.IO.File.Delete(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", site.ImagePath.TrimStart('/')));
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error deleting previous image: {0}", site.ImagePath);
+                        }
+                    }
+
+                    // Save the new file
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await imageFile.CopyToAsync(fileStream);
+                    }
+
+                    // Update the image path
+                    site.ImagePath = "/uploads/sites/" + uniqueFileName;
+                    _logger.LogInformation("New image saved at: {0}", site.ImagePath);
+                }
+
+                // Save all changes
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Site updated successfully: ID {0}", site.Id);
+
+                TempData["SuccessMessage"] = "Site updated successfully!";
+                return RedirectToAction(nameof(Sites));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating site with ID {0}: {1}", id, ex.Message);
+                TempData["ErrorMessage"] = $"Error updating site: {ex.Message}";
+
+                // Re-create the site object for the view
+                var site = new Site { Id = id };
+
                 try
                 {
-                    // Get the existing site to preserve data not included in the form
-                    var existingSite = await _context.Site
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(s => s.Id == id);
+                    // Try to populate with form values
+                    site.Name = form["Name"];
+                    site.CityId = int.Parse(form["CityId"]);
+                    site.SiteType = form["SiteType"];
+                    site.Location = form["Location"];
+                    site.Description = form["Description"];
 
-                    if (existingSite == null)
+                    site.CulturalInfo = new CulturalInfo
                     {
-                        return NotFound();
-                    }
-
-                    // Handle image upload if a new file is provided
-                    if (imageFile != null && imageFile.Length > 0)
-                    {
-                        // Define allowed file extensions
-                        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
-
-                        if (!allowedExtensions.Contains(extension))
-                        {
-                            ModelState.AddModelError("imageFile", "Only image files (jpg, jpeg, png, gif) are allowed.");
-                            ViewBag.Cities = await _context.City.ToListAsync();
-                            return View(site);
-                        }
-
-                        // Check file size (limit to 5MB)
-                        if (imageFile.Length > 5 * 1024 * 1024)
-                        {
-                            ModelState.AddModelError("imageFile", "The file size cannot exceed 5MB.");
-                            ViewBag.Cities = await _context.City.ToListAsync();
-                            return View(site);
-                        }
-
-                        // Generate a unique filename
-                        string uniqueFileName = $"{id}_{Guid.NewGuid().ToString("N")}{extension}";
-                        string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "sites");
-
-                        // Create directory if it doesn't exist
-                        if (!Directory.Exists(uploadsFolder))
-                        {
-                            Directory.CreateDirectory(uploadsFolder);
-                        }
-
-                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                        // Delete old image if it exists in our uploads folder
-                        if (!string.IsNullOrEmpty(existingSite.ImagePath) &&
-                            existingSite.ImagePath.StartsWith("/images/sites/") &&
-                            System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingSite.ImagePath.TrimStart('/'))))
-                        {
-                            System.IO.File.Delete(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingSite.ImagePath.TrimStart('/')));
-                        }
-
-                        // Save the new file
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await imageFile.CopyToAsync(fileStream);
-                        }
-
-                        // Update the image path in the site model
-                        site.ImagePath = "/images/sites/" + uniqueFileName;
-                    }
-                    else
-                    {
-                        // Keep the existing image if no new one is uploaded
-                        site.ImagePath = existingSite.ImagePath;
-                    }
-
-                    // Update the site entity
-                    _context.Update(site);
-                    await _context.SaveChangesAsync();
-
-                    // Update cultural info if it exists
-                    if (site.CulturalInfo != null)
-                    {
-                        var culturalInfo = await _context.CulturalInfo
-                            .FirstOrDefaultAsync(c => c.SiteId == site.Id);
-
-                        if (culturalInfo != null)
-                        {
-                            culturalInfo.Summary = site.CulturalInfo.Summary ?? string.Empty;
-                            culturalInfo.EstablishedDate = site.CulturalInfo.EstablishedDate;
-                            _context.Update(culturalInfo);
-                            await _context.SaveChangesAsync();
-                        }
-                        else
-                        {
-                            // Create cultural info if it doesn't exist
-                            var newCulturalInfo = new CulturalInfo
-                            {
-                                SiteId = site.Id,
-                                Summary = site.CulturalInfo.Summary ?? string.Empty,
-                                EstablishedDate = site.CulturalInfo.EstablishedDate
-                            };
-                            _context.CulturalInfo.Add(newCulturalInfo);
-                            await _context.SaveChangesAsync();
-                        }
-                    }
-
-                    TempData["SuccessMessage"] = "Site updated successfully!";
-                    return RedirectToAction(nameof(Sites));
+                        Summary = form["CulturalInfo.Summary"],
+                        EstablishedDate = int.Parse(form["CulturalInfo.EstablishedDate"])
+                    };
                 }
-                catch (DbUpdateConcurrencyException)
+                catch
                 {
-                    if (!SiteExists(site.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    // Ignore errors while rebuilding the model
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error updating site with ID {SiteId}", id);
-                    ModelState.AddModelError("", "An error occurred while updating the site: " + ex.Message);
-                }
+
+                ViewBag.Cities = await _context.City.ToListAsync();
+                return View(site);
             }
-
-            ViewBag.Cities = await _context.City.ToListAsync();
-            return View(site);
         }
 
         // GET: Admin/CreateSite
@@ -350,7 +371,7 @@ namespace Athrna.Controllers
                             }
 
                             // Update the image path in the site model
-                            site.ImagePath = "/uploads/sites/" + uniqueFileName;
+                            site.ImagePath = "/images/sites/" + uniqueFileName;
 
                             // Save the updated image path
                             _context.Update(site);
@@ -422,7 +443,6 @@ namespace Athrna.Controllers
                 return View(siteModel);
             }
         }
-
         // GET: Admin/DeleteSite/5
         public async Task<IActionResult> DeleteSite(int? id)
         {
@@ -511,7 +531,7 @@ namespace Athrna.Controllers
                 {
                     // Delete the site image file if it exists and is not a placeholder
                     if (!string.IsNullOrEmpty(site.ImagePath) &&
-                        site.ImagePath.StartsWith("/uploads/sites/") &&
+                        site.ImagePath.StartsWith("/images/sites/") &&
                         !site.ImagePath.Contains("placeholder"))
                     {
                         var imagePath = Path.Combine(

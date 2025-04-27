@@ -21,14 +21,14 @@
                     <!-- Show validation summary and TempData messages -->
                     @if (!ViewData.ModelState.IsValid)
                     {
-                        <div class="alert alert-danger">
-                            <ul>
+                            <div class="alert alert-danger">
+                                <ul>
                                 @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
                                 {
-                                    <li>@error.ErrorMessage</li>
+                                            <li>@error.ErrorMessage</li>
                                 }
-                            </ul>
-                        </div>
+                                </ul>
+                            </div>
                     }
 
                     <form asp-action="CreateSite" method="post" enctype="multipart/form-data">
@@ -51,11 +51,11 @@
                                             {
                                                 if (Model != null && Model.CityId == city.Id)
                                                 {
-                                                    <option value="@city.Id" selected>@city.Name</option>
+                                                            <option value="@city.Id" selected>@city.Name</option>
                                                 }
                                                 else
                                                 {
-                                                    <option value="@city.Id">@city.Name</option>
+                                                            <option value="@city.Id">@city.Name</option>
                                                 }
                                             }
                                         </select>
@@ -99,7 +99,11 @@
 
                                     <div class="form-group mb-3">
                                         <label for="EstablishedDate" class="form-label">Established Date</label>
-                                        <input id="EstablishedDate" name="EstablishedDate" class="form-control" type="number" min="1" max="9999" placeholder="e.g., 1320" value="@(Model?.CulturalInfo?.EstablishedDate > 0 ? Model.CulturalInfo.EstablishedDate : null)" />
+                                        <div class="input-group">
+                                            <input id="EstablishedDate" name="EstablishedDate" class="form-control" type="number" min="1" max="9999" placeholder="e.g., 1320" value="@(Model?.CulturalInfo?.EstablishedDate > 0 ? Model.CulturalInfo.EstablishedDate : Math.Abs(Model?.CulturalInfo?.EstablishedDate ?? 0))" />
+                                            <!-- The era selector will be added by JavaScript -->
+                                        </div>
+                                        <small class="form-text text-muted">Enter the year and select era (CE/BCE)</small>
                                     </div>
                                 </div>
 
@@ -135,43 +139,44 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    <script>
-        // Image preview functionality
-        document.querySelector('input[name="imageFile"]').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (event) {
-                    document.getElementById('imagePreview').src = event.target.result;
-                    document.querySelector('.preview-container').style.display = 'block';
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Form validation
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.querySelector('form');
-            
-            form.addEventListener('submit', function(e) {
-                let isValid = true;
-                const requiredFields = ['Name', 'CityId', 'SiteType', 'Location', 'Description'];
-                
-                requiredFields.forEach(fieldName => {
-                    const field = document.getElementById(fieldName);
-                    if (!field.value.trim()) {
-                        isValid = false;
-                        field.classList.add('is-invalid');
-                    } else {
-                        field.classList.remove('is-invalid');
+        <script src="~/js/historical-date.js"></script>
+        <script>
+            // Image preview functionality
+            document.querySelector('input[name="imageFile"]').addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        document.getElementById('imagePreview').src = event.target.result;
+                        document.querySelector('.preview-container').style.display = 'block';
                     }
-                });
-                
-                if (!isValid) {
-                    e.preventDefault();
-                    alert('Please fill in all required fields');
+                    reader.readAsDataURL(file);
                 }
             });
-        });
-    </script>
+
+            // Form validation
+            document.addEventListener('DOMContentLoaded', function() {
+                const form = document.querySelector('form');
+
+                form.addEventListener('submit', function(e) {
+                    let isValid = true;
+                    const requiredFields = ['Name', 'CityId', 'SiteType', 'Location', 'Description'];
+
+                    requiredFields.forEach(fieldName => {
+                        const field = document.getElementById(fieldName);
+                        if (!field.value.trim()) {
+                            isValid = false;
+                            field.classList.add('is-invalid');
+                        } else {
+                            field.classList.remove('is-invalid');
+                        }
+                    });
+
+                    if (!isValid) {
+                        e.preventDefault();
+                        alert('Please fill in all required fields');
+                    }
+                });
+            });
+        </script>
 }

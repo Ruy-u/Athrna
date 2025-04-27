@@ -18,9 +18,33 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach (var modelState in ViewData.ModelState.Values)
+                                {
+                                    foreach (var error in modelState.Errors)
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    }
+
                     <form asp-action="EditSite" method="post" enctype="multipart/form-data">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        @* Important: Always include the Site.Id *@
                         <input type="hidden" asp-for="Id" />
+                        
+                        @* Include CulturalInfo.Id if it exists *@
+                        @if (Model.CulturalInfo != null && Model.CulturalInfo.Id > 0)
+                        {
+                            <input type="hidden" name="CulturalInfo.Id" value="@Model.CulturalInfo.Id" />
+                            <input type="hidden" name="CulturalInfo.SiteId" value="@Model.Id" />
+                        }
 
                         <div class="row">
                             <div class="col-md-6">
@@ -76,15 +100,21 @@
                                     <h5>Cultural Information</h5>
 
                                     <div class="form-group mb-3">
-                                        <label for="CulturalInfo.Summary" class="form-label">Cultural Summary</label>
-                                        <textarea asp-for="CulturalInfo.Summary" class="form-control" rows="4"></textarea>
-                                        <span asp-validation-for="CulturalInfo.Summary" class="text-danger"></span>
+                                        <label for="CulturalInfo_Summary" class="form-label">Cultural Summary</label>
+                                        <textarea name="CulturalInfo.Summary" id="CulturalInfo_Summary" class="form-control" rows="4">@(Model.CulturalInfo?.Summary)</textarea>
                                     </div>
 
                                     <div class="form-group mb-3">
-                                        <label for="CulturalInfo.EstablishedDate" class="form-label">Established Date</label>
-                                        <input asp-for="CulturalInfo.EstablishedDate" class="form-control" type="date" />
-                                        <span asp-validation-for="CulturalInfo.EstablishedDate" class="text-danger"></span>
+                                        <label for="CulturalInfo_EstablishedDate" class="form-label">Established Date</label>
+                                        <div class="input-group">
+                                            <input type="number" name="CulturalInfo.EstablishedDate" id="CulturalInfo_EstablishedDate" class="form-control" min="1" max="9999" 
+                                                   value="@(Model.CulturalInfo != null ? (Model.CulturalInfo.EstablishedDate < 0 ? Math.Abs(Model.CulturalInfo.EstablishedDate) : Model.CulturalInfo.EstablishedDate) : 0)" />
+                                            <select id="eraSelector" class="form-select" style="width: auto;">
+                                                <option value="CE" selected="@(Model.CulturalInfo == null || Model.CulturalInfo.EstablishedDate >= 0)">CE</option>
+                                                <option value="BCE" selected="@(Model.CulturalInfo != null && Model.CulturalInfo.EstablishedDate < 0)">BCE</option>
+                                            </select>
+                                        </div>
+                                        <small class="form-text text-muted">Enter the year and select era (CE/BCE)</small>
                                     </div>
                                 </div>
 
@@ -123,4 +153,5 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script src="~/js/historical-date.js"></script>
 }
