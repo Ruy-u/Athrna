@@ -59,6 +59,14 @@ namespace Athrna.Controllers
                 return View(model);
             }
 
+            // Check if the account is banned
+            if (client.IsBanned)
+            {
+                _logger.LogWarning("Login attempt for banned account: {Username}", model.Username);
+                ModelState.AddModelError("", "Your account has been suspended. Please contact support for assistance.");
+                return View(model);
+            }
+
             // Direct password comparison instead of hash verification
             if (client.EncryptedPassword == model.Password)
             {
@@ -73,11 +81,11 @@ namespace Athrna.Controllers
 
                 // Create claims for the client
                 var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, client.Username),
-                    new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
-                    new Claim(ClaimTypes.Email, client.Email)
-                };
+        {
+            new Claim(ClaimTypes.Name, client.Username),
+            new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
+            new Claim(ClaimTypes.Email, client.Email)
+        };
 
                 // Check if client is an administrator
                 var isAdmin = await _context.Administrator.AnyAsync(a => a.ClientId == client.Id);
@@ -136,6 +144,18 @@ namespace Athrna.Controllers
                 return Json(new { success = false, message = "Invalid username or password" });
             }
 
+            // Check if the account is banned
+            if (client.IsBanned)
+            {
+                _logger.LogWarning("AJAX login attempt for banned account: {Username}", model.Username);
+                return Json(new
+                {
+                    success = false,
+                    message = "Your account has been suspended. Please contact support for assistance.",
+                    isBanned = true
+                });
+            }
+
             // Direct password comparison instead of hash verification
             if (client.EncryptedPassword == model.Password)
             {
@@ -156,11 +176,11 @@ namespace Athrna.Controllers
 
                 // Create claims for the client
                 var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, client.Username),
-                    new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
-                    new Claim(ClaimTypes.Email, client.Email)
-                };
+        {
+            new Claim(ClaimTypes.Name, client.Username),
+            new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
+            new Claim(ClaimTypes.Email, client.Email)
+        };
 
                 // Check if client is an administrator
                 var isAdmin = await _context.Administrator.AnyAsync(a => a.ClientId == client.Id);

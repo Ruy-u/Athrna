@@ -43,8 +43,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Redirect to specified URL
                         window.location.href = data.redirectUrl;
                     } else {
+                        // Check if account is banned
+                        if (data.isBanned) {
+                            // Show banned account message
+                            errorMessage.classList.remove('d-none');
+                            errorMessage.classList.remove('alert-warning');
+                            errorMessage.classList.add('alert-danger');
+                            errorMessage.innerHTML = `${data.message} <a href="/Home/Contact">Contact support</a>`;
+                        }
                         // Check if email verification is required
-                        if (data.requireVerification) {
+                        else if (data.requireVerification) {
                             // Show verification required message with link
                             errorMessage.classList.remove('d-none');
                             errorMessage.classList.remove('alert-danger');
@@ -153,6 +161,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             // Focus on username field
             document.getElementById('modalUsername').focus();
+
+            // Clear previous error message
+            if (errorMessage) {
+                errorMessage.classList.add('d-none');
+                errorMessage.textContent = '';
+            }
         });
     }
 

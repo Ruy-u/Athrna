@@ -1049,6 +1049,134 @@ namespace Athrna.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Users));
         }
+        // Add this to the AdminController.cs file
+
+        // GET: Admin/Ratings
+        public async Task<IActionResult> Ratings()
+        {
+            var ratings = await _context.Rating
+                .Include(r => r.Client)
+                .Include(r => r.Site)
+                    .ThenInclude(s => s.City)
+                .OrderByDescending(r => r.Id)
+                .ToListAsync();
+
+            return View(ratings);
+        }
+
+        // POST: Admin/DeleteRating/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteRating(int id)
+        {
+            try
+            {
+                _logger.LogInformation("Attempting to delete rating with ID: {Id}", id);
+
+                var rating = await _context.Rating.FindAsync(id);
+                if (rating == null)
+                {
+                    _logger.LogWarning("Rating not found with ID: {Id}", id);
+                    return NotFound();
+                }
+
+                _context.Rating.Remove(rating);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Rating deleted successfully: {Id}", id);
+                TempData["SuccessMessage"] = "Rating deleted successfully!";
+
+                return RedirectToAction(nameof(Ratings));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting rating with ID {Id}", id);
+                TempData["ErrorMessage"] = "An error occurred while deleting the rating. Please try again.";
+                return RedirectToAction(nameof(Ratings));
+            }
+        }
+
+        // POST: Admin/BanUser/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BanUser(int id, string banReason)
+        {
+            try
+            {
+                _logger.LogInformation("Attempting to ban user with ID: {Id}", id);
+
+                var client = await _context.Client.FindAsync(id);
+                if (client == null)
+                {
+                    _logger.LogWarning("User not found with ID: {Id}", id);
+                    return NotFound();
+                }
+
+                // Don't allow banning of admin accounts
+                var isAdmin = await _context.Administrator.AnyAsync(a => a.ClientId == client.Id);
+                if (isAdmin)
+                {
+                    TempData["ErrorMessage"] = "Cannot ban administrator accounts.";
+                    return RedirectToAction(nameof(Users));
+                }
+
+                // Set ban properties
+                client.IsBanned = true;
+                client.BanReason = banReason;
+                client.BannedAt = DateTime.UtcNow;
+
+                _context.Update(client);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("User banned successfully: {Id}, Username: {Username}", client.Id, client.Username);
+                TempData["SuccessMessage"] = $"User '{client.Username}' has been banned successfully.";
+
+                return RedirectToAction(nameof(Users));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error banning user with ID {Id}", id);
+                TempData["ErrorMessage"] = "An error occurred while banning the user. Please try again.";
+                return RedirectToAction(nameof(Users));
+            }
+        }
+
+        // POST: Admin/UnbanUser/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UnbanUser(int id)
+        {
+            try
+            {
+                _logger.LogInformation("Attempting to unban user with ID: {Id}", id);
+
+                var client = await _context.Client.FindAsync(id);
+                if (client == null)
+                {
+                    _logger.LogWarning("User not found with ID: {Id}", id);
+                    return NotFound();
+                }
+
+                // Clear ban properties
+                client.IsBanned = false;
+                client.BanReason = null;
+                client.BannedAt = null;
+
+                _context.Update(client);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("User unbanned successfully: {Id}, Username: {Username}", client.Id, client.Username);
+                TempData["SuccessMessage"] = $"User '{client.Username}' has been unbanned successfully.";
+
+                return RedirectToAction(nameof(Users));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error unbanning user with ID {Id}", id);
+                TempData["ErrorMessage"] = "An error occurred while unbanning the user. Please try again.";
+                return RedirectToAction(nameof(Users));
+            }
+        }
 
         // Helper methods
         private bool SiteExists(int id)

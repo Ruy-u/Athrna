@@ -21,6 +21,13 @@ namespace Athrna.Models
         // New property for email verification
         public bool IsEmailVerified { get; set; } = false;
 
+        // New properties for account status
+        public bool IsBanned { get; set; } = false;
+
+        public string? BanReason { get; set; }
+
+        public DateTime? BannedAt { get; set; }
+
         // Navigation properties
         public virtual ICollection<Rating> Ratings { get; set; }
         public virtual ICollection<Bookmark> Bookmarks { get; set; }

@@ -21,6 +21,7 @@
                                 <tr>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">User</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Email</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Status</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Role</th>
                                     <th class="text-secondary opacity-7"></th>
                                 </tr>
@@ -31,6 +32,9 @@
                                     <tr>
                                         <td>
                                             <div class="d-flex px-3 py-1">
+                                                <div class="avatar-circle me-3" style="width: 40px; height: 40px; font-size: 1.2rem; background-color: #1a3b29; color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                                                    @user.Username.Substring(0, 1).ToUpper()
+                                                </div>
                                                 <div class="d-flex flex-column justify-content-center">
                                                     <h6 class="mb-0 text-sm">@user.Username</h6>
                                                     <p class="text-xs text-secondary mb-0">ID: @user.Id</p>
@@ -39,6 +43,32 @@
                                         </td>
                                         <td>
                                             <p class="text-sm text-secondary mb-0">@user.Email</p>
+                                            @if (!user.IsEmailVerified)
+                                            {
+                                                <span class="badge bg-warning">Not Verified</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (user.IsBanned)
+                                            {
+                                                <span class="badge bg-danger">Banned</span>
+                                                @if (!string.IsNullOrEmpty(user.BanReason))
+                                                {
+                                                    <div class="text-xs text-secondary mt-1">
+                                                        <strong>Reason:</strong> @user.BanReason
+                                                    </div>
+                                                }
+                                                @if (user.BannedAt.HasValue)
+                                                {
+                                                    <div class="text-xs text-secondary">
+                                                        <strong>Since:</strong> @user.BannedAt.Value.ToString("yyyy-MM-dd")
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
                                         </td>
                                         <td>
                                             @if (user.Administrator != null)
@@ -52,6 +82,7 @@
                                         </td>
                                         <td class="align-middle">
                                             <div class="d-flex gap-2">
+                                                <!-- Toggle Admin Role -->
                                                 <a asp-action="ToggleAdmin" asp-route-id="@user.Id"
                                                    class="btn btn-sm @(user.Administrator != null ? "btn-outline-danger" : "btn-outline-success")"
                                                    onclick="return confirm('Are you sure you want to change this user\'s role?')">
@@ -64,9 +95,94 @@
                                                         <span><i class="bi bi-person-check"></i> Make Admin</span>
                                                     }
                                                 </a>
+
+                                                <!-- Ban/Unban User -->
+                                                @if (user.Administrator == null) // Only allow ban/unban for non-admin users
+                                                {
+                                                    @if (user.IsBanned)
+                                                    {
+                                                        <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#unbanUserModal-@user.Id">
+                                                            <i class="bi bi-unlock"></i> Unban
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#banUserModal-@user.Id">
+                                                            <i class="bi bi-ban"></i> Ban
+                                                        </button>
+                                                    }
+                                                }
                                             </div>
                                         </td>
                                     </tr>
+
+                                    <!-- Ban User Modal -->
+                                    @if (user.Administrator == null && !user.IsBanned)
+                                    {
+                                        <div class="modal fade" id="banUserModal-@user.Id" tabindex="-1" aria-labelledby="banUserModalLabel-@user.Id" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="banUserModalLabel-@user.Id">Ban User: @user.Username</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <form asp-action="BanUser" method="post">
+                                                        @Html.AntiForgeryToken()
+                                                        <div class="modal-body">
+                                                            <input type="hidden" name="id" value="@user.Id" />
+
+                                                            <p>Are you sure you want to ban the user <strong>@user.Username</strong>?</p>
+                                                            <p class="text-danger">This will prevent the user from logging in and accessing the site.</p>
+
+                                                            <div class="mb-3">
+                                                                <label for="banReason-@user.Id" class="form-label">Ban Reason (optional)</label>
+                                                                <textarea id="banReason-@user.Id" name="banReason" class="form-control" rows="3" placeholder="Enter a reason for banning this user..."></textarea>
+                                                                <div class="form-text">This reason will be visible to administrators only.</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-danger">Ban User</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    <!-- Unban User Modal -->
+                                    @if (user.Administrator == null && user.IsBanned)
+                                    {
+                                        <div class="modal fade" id="unbanUserModal-@user.Id" tabindex="-1" aria-labelledby="unbanUserModalLabel-@user.Id" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="unbanUserModalLabel-@user.Id">Unban User: @user.Username</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Are you sure you want to unban the user <strong>@user.Username</strong>?</p>
+                                                        <p>This will allow the user to log in and access the site again.</p>
+
+                                                        @if (!string.IsNullOrEmpty(user.BanReason))
+                                                        {
+                                                            <div class="alert alert-info">
+                                                                <strong>Ban Reason:</strong> @user.BanReason
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <form asp-action="UnbanUser" method="post">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="id" value="@user.Id" />
+                                                            <button type="submit" class="btn btn-success">Unban User</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
                                 }
                             </tbody>
                         </table>
@@ -98,7 +214,7 @@
                 tableRows.forEach(row => {
                     const userName = row.querySelector('h6').textContent.toLowerCase();
                     const userEmail = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                    const userRole = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                    const userRole = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
 
                     if (userName.includes(searchTerm) || userEmail.includes(searchTerm) || userRole.includes(searchTerm)) {
                         row.style.display = '';

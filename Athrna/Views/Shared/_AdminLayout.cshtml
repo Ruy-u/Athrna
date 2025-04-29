@@ -40,7 +40,13 @@
                         <i class="bi bi-people me-2"></i> Users
                     </a>
                 </li>
-                <!-- Add Guide Management Menu Items -->
+                <!-- Add Ratings Management item -->
+                <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "Ratings" ? "active" : "")">
+                    <a asp-controller="Admin" asp-action="Ratings">
+                        <i class="bi bi-star me-2"></i> Ratings
+                    </a>
+                </li>
+                <!-- Guide Management Menu Items -->
                 <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "GuideApplications" ? "active" : "")">
                     <a asp-controller="Admin" asp-action="GuideApplications">
                         <i class="bi bi-clipboard-check me-2"></i> Guide Applications
@@ -111,7 +117,7 @@
                         alert('@TempData["ErrorMessage"]');
             </text>
         }
-                });
+                        });
     </script>
     @RenderSection("Scripts", required: false)
 </body>
