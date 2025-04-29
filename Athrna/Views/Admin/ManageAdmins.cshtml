@@ -1,0 +1,233 @@
+﻿@model IEnumerable<Athrna.Models.Administrator>
+@using Athrna.Models
+
+@{
+    ViewData["Title"] = "Manage Administrators";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <h6 class="mb-0">Manage Administrators</h6>
+                    </div>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="alert alert-info mx-4 mt-3">
+                        <h5 class="alert-heading">Admin Role Levels</h5>
+                        <p class="mb-0">Admin roles are categorized into 5 levels:</p>
+                        <ul class="mb-0">
+                            <li><strong>Level 1 (Super Admin)</strong>: Full access to all admin functions, can manage other admins</li>
+                            <li><strong>Level 2 (Senior Admin)</strong>: Access to most functions except managing admins</li>
+                            <li><strong>Level 3 (Content Manager)</strong>: Can manage sites, cities, guides and content</li>
+                            <li><strong>Level 4 (User Manager)</strong>: Can manage users, bookmarks, and ratings</li>
+                            <li><strong>Level 5 (Viewer)</strong>: Read-only access to most parts of the admin panel</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Admin</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Email</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Role Level</th>
+                                    <th class="text-secondary opacity-7"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var admin in Model.OrderBy(a => a.RoleLevel))
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex px-3 py-1">
+                                                <div class="avatar-circle me-3" style="width: 40px; height: 40px; font-size: 1.2rem; background-color: #1a3b29; color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                                                    @admin.Client.Username.Substring(0, 1).ToUpper()
+                                                </div>
+                                                <div class="d-flex flex-column justify-content-center">
+                                                    <h6 class="mb-0 text-sm">@admin.Client.Username</h6>
+                                                    <p class="text-xs text-secondary mb-0">ID: @admin.Id</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <p class="text-sm text-secondary mb-0">@admin.Client.Email</p>
+                                        </td>
+                                        <td>
+                                            @{
+                                                string roleName = admin.RoleLevel switch
+                                                {
+                                                    1 => "Super Admin",
+                                                    2 => "Senior Admin",
+                                                    3 => "Content Manager",
+                                                    4 => "User Manager",
+                                                    5 => "Viewer",
+                                                    _ => "Unknown"
+                                                };
+                                                
+                                                string badgeColor = admin.RoleLevel switch
+                                                {
+                                                    1 => "bg-danger",
+                                                    2 => "bg-warning",
+                                                    3 => "bg-success",
+                                                    4 => "bg-info",
+                                                    5 => "bg-secondary",
+                                                    _ => "bg-secondary"
+                                                };
+                                            }
+                                            <span class="badge @badgeColor">Level @admin.RoleLevel: @roleName</span>
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="d-flex gap-2">
+                                                <!-- Don't show edit button for your own account -->
+                                                @if (admin.Client.Username != User.Identity.Name)
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editRoleModal-@admin.Id">
+                                                        <i class="bi bi-pencil"></i> Edit Role
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#removeAdminModal-@admin.Id">
+                                                        <i class="bi bi-x-circle"></i> Remove Admin
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-info">Current User</span>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Edit Role Modal -->
+                                    <div class="modal fade" id="editRoleModal-@admin.Id" tabindex="-1" aria-labelledby="editRoleModalLabel-@admin.Id" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="editRoleModalLabel-@admin.Id">Edit Admin Role: @admin.Client.Username</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form asp-action="EditAdmin" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <div class="modal-body">
+                                                        <input type="hidden" name="id" value="@admin.Id" />
+
+                                                        @{
+                                                            var roleOptions = new List<string>
+                                                    {
+                                                    $"<option value=\"1\" {(admin.RoleLevel == 1 ? "selected" : "")}>Level 1: Super Admin</option>",
+                                                    $"<option value=\"2\" {(admin.RoleLevel == 2 ? "selected" : "")}>Level 2: Senior Admin</option>",
+                                                    $"<option value=\"3\" {(admin.RoleLevel == 3 ? "selected" : "")}>Level 3: Content Manager</option>",
+                                                    $"<option value=\"4\" {(admin.RoleLevel == 4 ? "selected" : "")}>Level 4: User Manager</option>",
+                                                    $"<option value=\"5\" {(admin.RoleLevel == 5 ? "selected" : "")}>Level 5: Viewer</option>"
+                                                    };
+                                                        }
+                                                        <div class="form-group mb-3">
+                                                            <label for="roleLevel-@admin.Id" class="form-label">Role Level</label>
+                                                            <select id="roleLevel-@admin.Id" name="roleLevel" class="form-select">
+                                                                @Html.Raw(string.Join(Environment.NewLine, roleOptions))
+                                                            </select>
+                                                            <div class="form-text">
+                                                                <small><strong>Current Role:</strong> Level @admin.RoleLevel (@roleName)</small>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="role-descriptions mt-3">
+                                                            <h6>Role Permissions:</h6>
+                                                            <div class="role-description" id="role-desc-1-@admin.Id">
+                                                                <strong>Level 1: Super Admin</strong> - Full access to all admin functions, including managing other admins
+                                                            </div>
+                                                            <div class="role-description" id="role-desc-2-@admin.Id">
+                                                                <strong>Level 2: Senior Admin</strong> - Access to most functions except managing admins
+                                                            </div>
+                                                            <div class="role-description" id="role-desc-3-@admin.Id">
+                                                                <strong>Level 3: Content Manager</strong> - Can manage sites, cities, guides and content
+                                                            </div>
+                                                            <div class="role-description" id="role-desc-4-@admin.Id">
+                                                                <strong>Level 4: User Manager</strong> - Can manage users, bookmarks, and ratings
+                                                            </div>
+                                                            <div class="role-description" id="role-desc-5-@admin.Id">
+                                                                <strong>Level 5: Viewer</strong> - Read-only access to most parts of the admin panel
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-primary">Update Role</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Remove Admin Modal -->
+                                    <div class="modal fade" id="removeAdminModal-@admin.Id" tabindex="-1" aria-labelledby="removeAdminModalLabel-@admin.Id" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="removeAdminModalLabel-@admin.Id">Remove Admin Rights</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Are you sure you want to remove admin rights from <strong>@admin.Client.Username</strong>?</p>
+                                                    <p class="text-danger">This action cannot be undone.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <a asp-action="ToggleAdmin" asp-route-id="@admin.Client.Id" class="btn btn-danger">Remove Admin Rights</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (!Model.Any())
+                    {
+                        <div class="text-center py-4">
+                            <p class="text-muted">No administrators found.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show descriptions based on selected role
+            const roleSelects = document.querySelectorAll('select[name="roleLevel"]');
+            
+            roleSelects.forEach(select => {
+                const adminId = select.id.split('-')[1];
+                
+                // Initial highlighting
+                highlightDescription(select.value, adminId);
+                
+                // Change highlighting when selection changes
+                select.addEventListener('change', function() {
+                    highlightDescription(this.value, adminId);
+                });
+            });
+            
+            function highlightDescription(roleLevel, adminId) {
+                // Reset all descriptions
+                const descriptions = document.querySelectorAll(`[id^="role-desc-"][id$="-${adminId}"]`);
+                descriptions.forEach(desc => {
+                    desc.classList.remove('bg-light', 'p-2', 'rounded', 'fw-bold');
+                });
+                
+                // Highlight selected description
+                const selectedDesc = document.getElementById(`role-desc-${roleLevel}-${adminId}`);
+                if (selectedDesc) {
+                    selectedDesc.classList.add('bg-light', 'p-2', 'rounded', 'fw-bold');
+                }
+            }
+        });
+    </script>
+}

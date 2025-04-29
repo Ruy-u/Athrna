@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@using Athrna.Models
+@{
+    int adminRoleLevel = ViewBag.AdminRoleLevel ?? 5;
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -25,39 +29,64 @@
                         <i class="bi bi-speedometer2 me-2"></i> Dashboard
                     </a>
                 </li>
-                <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "Sites" ? "active" : "")">
-                    <a asp-controller="Admin" asp-action="Sites">
-                        <i class="bi bi-geo-alt me-2"></i> Sites
-                    </a>
-                </li>
-                <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "Cities" ? "active" : "")">
-                    <a asp-controller="Admin" asp-action="Cities">
-                        <i class="bi bi-building me-2"></i> Cities
-                    </a>
-                </li>
-                <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "Users" ? "active" : "")">
-                    <a asp-controller="Admin" asp-action="Users">
-                        <i class="bi bi-people me-2"></i> Users
-                    </a>
-                </li>
-                <!-- Add Ratings Management item -->
-                <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "Ratings" ? "active" : "")">
-                    <a asp-controller="Admin" asp-action="Ratings">
-                        <i class="bi bi-star me-2"></i> Ratings
-                    </a>
-                </li>
-                <!-- Guide Management Menu Items -->
-                <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "GuideApplications" ? "active" : "")">
-                    <a asp-controller="Admin" asp-action="GuideApplications">
-                        <i class="bi bi-clipboard-check me-2"></i> Guide Applications
-                    </a>
-                </li>
-                <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "ManageGuides" ? "active" : "")">
-                    <a asp-controller="Admin" asp-action="ManageGuides">
-                        <i class="bi bi-person-badge me-2"></i> Manage Guides
-                    </a>
-                </li>
-                <!-- End of Guide Management Menu Items -->
+
+                <!-- Content Management (Level 3 or higher) -->
+                @if (adminRoleLevel <= 3)
+                {
+                    <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "Sites" ? "active" : "")">
+                        <a asp-controller="Admin" asp-action="Sites">
+                            <i class="bi bi-geo-alt me-2"></i> Sites
+                        </a>
+                    </li>
+                    <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "Cities" ? "active" : "")">
+                        <a asp-controller="Admin" asp-action="Cities">
+                            <i class="bi bi-building me-2"></i> Cities
+                        </a>
+                    </li>
+                    <li class="@(ViewContext.RouteData.Values["Action"].ToString().StartsWith("Guide") ? "active" : "")">
+                        <a href="#guideSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                            <i class="bi bi-people me-2"></i> Guides
+                        </a>
+                        <ul class="collapse list-unstyled @(ViewContext.RouteData.Values["Action"].ToString().StartsWith("Guide") ? "show" : "")" id="guideSubmenu">
+                            <li>
+                                <a asp-controller="Admin" asp-action="GuideApplications">
+                                    <i class="bi bi-clipboard-check me-2"></i> Applications
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-controller="Admin" asp-action="ManageGuides">
+                                    <i class="bi bi-person-badge me-2"></i> Manage Guides
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                }
+
+                <!-- User Management (Level 4 or higher) -->
+                @if (adminRoleLevel <= 4)
+                {
+                    <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "Users" ? "active" : "")">
+                        <a asp-controller="Admin" asp-action="Users">
+                            <i class="bi bi-people me-2"></i> Users
+                        </a>
+                    </li>
+                    <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "Ratings" ? "active" : "")">
+                        <a asp-controller="Admin" asp-action="Ratings">
+                            <i class="bi bi-star me-2"></i> Ratings
+                        </a>
+                    </li>
+                }
+
+                <!-- Admin Management (Only Level 1) -->
+                @if (adminRoleLevel == 1)
+                {
+                    <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "ManageAdmins" ? "active" : "")">
+                        <a asp-controller="Admin" asp-action="ManageAdmins">
+                            <i class="bi bi-shield-lock me-2"></i> Manage Admins
+                        </a>
+                    </li>
+                }
+
                 <li>
                     <a asp-controller="Home" asp-action="Index">
                         <i class="bi bi-house-door me-2"></i> View Site
@@ -69,6 +98,34 @@
                     </a>
                 </li>
             </ul>
+
+            <!-- Admin Role Info -->
+            <div class="admin-role-info">
+                <div class="admin-role-level">
+                    @{
+                        string roleName = adminRoleLevel switch
+                        {
+                            1 => "Super Admin",
+                            2 => "Senior Admin",
+                            3 => "Content Manager",
+                            4 => "User Manager",
+                            5 => "Viewer",
+                            _ => "Unknown"
+                        };
+
+                        string badgeColor = adminRoleLevel switch
+                        {
+                            1 => "danger",
+                            2 => "warning",
+                            3 => "success",
+                            4 => "info",
+                            5 => "secondary",
+                            _ => "secondary"
+                        };
+                    }
+                    <span class="badge bg-@badgeColor">Level @adminRoleLevel: @roleName</span>
+                </div>
+            </div>
         </nav>
 
         <!-- Page Content -->
@@ -83,6 +140,23 @@
                     </div>
                 </div>
             </nav>
+
+            <!-- Display alerts for unauthorized actions -->
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show mx-3 mt-3" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show mx-3 mt-3" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
 
             <main>
                 @RenderBody()
@@ -102,22 +176,7 @@
                     sidebar.classList.toggle('active');
                 });
             }
-
-            // Show message if present
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <text>
-                        alert('@TempData["SuccessMessage"]');
-            </text>
-        }
-
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <text>
-                        alert('@TempData["ErrorMessage"]');
-            </text>
-        }
-                        });
+        });
     </script>
     @RenderSection("Scripts", required: false)
 </body>

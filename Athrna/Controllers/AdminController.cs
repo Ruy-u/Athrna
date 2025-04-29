@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Security.Claims;
 
 namespace Athrna.Controllers
 {
@@ -25,22 +26,26 @@ namespace Athrna.Controllers
         {
             try
             {
+                // Dashboard is accessible to all admin levels
                 var statistics = new AdminDashboardViewModel
-            {
-                TotalSites = await _context.Site.CountAsync(),
-                TotalUsers = await _context.Client.CountAsync(),
-                TotalBookmarks = await _context.Bookmark.CountAsync(),
-                TotalRatings = await _context.Rating.CountAsync(),
-                RecentUsers = await _context.Client.OrderByDescending(c => c.Id).Take(5).ToListAsync(),
-                RecentRatings = await _context.Rating
-                    .Include(r => r.Client)
-                    .Include(r => r.Site)
-                    .OrderByDescending(r => r.Id)
-                    .Take(5)
-                    .ToListAsync()
-            };
+                {
+                    TotalSites = await _context.Site.CountAsync(),
+                    TotalUsers = await _context.Client.CountAsync(),
+                    TotalBookmarks = await _context.Bookmark.CountAsync(),
+                    TotalRatings = await _context.Rating.CountAsync(),
+                    RecentUsers = await _context.Client.OrderByDescending(c => c.Id).Take(5).ToListAsync(),
+                    RecentRatings = await _context.Rating
+                        .Include(r => r.Client)
+                        .Include(r => r.Site)
+                        .OrderByDescending(r => r.Id)
+                        .Take(5)
+                        .ToListAsync()
+                };
 
-            return View(statistics);
+                // Pass current admin role level to view
+                ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
+
+                return View(statistics);
             }
             catch (Exception ex)
             {
@@ -51,6 +56,7 @@ namespace Athrna.Controllers
         }
 
         // GET: Admin/Sites
+        [Authorize(Policy = "ContentManagement")]
         public async Task<IActionResult> Sites()
         {
             var sites = await _context.Site
@@ -58,32 +64,41 @@ namespace Athrna.Controllers
                 .Include(s => s.CulturalInfo)
                 .ToListAsync();
 
+            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
             return View(sites);
         }
 
         // GET: Admin/Cities
+        [Authorize(Policy = "ContentManagement")]
         public async Task<IActionResult> Cities()
         {
             var cities = await _context.City
                 .Include(c => c.Sites)
                 .ToListAsync();
 
+            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
             return View(cities);
         }
 
         // GET: Admin/Users
+        [Authorize(Policy = "UserManagement")]
         public async Task<IActionResult> Users()
         {
             var users = await _context.Client
                 .Include(c => c.Administrator)
                 .ToListAsync();
 
+            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
             return View(users);
         }
 
         // GET: Admin/EditSite/5
         public async Task<IActionResult> EditSite(int? id)
         {
+            // Content management (level 3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+
             if (id == null)
             {
                 return NotFound();
@@ -102,6 +117,7 @@ namespace Athrna.Controllers
             }
 
             ViewBag.Cities = await _context.City.ToListAsync();
+            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
             return View(site);
         }
 
@@ -109,6 +125,10 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditSite(int id, IFormCollection form, IFormFile imageFile)
         {
+            // Content management (level 3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+
             // Log what we received
             _logger.LogInformation("EditSite POST received for ID: {0}", id);
             foreach (var key in form.Keys)
@@ -281,6 +301,10 @@ namespace Athrna.Controllers
             int? EstablishedDate,
             IFormFile imageFile)
         {
+            // Content management (level 3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+
             // Log incoming data
             _logger.LogInformation("Creating site with Name: {Name}, CityId: {CityId}, SiteType: {SiteType}",
                 Name, CityId, SiteType);
@@ -446,6 +470,9 @@ namespace Athrna.Controllers
         // GET: Admin/DeleteSite/5
         public async Task<IActionResult> DeleteSite(int? id)
         {
+            // Content management (level 3 or higher requires delete permission)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
             if (id == null)
             {
                 return NotFound();
@@ -464,7 +491,7 @@ namespace Athrna.Controllers
                 {
                     return NotFound();
                 }
-
+                ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
                 return View(site);
             }
             catch (Exception ex)
@@ -480,6 +507,8 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteSiteConfirmed(int id)
         {
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
             try
             {
                 // First delete related cultural info
@@ -571,6 +600,8 @@ namespace Athrna.Controllers
         // GET: Admin/EditCity/5
         public async Task<IActionResult> EditCity(int? id)
         {
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
             if (id == null)
             {
                 return NotFound();
@@ -585,7 +616,7 @@ namespace Athrna.Controllers
             {
                 return NotFound();
             }
-
+            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
             return View(city);
         }
 
@@ -594,6 +625,10 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditCity(int id, string Name)
         {
+            // Content management (level 3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+
             if (string.IsNullOrEmpty(Name))
             {
                 ModelState.AddModelError("Name", "City name is required");
@@ -664,20 +699,25 @@ namespace Athrna.Controllers
         }
 
         // GET: Admin/GuideApplications
+        [Authorize(Policy = "ContentManagement")]
         public async Task<IActionResult> GuideApplications()
         {
+            var applications = await _context.GuideApplication
+                .Include(g => g.City)
+                .OrderByDescending(g => g.SubmissionDate)
+                .ToListAsync();
 
-                var applications = await _context.GuideApplication
-                    .Include(g => g.City)
-                    .OrderByDescending(g => g.SubmissionDate)
-                    .ToListAsync();
-
-                return View(applications);
+            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
+            return View(applications);
         }
 
         // GET: Admin/GuideApplicationDetail/5
         public async Task<IActionResult> GuideApplicationDetail(int? id)
         {
+            // Guide management (level 3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+
             if (id == null)
             {
                 return NotFound();
@@ -691,7 +731,7 @@ namespace Athrna.Controllers
             {
                 return NotFound();
             }
-
+            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
             return View(application);
         }
 
@@ -700,6 +740,9 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveGuideApplication(int id)
         {
+            // Guide management (level 3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
             try
             {
                 var application = await _context.GuideApplication
@@ -756,6 +799,10 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RejectGuideApplication(int id, string rejectionReason)
         {
+            // Guide management (level 3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+
             var application = await _context.GuideApplication
                 .FirstOrDefaultAsync(g => g.Id == id);
 
@@ -785,17 +832,26 @@ namespace Athrna.Controllers
         // GET: Admin/ManageGuides
         public async Task<IActionResult> ManageGuides()
         {
+            // Guide management (level 3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+
             var guides = await _context.Guide
                 .Include(g => g.City)
                 .OrderBy(g => g.FullName)
                 .ToListAsync();
 
+            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
             return View(guides);
         }
 
         // GET: Admin/EditGuide/5
         public async Task<IActionResult> EditGuide(int? id)
         {
+            // Guide management (level 3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+
             if (id == null)
             {
                 return NotFound();
@@ -809,7 +865,7 @@ namespace Athrna.Controllers
             {
                 return NotFound();
             }
-
+            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
             ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
             return View(guide);
         }
@@ -819,6 +875,10 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditGuide(int id, Guide guide)
         {
+            // Guide management (level 3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+
             if (id != guide.Id)
             {
                 return NotFound();
@@ -856,6 +916,10 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteGuideConfirmed(int id)
         {
+            // Guide management (level 3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+
             var guide = await _context.Guide.FindAsync(id);
             if (guide != null)
             {
@@ -1049,9 +1113,9 @@ namespace Athrna.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Users));
         }
-        // Add this to the AdminController.cs file
 
         // GET: Admin/Ratings
+        [Authorize(Policy = "UserManagement")]
         public async Task<IActionResult> Ratings()
         {
             var ratings = await _context.Rating
@@ -1061,6 +1125,7 @@ namespace Athrna.Controllers
                 .OrderByDescending(r => r.Id)
                 .ToListAsync();
 
+            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
             return View(ratings);
         }
 
@@ -1069,6 +1134,9 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteRating(int id)
         {
+            // User management (level 4 or higher)
+            if (!await HasRequiredRoleLevel(4))
+                return Unauthorized(4);
             try
             {
                 _logger.LogInformation("Attempting to delete rating with ID: {Id}", id);
@@ -1101,6 +1169,9 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> BanUser(int id, string banReason)
         {
+            // User management (level 4 or higher)
+            if (!await HasRequiredRoleLevel(4))
+                return Unauthorized(4);
             try
             {
                 _logger.LogInformation("Attempting to ban user with ID: {Id}", id);
@@ -1146,6 +1217,9 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UnbanUser(int id)
         {
+            // User management (level 4 or higher)
+            if (!await HasRequiredRoleLevel(4))
+                return Unauthorized(4);
             try
             {
                 _logger.LogInformation("Attempting to unban user with ID: {Id}", id);
@@ -1177,6 +1251,125 @@ namespace Athrna.Controllers
                 return RedirectToAction(nameof(Users));
             }
         }
+        // GET: Admin/ManageAdmins
+        [Authorize(Policy = "AdminManagement")]
+        public async Task<IActionResult> ManageAdmins()
+        {
+            var admins = await _context.Administrator
+                .Include(a => a.Client)
+                .ToListAsync();
+
+            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
+            return View(admins);
+        }
+
+        // GET: Admin/EditAdmin/5
+        public async Task<IActionResult> EditAdmin(int? id)
+        {
+            // Admin management (only level 1 can edit admins)
+            if (!await HasRequiredRoleLevel(1))
+                return Unauthorized(1);
+
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var admin = await _context.Administrator
+                .Include(a => a.Client)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (admin == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
+            return View(admin);
+        }
+
+        // POST: Admin/EditAdmin/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditAdmin(int id, int roleLevel)
+        {
+            // Admin management (only level 1 can edit admins)
+            if (!await HasRequiredRoleLevel(1))
+                return Unauthorized(1);
+
+            if (id <= 0 || roleLevel < 1 || roleLevel > 5)
+            {
+                return BadRequest();
+            }
+
+            var admin = await _context.Administrator.FindAsync(id);
+            if (admin == null)
+            {
+                return NotFound();
+            }
+
+            // Prevent an admin from lowering their own role
+            if (admin.ClientId == int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)))
+            {
+                TempData["ErrorMessage"] = "You cannot modify your own admin role.";
+                return RedirectToAction(nameof(ManageAdmins));
+            }
+
+            // Update admin role
+            admin.RoleLevel = roleLevel;
+            _context.Update(admin);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Admin role updated successfully.";
+            return RedirectToAction(nameof(ManageAdmins));
+        }
+
+        // GET: Admin/ToggleAdmin/5
+        [Authorize(Policy = "AdminManagement")]
+        public async Task<IActionResult> ToggleAdmin(int id, int roleLevel = 5)
+        {
+            var client = await _context.Client
+                .Include(c => c.Administrator)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (client == null)
+            {
+                return NotFound();
+            }
+
+            if (client.Administrator != null)
+            {
+                // Prevent an admin from removing their own admin status
+                if (client.Id == int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)))
+                {
+                    TempData["ErrorMessage"] = "You cannot remove your own admin status.";
+                    return RedirectToAction(nameof(Users));
+                }
+
+                // Remove admin privileges
+                _context.Administrator.Remove(client.Administrator);
+            }
+            else
+            {
+                // Add admin privileges with specified role level
+                // Ensure role level is within valid range
+                if (roleLevel < 1 || roleLevel > 5)
+                {
+                    roleLevel = 5; // Default to lowest permission if invalid
+                }
+
+                var administrator = new Administrator
+                {
+                    ClientId = client.Id,
+                    RoleLevel = roleLevel
+                };
+                _context.Administrator.Add(administrator);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Users));
+        }
+
 
         // Helper methods
         private bool SiteExists(int id)
@@ -1187,6 +1380,32 @@ namespace Athrna.Controllers
         private bool CityExists(int id)
         {
             return _context.City.Any(e => e.Id == id);
+        }
+        private async Task<int> GetCurrentAdminRoleLevel()
+        {
+            if (User.Identity.IsAuthenticated && User.IsInRole("Administrator"))
+            {
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var admin = await _context.Administrator
+                    .FirstOrDefaultAsync(a => a.ClientId == userId);
+
+                return admin?.RoleLevel ?? 5; // Default to lowest permission if not found
+            }
+            return 5; // Default to lowest permission level
+        }
+
+        // Check if user has required role level
+        private async Task<bool> HasRequiredRoleLevel(int requiredLevel)
+        {
+            var currentLevel = await GetCurrentAdminRoleLevel();
+            return currentLevel <= requiredLevel; // Lower numbers have higher permissions
+        }
+
+        // Unauthorized action result
+        private IActionResult Unauthorized(int requiredLevel)
+        {
+            TempData["ErrorMessage"] = $"You need admin role level {requiredLevel} or higher to access this feature.";
+            return RedirectToAction("Index");
         }
     }
 }

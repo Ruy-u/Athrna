@@ -275,3 +275,131 @@ main {
         overflow-x: auto;
     }
 }
+/* Admin role info on sidebar */
+.admin-role-info {
+    padding: 1rem;
+    text-align: center;
+    margin-top: auto;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.admin-role-level {
+    margin-bottom: 0.5rem;
+}
+
+    .admin-role-level .badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+/* Role descriptions in modals */
+.role-descriptions {
+    font-size: 0.9rem;
+    margin-top: 1rem;
+}
+
+.role-description {
+    margin-bottom: 0.5rem;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+    .role-description.active {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+/* Highlight current admin role */
+span.badge.bg-danger {
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.5);
+}
+
+span.badge.bg-warning {
+    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.5);
+}
+
+span.badge.bg-success {
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.5);
+}
+
+span.badge.bg-info {
+    box-shadow: 0 0 0 2px rgba(23, 162, 184, 0.5);
+}
+
+span.badge.bg-secondary {
+    box-shadow: 0 0 0 2px rgba(108, 117, 125, 0.5);
+}
+
+/* Badge colors by role level */
+.badge-role-1 {
+    background-color: #dc3545 !important;
+}
+
+.badge-role-2 {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.badge-role-3 {
+    background-color: #28a745 !important;
+}
+
+.badge-role-4 {
+    background-color: #17a2b8 !important;
+}
+
+.badge-role-5 {
+    background-color: #6c757d !important;
+}
+
+/* Role hierarchy visualization */
+.role-hierarchy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 1rem 0;
+}
+
+.role-level {
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+}
+
+.role-level-1 {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-left: 4px solid #dc3545;
+}
+
+.role-level-2 {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-left: 4px solid #ffc107;
+}
+
+.role-level-3 {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-left: 4px solid #28a745;
+}
+
+.role-level-4 {
+    background-color: rgba(23, 162, 184, 0.1);
+    border-left: 4px solid #17a2b8;
+}
+
+.role-level-5 {
+    background-color: rgba(108, 117, 125, 0.1);
+    border-left: 4px solid #6c757d;
+}
+
+/* Tooltip indicating required role level */
+.required-role-tooltip {
+    font-size: 0.8rem;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+    .required-role-tooltip i {
+        font-size: 0.9rem;
+    }

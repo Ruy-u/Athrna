@@ -73,7 +73,27 @@
                                         <td>
                                             @if (user.Administrator != null)
                                             {
-                                                <span class="badge bg-gradient-success">Administrator</span>
+                                                string roleName = user.Administrator.RoleLevel switch
+                                                {
+                                                    1 => "Super Admin",
+                                                    2 => "Senior Admin",
+                                                    3 => "Content Manager",
+                                                    4 => "User Manager",
+                                                    5 => "Viewer",
+                                                    _ => "Admin"
+                                                };
+
+                                                string badgeColor = user.Administrator.RoleLevel switch
+                                                {
+                                                    1 => "bg-danger",
+                                                    2 => "bg-warning",
+                                                    3 => "bg-success",
+                                                    4 => "bg-info",
+                                                    5 => "bg-secondary",
+                                                    _ => "bg-primary"
+                                                };
+
+                                                <span class="badge @badgeColor">Level @user.Administrator.RoleLevel: @roleName</span>
                                             }
                                             else
                                             {
@@ -83,18 +103,83 @@
                                         <td class="align-middle">
                                             <div class="d-flex gap-2">
                                                 <!-- Toggle Admin Role -->
-                                                <a asp-action="ToggleAdmin" asp-route-id="@user.Id"
-                                                   class="btn btn-sm @(user.Administrator != null ? "btn-outline-danger" : "btn-outline-success")"
-                                                   onclick="return confirm('Are you sure you want to change this user\'s role?')">
+                                                @if (ViewBag.AdminRoleLevel == 1) // Only Super Admins can manage other admins
+                                                {
                                                     @if (user.Administrator != null)
                                                     {
-                                                        <span><i class="bi bi-person"></i> Remove Admin</span>
+                                                        <a asp-action="ToggleAdmin" asp-route-id="@user.Id"
+                                                           class="btn btn-sm btn-outline-danger"
+                                                           onclick="return confirm('Are you sure you want to remove admin rights from this user?')">
+                                                            <span><i class="bi bi-person"></i> Remove Admin</span>
+                                                        </a>
                                                     }
                                                     else
                                                     {
-                                                        <span><i class="bi bi-person-check"></i> Make Admin</span>
+                                                        <button type="button" class="btn btn-sm btn-outline-success"
+                                                                data-bs-toggle="modal" data-bs-target="#makeAdminModal-@user.Id">
+                                                            <span><i class="bi bi-person-check"></i> Make Admin</span>
+                                                        </button>
+
+                                                        <!-- Make Admin Modal -->
+                                                        <div class="modal fade" id="makeAdminModal-@user.Id" tabindex="-1" aria-labelledby="makeAdminModalLabel-@user.Id" aria-hidden="true">
+                                                            <div class="modal-dialog">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title" id="makeAdminModalLabel-@user.Id">Assign Admin Role to @user.Username</h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div>
+                                                                    <form asp-action="ToggleAdmin" method="get">
+                                                                        <div class="modal-body">
+                                                                            <input type="hidden" name="id" value="@user.Id" />
+
+                                                                            <div class="form-group mb-3">
+                                                                                <label for="roleLevel-@user.Id" class="form-label">Admin Role Level</label>
+                                                                                <select id="roleLevel-@user.Id" name="roleLevel" class="form-select">
+                                                                                    <option value="1">Level 1: Super Admin</option>
+                                                                                    <option value="2">Level 2: Senior Admin</option>
+                                                                                    <option value="3">Level 3: Content Manager</option>
+                                                                                    <option value="4">Level 4: User Manager</option>
+                                                                                    <option value="5" selected>Level 5: Viewer</option>
+                                                                                </select>
+                                                                            </div>
+
+                                                                            <div class="role-descriptions mt-3">
+                                                                                <h6>Role Permissions:</h6>
+                                                                                <div class="role-description" id="role-desc-1-@user.Id">
+                                                                                    <strong>Level 1: Super Admin</strong> - Full access to all admin functions, including managing other admins
+                                                                                </div>
+                                                                                <div class="role-description" id="role-desc-2-@user.Id">
+                                                                                    <strong>Level 2: Senior Admin</strong> - Access to most functions except managing admins
+                                                                                </div>
+                                                                                <div class="role-description" id="role-desc-3-@user.Id">
+                                                                                    <strong>Level 3: Content Manager</strong> - Can manage sites, cities, guides and content
+                                                                                </div>
+                                                                                <div class="role-description" id="role-desc-4-@user.Id">
+                                                                                    <strong>Level 4: User Manager</strong> - Can manage users, bookmarks, and ratings
+                                                                                </div>
+                                                                                <div class="role-description" id="role-desc-5-@user.Id">
+                                                                                    <strong>Level 5: Viewer</strong> - Read-only access to most parts of the admin panel
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="modal-footer">
+                                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                            <button type="submit" class="btn btn-success">Make Admin</button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     }
-                                                </a>
+                                                }
+                                                else
+                                                {
+                                                    <!-- For non-SuperAdmin users, show informational badge instead -->
+                                                    @if (user.Administrator != null)
+                                                    {
+                                                        <!-- Nothing extra needed as the admin badge is already shown in the Role column -->
+                                                    }
+                                                }
 
                                                 <!-- Ban/Unban User -->
                                                 @if (user.Administrator == null) // Only allow ban/unban for non-admin users
@@ -223,6 +308,35 @@
                     }
                 });
             });
+
+            // Role selection description highlighter
+            const roleSelects = document.querySelectorAll('select[name="roleLevel"]');
+
+            roleSelects.forEach(select => {
+                const userId = select.id.split('-')[1];
+
+                // Initial highlighting
+                highlightDescription(select.value, userId);
+
+                // Change highlighting when selection changes
+                select.addEventListener('change', function () {
+                    highlightDescription(this.value, userId);
+                });
+            });
+
+            function highlightDescription(roleLevel, userId) {
+                // Reset all descriptions
+                const descriptions = document.querySelectorAll(`[id^="role-desc-"][id$="-${userId}"]`);
+                descriptions.forEach(desc => {
+                    desc.classList.remove('bg-light', 'p-2', 'rounded', 'fw-bold');
+                });
+
+                // Highlight selected description
+                const selectedDesc = document.getElementById(`role-desc-${roleLevel}-${userId}`);
+                if (selectedDesc) {
+                    selectedDesc.classList.add('bg-light', 'p-2', 'rounded', 'fw-bold');
+                }
+            }
         });
     </script>
 }

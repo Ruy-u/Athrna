@@ -3,6 +3,7 @@ using Athrna.Data;
 using Athrna.Services;
 using Athrna.Middleware;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +14,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add authentication
+// Add authentication with custom claim transformation
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -23,7 +24,56 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Strict;
+
+        // Add the role level claim to transform from claim to Role
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            // Ensure we have a user identity
+            if (context.Principal?.Identity is ClaimsIdentity identity)
+            {
+                // Check if the user is an administrator
+                if (identity.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "Administrator"))
+                {
+                    // Check if they have a role level claim
+                    var roleLevelClaim = identity.FindFirst("AdminRoleLevel");
+                    if (roleLevelClaim != null && int.TryParse(roleLevelClaim.Value, out int roleLevel))
+                    {
+                        // Add specific role claims based on the admin role level
+                        if (roleLevel <= 3) // Level 3 or higher
+                        {
+                            identity.AddClaim(new Claim("AdminPermission", "ContentManagement"));
+                        }
+
+                        if (roleLevel <= 4) // Level 4 or higher
+                        {
+                            identity.AddClaim(new Claim("AdminPermission", "UserManagement"));
+                        }
+
+                        if (roleLevel == 1) // Only level 1
+                        {
+                            identity.AddClaim(new Claim("AdminPermission", "AdminManagement"));
+                        }
+                    }
+                }
+            }
+        };
     });
+
+// Add authorization policies for specific admin permissions
+builder.Services.AddAuthorization(options =>
+{
+    // Policy for content management (level 3 or higher)
+    options.AddPolicy("ContentManagement", policy =>
+        policy.RequireClaim("AdminPermission", "ContentManagement"));
+
+    // Policy for user management (level 4 or higher)
+    options.AddPolicy("UserManagement", policy =>
+        policy.RequireClaim("AdminPermission", "UserManagement"));
+
+    // Policy for admin management (only level 1)
+    options.AddPolicy("AdminManagement", policy =>
+        policy.RequireClaim("AdminPermission", "AdminManagement"));
+});
 
 // Register DataProtection for token generation
 builder.Services.AddDataProtection();
@@ -31,6 +81,7 @@ builder.Services.AddDataProtection();
 // Register email services
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<PasswordResetTokenService>();
+
 // Add translation dictionary
 builder.Services.AddSingleton<Dictionary<string, Dictionary<string, string>>>(serviceProvider => {
     // Initialize with some basic translations

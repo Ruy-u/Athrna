@@ -27,6 +27,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            // Show loading indicator
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Logging in...';
+            submitBtn.disabled = true;
+
             const formData = new FormData(this);
             const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
@@ -39,9 +45,36 @@ document.addEventListener('DOMContentLoaded', function () {
             })
                 .then(response => response.json())
                 .then(data => {
+                    // Reset button state
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+
                     if (data.success) {
-                        // Redirect to specified URL
-                        window.location.href = data.redirectUrl;
+                        // Store admin role info in sessionStorage if user is admin
+                        if (data.isAdmin) {
+                            sessionStorage.setItem('isAdmin', 'true');
+                            sessionStorage.setItem('adminRoleLevel', data.adminRoleLevel.toString());
+
+                            // Map role level to a descriptive name for UX
+                            const roleName = getRoleName(data.adminRoleLevel);
+                            sessionStorage.setItem('adminRoleName', roleName);
+
+                            // Show a temporary notification
+                            showLoginSuccessNotification(`Welcome! You're logged in as ${roleName}.`);
+                        } else {
+                            // Clear any previous admin info
+                            sessionStorage.removeItem('isAdmin');
+                            sessionStorage.removeItem('adminRoleLevel');
+                            sessionStorage.removeItem('adminRoleName');
+
+                            // Show a simple welcome notification
+                            showLoginSuccessNotification('Welcome! You have successfully logged in.');
+                        }
+
+                        // Redirect to specified URL after a short delay to show notification
+                        setTimeout(() => {
+                            window.location.href = data.redirectUrl;
+                        }, 1000);
                     } else {
                         // Check if account is banned
                         if (data.isBanned) {
@@ -73,6 +106,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 })
                 .catch(error => {
+                    // Reset button state
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+
                     console.error('Error during login:', error);
                     errorMessage.classList.remove('d-none');
                     errorMessage.textContent = 'An error occurred. Please try again.';
@@ -203,5 +240,54 @@ document.addEventListener('DOMContentLoaded', function () {
                 icon.classList.add('bi-eye');
             }
         });
+    }
+
+    // Helper function to convert role level to a descriptive name
+    function getRoleName(roleLevel) {
+        switch (parseInt(roleLevel)) {
+            case 1: return 'Super Admin';
+            case 2: return 'Senior Admin';
+            case 3: return 'Content Manager';
+            case 4: return 'User Manager';
+            case 5: return 'Viewer';
+            default: return 'Administrator';
+        }
+    }
+
+    // Function to show a temporary notification for successful login
+    function showLoginSuccessNotification(message) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'login-success-notification';
+        notification.style.position = 'fixed';
+        notification.style.top = '20px';
+        notification.style.right = '20px';
+        notification.style.padding = '15px 20px';
+        notification.style.backgroundColor = '#28a745';
+        notification.style.color = 'white';
+        notification.style.borderRadius = '4px';
+        notification.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+        notification.style.zIndex = '9999';
+        notification.style.transition = 'opacity 0.5s ease';
+        notification.style.display = 'flex';
+        notification.style.alignItems = 'center';
+        notification.style.gap = '10px';
+
+        // Add check icon
+        notification.innerHTML = `
+            <i class="bi bi-check-circle-fill" style="font-size: 1.2rem;"></i>
+            <span>${message}</span>
+        `;
+
+        // Add to document
+        document.body.appendChild(notification);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                notification.remove();
+            }, 500);
+        }, 3000);
     }
 });

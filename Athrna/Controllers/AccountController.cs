@@ -38,6 +38,9 @@ namespace Athrna.Controllers
             return View();
         }
 
+        // This is a partial update to the AccountController.cs file
+        // Update the login method to include RoleLevel in the claims
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
@@ -88,10 +91,13 @@ namespace Athrna.Controllers
         };
 
                 // Check if client is an administrator
-                var isAdmin = await _context.Administrator.AnyAsync(a => a.ClientId == client.Id);
-                if (isAdmin)
+                var admin = await _context.Administrator.FirstOrDefaultAsync(a => a.ClientId == client.Id);
+                if (admin != null)
                 {
                     claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
+
+                    // Add admin role level as a claim
+                    claims.Add(new Claim("AdminRoleLevel", admin.RoleLevel.ToString()));
                 }
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -110,7 +116,7 @@ namespace Athrna.Controllers
                 _logger.LogInformation($"User {model.Username} logged in successfully");
 
                 // Check if user is admin and redirect accordingly
-                if (isAdmin)
+                if (admin != null)
                 {
                     return RedirectToAction("Index", "Admin");
                 }
@@ -183,10 +189,17 @@ namespace Athrna.Controllers
         };
 
                 // Check if client is an administrator
-                var isAdmin = await _context.Administrator.AnyAsync(a => a.ClientId == client.Id);
-                if (isAdmin)
+                var admin = await _context.Administrator.FirstOrDefaultAsync(a => a.ClientId == client.Id);
+                if (admin != null)
                 {
                     claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
+
+                    // Add admin role level as a claim
+                    claims.Add(new Claim("AdminRoleLevel", admin.RoleLevel.ToString()));
+
+                    // Log admin role level for debugging
+                    _logger.LogInformation("Admin user {Username} logged in with role level {RoleLevel}",
+                        client.Username, admin.RoleLevel);
                 }
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -202,12 +215,18 @@ namespace Athrna.Controllers
                     authProperties);
 
                 // Add a success log entry
-                _logger.LogInformation($"User {model.Username} logged in successfully via AJAX");
+                _logger.LogInformation("User {Username} logged in successfully via AJAX", model.Username);
 
                 // Return different redirect URL based on user role
-                string redirectUrl = isAdmin ? "/Admin" : "/";
+                string redirectUrl = admin != null ? "/Admin" : "/";
 
-                return Json(new { success = true, redirectUrl });
+                return Json(new
+                {
+                    success = true,
+                    redirectUrl,
+                    isAdmin = admin != null,
+                    adminRoleLevel = admin?.RoleLevel ?? 0
+                });
             }
 
             return Json(new { success = false, message = "Invalid username or password" });
