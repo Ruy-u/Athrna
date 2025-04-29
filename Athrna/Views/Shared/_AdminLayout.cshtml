@@ -178,6 +178,91 @@
             }
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check if admin role information exists in localStorage
+            const isAdmin = localStorage.getItem('isAdmin') === 'true';
+            const adminRoleLevel = parseInt(localStorage.getItem('adminRoleLevel') || '5');
+            const adminRoleName = localStorage.getItem('adminRoleName') || 'Unknown';
+
+            console.log('Admin status from localStorage:', {
+                isAdmin,
+                adminRoleLevel,
+                adminRoleName
+            });
+
+            // If we don't have admin role information but we're in the admin panel,
+            // we need to fetch it from the server
+            if (!isAdmin && window.location.pathname.startsWith('/Admin')) {
+                console.log('In Admin panel but no admin info in localStorage, fetching...');
+
+                fetch('/Admin/GetCurrentUserInfo', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.isAdmin) {
+                            console.log('Received admin info from server:', data);
+
+                            localStorage.setItem('isAdmin', 'true');
+                            localStorage.setItem('adminRoleLevel', data.adminRoleLevel.toString());
+
+                            // Map role level to a descriptive name
+                            const roleName = getRoleName(data.adminRoleLevel);
+                            localStorage.setItem('adminRoleName', roleName);
+
+                            // Refresh the page to apply admin permissions
+                            window.location.reload();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching admin info:', error);
+                    });
+            }
+
+            // Helper function to convert role level to a descriptive name
+            function getRoleName(roleLevel) {
+                switch (parseInt(roleLevel)) {
+                    case 1: return 'Super Admin';
+                    case 2: return 'Senior Admin';
+                    case 3: return 'Content Manager';
+                    case 4: return 'User Manager';
+                    case 5: return 'Viewer';
+                    default: return 'Administrator';
+                }
+            }
+
+            // Toggle admin sidebar items based on role level
+            function updateSidebarVisibility() {
+                const adminRoleLevel = parseInt(localStorage.getItem('adminRoleLevel') || '5');
+
+                // Only show content management items to level 3 or higher
+                const contentManagementItems = document.querySelectorAll('[data-role-level="3"]');
+                contentManagementItems.forEach(item => {
+                    item.style.display = adminRoleLevel <= 3 ? 'block' : 'none';
+                });
+
+                // Only show user management items to level 4 or higher
+                const userManagementItems = document.querySelectorAll('[data-role-level="4"]');
+                userManagementItems.forEach(item => {
+                    item.style.display = adminRoleLevel <= 4 ? 'block' : 'none';
+                });
+
+                // Only show admin management items to level 1
+                const adminManagementItems = document.querySelectorAll('[data-role-level="1"]');
+                adminManagementItems.forEach(item => {
+                    item.style.display = adminRoleLevel === 1 ? 'block' : 'none';
+                });
+            }
+
+            // Call this function to update sidebar visibility
+            updateSidebarVisibility();
+        });
+    </script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

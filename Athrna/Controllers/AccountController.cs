@@ -38,7 +38,6 @@ namespace Athrna.Controllers
             return View();
         }
 
-        // This is a partial update to the AccountController.cs file
         // Update the login method to include RoleLevel in the claims
 
         [HttpPost]
@@ -101,10 +100,15 @@ namespace Athrna.Controllers
                 }
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                // Set up auth properties with proper expiration based on Remember Me
                 var authProperties = new AuthenticationProperties
                 {
                     IsPersistent = model.RememberMe,
-                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(model.RememberMe ? 30 : 1)
+                    // If RememberMe is true, use a 30-day expiration, otherwise use the default (2 hours from configuration)
+                    ExpiresUtc = model.RememberMe ? DateTimeOffset.UtcNow.AddDays(30) : null,
+                    // Only use sliding expiration for "Remember Me" (refreshes the cookie on activity)
+                    AllowRefresh = model.RememberMe
                 };
 
                 await HttpContext.SignInAsync(
@@ -113,7 +117,7 @@ namespace Athrna.Controllers
                     authProperties);
 
                 // Add a success log entry
-                _logger.LogInformation($"User {model.Username} logged in successfully");
+                _logger.LogInformation($"User {model.Username} logged in successfully. Remember Me: {model.RememberMe}");
 
                 // Check if user is admin and redirect accordingly
                 if (admin != null)
@@ -203,10 +207,15 @@ namespace Athrna.Controllers
                 }
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                // Set up auth properties with proper expiration based on Remember Me
                 var authProperties = new AuthenticationProperties
                 {
                     IsPersistent = model.RememberMe,
-                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(model.RememberMe ? 30 : 1)
+                    // If RememberMe is true, use a 30-day expiration, otherwise use the default (2 hours from configuration)
+                    ExpiresUtc = model.RememberMe ? DateTimeOffset.UtcNow.AddDays(30) : null,
+                    // Only use sliding expiration for "Remember Me" (refreshes the cookie on activity)
+                    AllowRefresh = model.RememberMe
                 };
 
                 await HttpContext.SignInAsync(
@@ -215,7 +224,8 @@ namespace Athrna.Controllers
                     authProperties);
 
                 // Add a success log entry
-                _logger.LogInformation("User {Username} logged in successfully via AJAX", model.Username);
+                _logger.LogInformation("User {Username} logged in successfully via AJAX. Remember Me: {RememberMe}",
+                    model.Username, model.RememberMe);
 
                 // Return different redirect URL based on user role
                 string redirectUrl = admin != null ? "/Admin" : "/";
@@ -468,10 +478,17 @@ namespace Athrna.Controllers
         public async Task<IActionResult> Logout()
         {
             var username = User.Identity.Name;
+
+            // Clear authentication cookie
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            // Add script to clear localStorage on the client side
+            TempData["ClearLocalStorage"] = true;
+
             _logger.LogInformation("User {Username} logged out", username);
             return RedirectToAction("Index", "Home");
         }
+
 
         private bool IsValidUsername(string username)
         {

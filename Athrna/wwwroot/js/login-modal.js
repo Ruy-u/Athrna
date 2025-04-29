@@ -1,4 +1,7 @@
-﻿// Get elements
+﻿// This is the updated login-modal.js file to properly handle Remember Me
+// and ensure admin role retrieval during auto-login
+
+// Get elements
 const loginModal = document.getElementById('loginModal');
 const loginButtons = document.querySelectorAll('.login-btn');
 const loginForm = document.getElementById('loginModalForm');
@@ -7,6 +10,7 @@ const captchaInput = document.getElementById('captchaInput');
 const captchaImage = document.getElementById('captchaImage');
 const refreshCaptchaBtn = document.getElementById('refreshCaptcha');
 const passwordToggle = document.querySelector('.password-toggle');
+const rememberMeCheckbox = document.getElementById('modalRememberMe');
 
 // Create Bootstrap modal instance if modal exists
 let modal = null;
@@ -36,6 +40,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const formData = new FormData(this);
             const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
+            // Log the remember me state for debugging
+            console.log('Remember Me checked:', rememberMeCheckbox ? rememberMeCheckbox.checked : 'Checkbox not found');
+
             fetch('/Account/LoginAjax', {
                 method: 'POST',
                 body: formData,
@@ -50,26 +57,31 @@ document.addEventListener('DOMContentLoaded', function () {
                     submitBtn.disabled = false;
 
                     if (data.success) {
-                        // Store admin role info in sessionStorage if user is admin
+                        // Store admin role info in localStorage (more persistent than sessionStorage)
+                        // Note: We use localStorage even for non-remembered sessions since it helps with
+                        // showing the correct UI elements during the current browser session
                         if (data.isAdmin) {
-                            sessionStorage.setItem('isAdmin', 'true');
-                            sessionStorage.setItem('adminRoleLevel', data.adminRoleLevel.toString());
+                            localStorage.setItem('isAdmin', 'true');
+                            localStorage.setItem('adminRoleLevel', data.adminRoleLevel.toString());
 
                             // Map role level to a descriptive name for UX
                             const roleName = getRoleName(data.adminRoleLevel);
-                            sessionStorage.setItem('adminRoleName', roleName);
+                            localStorage.setItem('adminRoleName', roleName);
 
                             // Show a temporary notification
                             showLoginSuccessNotification(`Welcome! You're logged in as ${roleName}.`);
                         } else {
                             // Clear any previous admin info
-                            sessionStorage.removeItem('isAdmin');
-                            sessionStorage.removeItem('adminRoleLevel');
-                            sessionStorage.removeItem('adminRoleName');
+                            localStorage.removeItem('isAdmin');
+                            localStorage.removeItem('adminRoleLevel');
+                            localStorage.removeItem('adminRoleName');
 
                             // Show a simple welcome notification
                             showLoginSuccessNotification('Welcome! You have successfully logged in.');
                         }
+
+                        // Also store whether this is a remembered session
+                        localStorage.setItem('isRememberedSession', rememberMeCheckbox && rememberMeCheckbox.checked ? 'true' : 'false');
 
                         // Redirect to specified URL after a short delay to show notification
                         setTimeout(() => {
@@ -115,6 +127,46 @@ document.addEventListener('DOMContentLoaded', function () {
                     errorMessage.textContent = 'An error occurred. Please try again.';
                 });
         });
+    }
+
+    // Check if user was auto-logged in (session exists but not remembered)
+    // This helps with admin panel access when a non-remembered session is still active
+    window.checkAutoLoginSession = function () {
+        // If user is logged in (by checking some element that only appears when logged in)
+        // but we don't have adminRoleLevel in localStorage, we need to fetch it
+        const userMenuButton = document.getElementById('userMenuButton');
+        const adminMenuItem = document.querySelector('a[href="/Admin"]');
+
+        if (userMenuButton && adminMenuItem && !localStorage.getItem('adminRoleLevel')) {
+            // User is logged in as admin but we don't have the role level
+            // Make an AJAX request to fetch user info
+            fetch('/Admin/GetCurrentUserInfo', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.isAdmin) {
+                        localStorage.setItem('isAdmin', 'true');
+                        localStorage.setItem('adminRoleLevel', data.adminRoleLevel.toString());
+                        localStorage.setItem('adminRoleName', getRoleName(data.adminRoleLevel));
+
+                        // Refresh the page to apply admin permissions
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user info:', error);
+                });
+        }
+    };
+
+    // Call this function when the page loads
+    if (typeof window.checkAutoLoginSession === 'function') {
+        window.checkAutoLoginSession();
     }
 
     // Generate and refresh CAPTCHA
@@ -203,6 +255,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (errorMessage) {
                 errorMessage.classList.add('d-none');
                 errorMessage.textContent = '';
+            }
+
+            // Reset Remember Me to unchecked by default
+            if (rememberMeCheckbox) {
+                rememberMeCheckbox.checked = false;
             }
         });
     }

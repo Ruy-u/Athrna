@@ -25,6 +25,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Strict;
 
+        // Set default expiration (short-lived) when "Remember Me" is not checked
+        options.ExpireTimeSpan = TimeSpan.FromHours(2);
+
+        // Set sliding expiration to false by default - cookies will expire after fixed time
+        options.SlidingExpiration = false;
+
         // Add the role level claim to transform from claim to Role
         options.Events.OnValidatePrincipal = async context =>
         {

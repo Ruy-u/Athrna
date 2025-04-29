@@ -1370,6 +1370,32 @@ namespace Athrna.Controllers
             return RedirectToAction(nameof(Users));
         }
 
+        [HttpGet]
+        [Authorize(Roles = "Administrator")]
+        public async Task<IActionResult> GetCurrentUserInfo()
+        {
+            try
+            {
+                // Get current admin role level 
+                int adminRoleLevel = await GetCurrentAdminRoleLevel();
+
+                return Json(new
+                {
+                    isAdmin = true,
+                    adminRoleLevel = adminRoleLevel,
+                    username = User.Identity.Name
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting current user info");
+                return Json(new
+                {
+                    isAdmin = false,
+                    error = "Failed to retrieve user information"
+                });
+            }
+        }
 
         // Helper methods
         private bool SiteExists(int id)

@@ -131,5 +131,16 @@
     @RenderSection("Scripts", required: false)
     <!-- Anti-forgery token for AJAX requests -->
     @Html.AntiForgeryToken()
+    @if (TempData["ClearLocalStorage"] != null && (bool)TempData["ClearLocalStorage"] == true)
+    {
+        <script>
+            // Clear localStorage items related to authentication and admin status
+            localStorage.removeItem('isAdmin');
+            localStorage.removeItem('adminRoleLevel');
+            localStorage.removeItem('adminRoleName');
+            localStorage.removeItem('isRememberedSession');
+            console.log('Cleared authentication data from localStorage after logout');
+        </script>
+    }
 </body>
 </html>
