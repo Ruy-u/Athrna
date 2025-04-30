@@ -76,7 +76,9 @@ namespace Athrna.Controllers
                 SiteId = site.Id,
                 LanguageCode = lang,
                 Name = translation?.TranslatedName ?? site.Name,
-                Description = translation?.TranslatedDescription ?? site.Description
+                Description = translation?.TranslatedDescription ?? site.Description,
+                Location = site.Location,
+                SiteType = site.SiteType
             };
 
             return Json(translationData);
@@ -115,7 +117,96 @@ namespace Athrna.Controllers
             {
                 SiteId = id,
                 LanguageCode = lang,
-                Summary = translation?.TranslatedSummary ?? culturalInfo.Summary
+                Summary = translation?.TranslatedSummary ?? culturalInfo.Summary,
+                EstablishedDate = culturalInfo.EstablishedDate
+            };
+
+            return Json(translationData);
+        }
+
+        // GET: /Translation/GetCityTranslation/cityname?lang=ar
+        [HttpGet]
+        public async Task<IActionResult> GetCityTranslation(string id, string lang = "en")
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return BadRequest("City name is required");
+            }
+
+            // Normalize the city name
+            id = id.ToLower();
+
+            // Get city from database
+            var city = await _context.City
+                .FirstOrDefaultAsync(c => c.Name.ToLower() == id);
+
+            if (city == null)
+            {
+                return NotFound();
+            }
+
+            // In a real implementation, we would fetch the translation from a database
+            // For this example, we're using a simple dictionary for demonstration
+            var translations = new Dictionary<string, Dictionary<string, string>>
+            {
+                { "ar", new Dictionary<string, string>
+                    {
+                        { "Madinah", "المدينة المنورة" },
+                        { "Riyadh", "الرياض" },
+                        { "AlUla", "العلا" },
+                        { "Historical Sites in", "المواقع التاريخية في" },
+                        { "Available Guides in", "المرشدون المتاحون في" },
+                        { "Interactive Map of", "خريطة تفاعلية لـ" }
+                    }
+                },
+                { "fr", new Dictionary<string, string>
+                    {
+                        { "Madinah", "Médine" },
+                        { "Riyadh", "Riyad" },
+                        { "AlUla", "AlUla" },
+                        { "Historical Sites in", "Sites historiques à" },
+                        { "Available Guides in", "Guides disponibles à" },
+                        { "Interactive Map of", "Carte interactive de" }
+                    }
+                },
+                { "es", new Dictionary<string, string>
+                    {
+                        { "Madinah", "Medina" },
+                        { "Riyadh", "Riad" },
+                        { "AlUla", "AlUla" },
+                        { "Historical Sites in", "Sitios históricos en" },
+                        { "Available Guides in", "Guías disponibles en" },
+                        { "Interactive Map of", "Mapa interactivo de" }
+                    }
+                }
+            };
+
+            // Get translated name if available
+            string translatedName = city.Name;
+            if (lang != "en" && translations.ContainsKey(lang) && translations[lang].ContainsKey(city.Name))
+            {
+                translatedName = translations[lang][city.Name];
+            }
+
+            // Get section headings translations
+            var headings = new Dictionary<string, string>();
+            if (lang != "en" && translations.ContainsKey(lang))
+            {
+                foreach (var key in new[] { "Historical Sites in", "Available Guides in", "Interactive Map of" })
+                {
+                    if (translations[lang].ContainsKey(key))
+                    {
+                        headings[key] = translations[lang][key];
+                    }
+                }
+            }
+
+            var translationData = new
+            {
+                CityId = city.Id,
+                LanguageCode = lang,
+                Name = translatedName,
+                Headings = headings
             };
 
             return Json(translationData);
@@ -135,6 +226,27 @@ namespace Athrna.Controllers
                 .ToListAsync();
 
             return Json(languages);
+        }
+
+        // GET: /Translation/GetPageTranslations?lang=ar
+        [HttpGet]
+        public IActionResult GetPageTranslations(string lang = "en")
+        {
+            if (lang == "en")
+            {
+                return Json(new { });
+            }
+
+            // Get translations from the service
+            var translationService = HttpContext.RequestServices.GetService(typeof(Services.TranslationService)) as Services.TranslationService;
+
+            if (translationService == null)
+            {
+                return Json(new { error = "Translation service not available" });
+            }
+
+            var translations = translationService.GetAllTranslations(lang);
+            return Json(translations);
         }
 
         // Admin Methods
