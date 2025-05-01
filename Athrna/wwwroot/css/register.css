@@ -1,220 +1,188 @@
-﻿document.addEventListener('DOMContentLoaded', function () {
-    // Handle successful registration
-    const successMessage = document.querySelector('.alert-success');
-    if (successMessage) {
-        // Add highlight class for animation
-        successMessage.classList.add('highlight');
+﻿/* Register Page Styling */
+.registration-container {
+    max-width: 500px;
+    margin: 40px auto;
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
-        // Scroll to the success message
-        successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+.registration-header {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 25px;
+    text-align: center;
+    color: #003d7e;
+}
 
-        // Reset form on successful registration
-        const form = document.querySelector('form');
-        form.reset();
+.registration-form-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
 
-        // Show additional information based on registration type
-        const isGuideRegistration = successMessage.textContent.includes('guide application');
+/* Form group spacing */
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
 
-        // Create "What's Next" section
-        const whatNextSection = document.createElement('div');
-        whatNextSection.className = 'registration-success-section';
+/* Inputs and labels */
+.form-label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #333;
+}
 
-        const successIcon = document.createElement('div');
-        successIcon.className = 'success-icon';
-        successIcon.innerHTML = '✓';
+.form-control,
+.form-select {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
 
-        const whatNextTitle = document.createElement('h4');
-        whatNextTitle.textContent = "What's Next?";
-
-        const whatNextList = document.createElement('ul');
-        whatNextList.className = 'what-next-list';
-
-        // Common steps
-        const emailField = document.querySelector('#email');
-        const emailValue = emailField ? emailField.value : 'your email';
-        
-        whatNextList.innerHTML = `
-            <li>Check your email (${emailValue}) for a verification link</li>
-            <li>Click the verification link to activate your account</li>
-            <li>Once verified, you can log in to your account</li>
-        `;
-
-        // Add guide-specific steps
-        if (isGuideRegistration) {
-            whatNextList.innerHTML += `
-                <li>Your guide application will be reviewed by our administrators</li>
-                <li>You will receive an email notification regarding your application status</li>
-                <li>Once approved, you'll be able to access guide-specific features</li>
-            `;
-        }
-
-        // Assemble and insert the section
-        whatNextSection.appendChild(successIcon);
-        whatNextSection.appendChild(whatNextTitle);
-        whatNextSection.appendChild(whatNextList);
-
-        // Insert after success message
-        successMessage.after(whatNextSection);
-
-        // Reset guide form section
-        const guideCheckbox = document.getElementById('registerAsGuide');
-        const guideDetailsSection = document.getElementById('guideDetailsSection');
-
-        if (guideCheckbox && guideDetailsSection) {
-            guideCheckbox.checked = false;
-            guideDetailsSection.style.display = 'none';
-        }
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #0056b3;
+        outline: none;
     }
 
-    // Toggle guide details section
-    const guideCheckbox = document.getElementById('registerAsGuide');
-    const guideDetailsSection = document.getElementById('guideDetailsSection');
-    const guideFields = document.querySelectorAll('.guide-field');
+/* Password toggle styling */
+.password-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
 
-    if (guideCheckbox && guideDetailsSection) {
-        guideCheckbox.addEventListener('change', function () {
-            guideDetailsSection.style.display = this.checked ? 'block' : 'none';
-
-            // Make guide fields required when checkbox is checked
-            guideFields.forEach(field => {
-                if (this.checked) {
-                    field.setAttribute('required', 'required');
-                } else {
-                    field.removeAttribute('required');
-                    // Clear validation errors when unchecked
-                    field.classList.remove('is-invalid');
-                    const errorSpan = field.nextElementSibling;
-                    if (errorSpan && errorSpan.classList.contains('text-danger')) {
-                        errorSpan.textContent = '';
-                    }
-                }
-            });
-        });
+    .password-container .form-control {
+        flex: 1;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
     }
 
-    // Password visibility toggles
-    document.querySelectorAll('.password-toggle').forEach(button => {
-        button.addEventListener('click', function () {
-            const input = this.previousElementSibling;
-            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-            input.setAttribute('type', type);
+.password-toggle {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 0 10px;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    cursor: pointer;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
 
-            const icon = this.querySelector('i');
-            if (type === 'text') {
-                icon.classList.remove('bi-eye');
-                icon.classList.add('bi-eye-slash');
-            } else {
-                icon.classList.remove('bi-eye-slash');
-                icon.classList.add('bi-eye');
-            }
-        });
-    });
+/* Password strength */
+.password-strength-meter .progress {
+    background-color: #e9ecef;
+}
 
-    // Password strength meter
-    const passwordField = document.getElementById('password');
-    const strengthMeter = document.querySelector('.password-strength-meter');
-    const progressBar = document.querySelector('.progress-bar');
-    const strengthText = document.querySelector('.strength-text');
+.password-strength-meter .progress-bar {
+    background-color: #28a745;
+}
 
-    if (passwordField && strengthMeter && progressBar && strengthText) {
-        // Show strength meter when password field is focused
-        passwordField.addEventListener('focus', function () {
-            strengthMeter.style.display = 'block';
-        });
+.strength-text {
+    font-weight: bold;
+}
 
-        // Update strength meter on input
-        passwordField.addEventListener('input', function () {
-            const password = this.value;
-            let strength = 0;
+/* Guide fields section */
+#guideDetailsSection {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border: 1px dashed #ccc;
+    border-radius: 8px;
+    margin-top: 10px;
+}
 
-            if (password.length >= 8) strength += 20;
-            if (password.length >= 12) strength += 10;
-            if (/[a-z]/.test(password)) strength += 10;
-            if (/[A-Z]/.test(password)) strength += 20;
-            if (/\d/.test(password)) strength += 20;
-            if (/[^a-zA-Z0-9]/.test(password)) strength += 20;
+/* Register button (same as login) */
+.register-btn {
+    background-color: #0056b3;
+    color: white;
+    border: 2px solid #0056b3;
+    padding: 10px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
 
-            // Update progress bar
-            progressBar.style.width = `${strength}%`;
-            progressBar.setAttribute('aria-valuenow', strength);
-
-            // Update text and color
-            if (strength < 40) {
-                progressBar.className = 'progress-bar bg-danger';
-                strengthText.textContent = 'Weak';
-                strengthText.className = 'text-danger';
-            } else if (strength < 70) {
-                progressBar.className = 'progress-bar bg-warning';
-                strengthText.textContent = 'Moderate';
-                strengthText.className = 'text-warning';
-            } else {
-                progressBar.className = 'progress-bar bg-success';
-                strengthText.textContent = 'Strong';
-                strengthText.className = 'text-success';
-            }
-        });
+    .register-btn:hover {
+        background-color: #003d7e;
     }
 
-    // Form validation
-    const form = document.querySelector('form');
-    if (form) {
-        form.addEventListener('submit', function (e) {
-            // Clear guide fields if not registering as guide
-            if (!guideCheckbox.checked) {
-                guideFields.forEach(field => {
-                    field.value = '';
-                });
-            }
-        });
+/* Login link under register form */
+.login-link-section {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.login-link {
+    color: #0056b3;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+    .login-link:hover {
+        color: #003d7e;
     }
-    
-    // Add CSS for registration success styling
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes highlight-pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); background-color: #c3e6cb; }
-            100% { transform: scale(1); }
-        }
-        
-        .highlight {
-            animation: highlight-pulse 2s ease;
-        }
-        
-        .registration-success-section {
-            margin-top: 20px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        .success-icon {
-            font-size: 48px;
-            color: #28a745;
-            margin-bottom: 15px;
-        }
-        
-        .what-next-list {
-            text-align: left;
-            max-width: 500px;
-            margin: 20px auto;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        .what-next-list li {
-            margin-bottom: 10px;
-            position: relative;
-            padding-left: 25px;
-        }
-        
-        .what-next-list li::before {
-            content: "→";
-            position: absolute;
-            left: 0;
-            color: #1a3b29;
-            font-weight: bold;
-        }
-    `;
-    document.head.appendChild(style);
-});
+
+/* Alert box spacing */
+.alert {
+    margin-bottom: 20px;
+}
+
+.login-link{
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: transparent; 
+    text-decoration: underline;
+}
+
+/* Dark mode (optional, if using dark-mode class) */
+.dark-mode .registration-container {
+    background-color: #2d2d2d; /* softer dark gray */
+    color: #e0e0e0; /* softer white text */
+}
+
+.dark-mode .form-control,
+.dark-mode .form-select {
+    background-color: #3a3a3a; /* medium-dark input background */
+    color: #e0e0e0;
+    border-color: #555;
+}
+
+.dark-mode .form-label {
+    color: #cccccc;
+}
+
+.dark-mode .register-btn {
+    background-color: #3366cc; /* gentle blue */
+    border-color: #3366cc;
+}
+
+    .dark-mode .register-btn:hover {
+        background-color: #254a99; /* slightly darker on hover */
+    }
+
+.dark-mode .login-link {
+    color: #66aaff;
+}
+
+    .dark-mode .login-link:hover {
+        color: #4d88cc;
+    }
+
+.dark-mode #guideDetailsSection {
+    background-color: #3a3a3a;
+    border-color: #555;
+}
+
+.dark-mode .password-toggle {
+    background-color: #444;
+    border-color: #666;
+}

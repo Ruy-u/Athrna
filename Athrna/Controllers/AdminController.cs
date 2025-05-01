@@ -299,8 +299,15 @@ namespace Athrna.Controllers
             string Description,
             string CulturalSummary,
             int? EstablishedDate,
-            IFormFile imageFile)
+            IFormFile imageFile,
+            int? AdminRoleLevel)
         {
+            // Use AdminRoleLevel from form if provided
+            if (AdminRoleLevel.HasValue)
+            {
+                TempData["AdminRoleLevel"] = AdminRoleLevel.Value;
+            }
+
             // Content management (level 3 or higher)
             if (!await HasRequiredRoleLevel(3))
                 return Unauthorized(3);
@@ -944,11 +951,16 @@ namespace Athrna.Controllers
             return View();
         }
 
-        // POST: Admin/CreateCity
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateCity(string Name)
+        public async Task<IActionResult> CreateCity(string Name, int? AdminRoleLevel)
         {
+            // Use AdminRoleLevel from form if provided
+            if (AdminRoleLevel.HasValue)
+            {
+                TempData["AdminRoleLevel"] = AdminRoleLevel.Value;
+            }
+
             if (string.IsNullOrEmpty(Name))
             {
                 ModelState.AddModelError("Name", "City name is required");

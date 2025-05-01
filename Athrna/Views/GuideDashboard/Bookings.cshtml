@@ -1,0 +1,191 @@
+﻿<!-- Views/GuideDashboard/Bookings.cshtml -->
+@model IEnumerable<Athrna.Models.Booking>
+
+@{
+    ViewData["Title"] = "Tour Bookings";
+    Layout = "_GuideLayout";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="container">
+            <h1>Tour Bookings</h1>
+            <p>Manage your tour bookings and schedule.</p>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Dashboard Navigation -->
+        <div class="dashboard-nav mb-4">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Index">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Messages">Messages</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" asp-action="Bookings">Bookings</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Availability">Availability</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Profile">My Profile</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="dashboard-widget">
+                    <div class="widget-header">
+                        <h2>Your Bookings</h2>
+                        <div class="filter-options">
+                            <select id="statusFilter" class="form-select form-select-sm">
+                                <option value="all">All Bookings</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Confirmed">Confirmed</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        @if (Model.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover booking-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tourist</th>
+                                            <th>Site</th>
+                                            <th>Date & Time</th>
+                                            <th>Group Size</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var booking in Model)
+                                        {
+                                            <tr class="booking-row" data-status="@booking.Status">
+                                                <td>
+                                                    <strong>@booking.Client.Username</strong>
+                                                </td>
+                                                <td>
+                                                    @(booking.Site != null ? booking.Site.Name : "General City Tour")
+                                                </td>
+                                                <td>
+                                                    @booking.TourDateTime.ToString("MMM dd, yyyy - h:mm tt")
+                                                </td>
+                                                <td>
+                                                    @booking.GroupSize @(booking.GroupSize == 1 ? "person" : "people")
+                                                </td>
+                                                <td>
+                                                    <span class="badge @GetStatusBadgeClass(booking.Status)">@booking.Status</span>
+                                                </td>
+                                                <td>
+                                                    <div class="booking-actions">
+                                                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            Actions
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li>
+                                                                <a class="dropdown-item" asp-action="ViewBooking" asp-route-id="@booking.Id">
+                                                                    <i class="bi bi-eye"></i> View Details
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a class="dropdown-item" href="@Url.Action("Conversation", new { id = booking.ClientId })">
+                                                                    <i class="bi bi-chat"></i> Message Tourist
+                                                                </a>
+                                                            </li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            @if (booking.Status == "Pending")
+                                                            {
+                                                                <li>
+                                                                    <a class="dropdown-item text-success" asp-action="UpdateStatus" asp-route-id="@booking.Id" asp-route-status="Confirmed">
+                                                                        <i class="bi bi-check-circle"></i> Confirm
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a class="dropdown-item text-danger" asp-action="UpdateStatus" asp-route-id="@booking.Id" asp-route-status="Cancelled">
+                                                                        <i class="bi bi-x-circle"></i> Cancel
+                                                                    </a>
+                                                                </li>
+                                                            }
+                                                            @if (booking.Status == "Confirmed")
+                                                            {
+                                                                <li>
+                                                                    <a class="dropdown-item text-info" asp-action="UpdateStatus" asp-route-id="@booking.Id" asp-route-status="Completed">
+                                                                        <i class="bi bi-check2-all"></i> Mark as Completed
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a class="dropdown-item text-danger" asp-action="UpdateStatus" asp-route-id="@booking.Id" asp-route-status="Cancelled">
+                                                                        <i class="bi bi-x-circle"></i> Cancel
+                                                                    </a>
+                                                                </li>
+                                                            }
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-content">
+                                <p>You don't have any bookings yet.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Status filter functionality
+            const statusFilter = document.getElementById('statusFilter');
+            const bookingRows = document.querySelectorAll('.booking-row');
+
+            if (statusFilter) {
+                statusFilter.addEventListener('change', function() {
+                    const selectedStatus = this.value;
+
+                    bookingRows.forEach(row => {
+                        const rowStatus = row.getAttribute('data-status');
+
+                        if (selectedStatus === 'all' || rowStatus === selectedStatus) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+}
+
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bg-warning",
+            "Confirmed" => "bg-success",
+            "Completed" => "bg-info",
+            "Cancelled" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

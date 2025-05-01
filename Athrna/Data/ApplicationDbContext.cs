@@ -22,6 +22,9 @@ namespace Athrna.Data
         public DbSet<City> City { get; set; }
         public DbSet<CulturalInfo> CulturalInfo { get; set; }
         public DbSet<Administrator> Administrator { get; set; }
+        public DbSet<Message> Messages { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
+        public DbSet<GuideAvailability> GuideAvailabilities { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -66,6 +69,9 @@ namespace Athrna.Data
             modelBuilder.Entity<Bookmark>().ToTable("Bookmark");
             modelBuilder.Entity<CulturalInfo>().ToTable("CulturalInfo");
             modelBuilder.Entity<Administrator>().ToTable("Administrator");
+            modelBuilder.Entity<Message>().ToTable("Message");
+            modelBuilder.Entity<Booking>().ToTable("Booking");
+            modelBuilder.Entity<GuideAvailability>().ToTable("GuideAvailability");
         }
     }
 }

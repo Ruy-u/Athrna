@@ -301,9 +301,44 @@ a {
     -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
     transition: background-color 5000s ease-in-out 0s;
 }
-[data-theme="dark"] .card,
+[data-theme="dark"] .card {
+    background-color: var(--card-bg) !important;
+    border-color: var(--card-border) !important;
+    color: var(--text-color) !important;
+}
 [data-theme="dark"] .card *,
 [data-theme="dark"] .card-content *,
 [data-theme="dark"] .cards-container .card * {
     color: var(--text-color) !important;
 }
+.registration-container {
+    max-width: 500px;
+    margin: 40px auto;
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333; /* Default text color */
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .registration-container,
+[data-theme="dark"] #guideDetailsSection {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important; /* Set text color in dark mode */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+    [data-theme="dark"] .registration-container .form-label,
+    [data-theme="dark"] .registration-container input,
+    [data-theme="dark"] .registration-header,
+    [data-theme="dark"] .registration-container .form-text {
+        color: var(--text-color) !important;
+    }
+
+    /* Adjust button and link styles */
+    [data-theme="dark"] .registration-container .register-btn,
+    [data-theme="dark"] .registration-container .login-link {
+        color: var(--button-text-color) !important; 
+    }

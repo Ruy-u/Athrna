@@ -1,0 +1,203 @@
+﻿<!-- Views/GuideDashboard/Index.cshtml -->
+@model Athrna.Models.GuideDashboardViewModel
+
+@{
+    ViewData["Title"] = "Guide Dashboard";
+    Layout = "_GuideLayout"; // We'll create this layout for guides
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="container">
+            <h1>Welcome, @Model.Guide.FullName!</h1>
+            <p>Manage your tour guide services and communicate with tourists.</p>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Dashboard Navigation -->
+        <div class="dashboard-nav mb-4">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" asp-action="Index">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Messages">Messages <span class="badge bg-primary">@Model.UnreadMessages</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Bookings">Bookings</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Availability">Availability</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Profile">My Profile</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="row">
+            <!-- Statistics Cards -->
+            <div class="col-md-12 mb-4">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-chat-dots-fill"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>@Model.UnreadMessages</h3>
+                                <p>Unread Messages</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-calendar-check-fill"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>@Model.PendingBookings</h3>
+                                <p>Pending Bookings</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>@Model.CompletedTours</h3>
+                                <p>Completed Tours</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-star-fill"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>@Model.AverageRating.ToString("0.0")</h3>
+                                <p>Average Rating</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Bookings -->
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-widget">
+                    <div class="widget-header">
+                        <h2>Recent Bookings</h2>
+                        <a asp-action="Bookings" class="view-all">View All</a>
+                    </div>
+                    <div class="widget-content">
+                        @if (Model.RecentBookings.Any())
+                        {
+                            <div class="booking-list">
+                                @foreach (var booking in Model.RecentBookings)
+                                {
+                                    <div class="booking-item">
+                                        <div class="booking-info">
+                                            <h4>@booking.Client.Username</h4>
+                                            <p>
+                                                @(booking.Site != null ? booking.Site.Name : "General City Tour")
+                                                <span class="badge @GetStatusBadgeClass(booking.Status)">@booking.Status</span>
+                                            </p>
+                                            <div class="booking-date">
+                                                <i class="bi bi-calendar"></i> @booking.TourDateTime.ToString("MMM dd, yyyy - h:mm tt")
+                                            </div>
+                                        </div>
+                                        <div class="booking-actions">
+                                            <a asp-action="ViewBooking" asp-route-id="@booking.Id" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-content">
+                                <p>You don't have any bookings yet.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unread Messages -->
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-widget">
+                    <div class="widget-header">
+                        <h2>Unread Messages</h2>
+                        <a asp-action="Messages" class="view-all">View All</a>
+                    </div>
+                    <div class="widget-content">
+                        @if (Model.UnreadMessages > 0)
+                        {
+                            <p>You have @Model.UnreadMessages unread message(s). Click below to view them.</p>
+                            <a asp-action="Messages" class="btn btn-primary">View Messages</a>
+                        }
+                        else
+                        {
+                            <div class="empty-content">
+                                <p>You don't have any unread messages.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guide Profile -->
+            <div class="col-md-12">
+                <div class="dashboard-widget">
+                    <div class="widget-header">
+                        <h2>My Profile</h2>
+                        <a asp-action="Profile" class="view-all">Edit Profile</a>
+                    </div>
+                    <div class="widget-content">
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                <div class="guide-avatar">
+                                    <div class="avatar-circle">
+                                        @(Model.Guide.FullName.Substring(0, 1).ToUpper())
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <h3>@Model.Guide.FullName</h3>
+                                <p><i class="bi bi-geo-alt"></i> @Model.Guide.City.Name</p>
+                                <p><i class="bi bi-envelope"></i> @Model.Guide.Email</p>
+                                <p>
+                                    <strong>Guiding Since:</strong> <span id="guidingSince">2023</span>
+                                </p>
+                                <p>
+                                    <strong>Licensed Guide:</strong> Yes
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bg-warning",
+            "Confirmed" => "bg-success",
+            "Completed" => "bg-info",
+            "Cancelled" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

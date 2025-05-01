@@ -1,0 +1,90 @@
+﻿<!-- Views/GuideDashboard/Messages.cshtml -->
+@model IEnumerable<Athrna.Models.ConversationViewModel>
+
+@{
+    ViewData["Title"] = "Messages";
+    Layout = "_GuideLayout";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="container">
+            <h1>Messages</h1>
+            <p>View and respond to messages from tourists.</p>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Dashboard Navigation -->
+        <div class="dashboard-nav mb-4">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Index">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" asp-action="Messages">Messages</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Bookings">Bookings</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Availability">Availability</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Profile">My Profile</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="dashboard-widget">
+                    <div class="widget-header">
+                        <h2>Conversations</h2>
+                        <div class="search-filter">
+                            <input type="text" id="conversationSearch" class="form-control form-control-sm" placeholder="Search conversations...">
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        @if (Model.Any())
+                        {
+                            <div class="conversation-list">
+                                @foreach (var conversation in Model)
+                                {
+                                    <a href="@Url.Action("Conversation", new { id = conversation.ClientId })" class="conversation-item @(conversation.UnreadCount > 0 ? "unread" : "")">
+                                        <div class="conversation-avatar">
+                                            <div class="avatar-circle">
+                                                @(conversation.ClientName.Substring(0, 1).ToUpper())
+                                            </div>
+                                        </div>
+                                        <div class="conversation-content">
+                                            <h4>@conversation.ClientName</h4>
+                                            <p class="last-message">
+                                                @(conversation.LastMessage.Content.Length > 50
+                                                    ? conversation.LastMessage.Content.Substring(0, 50) + "..."
+                                                    : conversation.LastMessage.Content)
+                                            </p>
+                                            <div class="conversation-meta">
+                                                <span class="message-time">@conversation.LastMessage.SentAt.ToString("MMM dd, h:mm tt")</span>
+                                                @if (conversation.UnreadCount > 0)
+                                                {
+                                                    <span class="unread-badge">@conversation.UnreadCount</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-content">
+                                <p>You don't have any conversations yet.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
