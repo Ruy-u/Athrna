@@ -42,7 +42,12 @@
                 @if (Model.CulturalInfo != null)
                 {
                     <h3 class="mt-4" data-translate="Cultural Information">Cultural Information</h3>
-                    <p class="cultural-info" data-translate="cultural-info">@Model.CulturalInfo.Summary</p>
+                    <!-- Added data attributes for audio player -->
+                    <div class="cultural-info-section" data-cultural-info-id="@Model.Id" data-site-name="@Model.Name">
+                        <p class="cultural-info" data-translate="cultural-info">@Model.CulturalInfo.Summary</p>
+                        <!-- Audio player will be inserted here by JavaScript -->
+                        <div id="cultural-audio-@Model.Id" class="cultural-audio-container mt-3"></div>
+                    </div>
                 }
             </section>
 
@@ -419,11 +424,38 @@
 @section Styles {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="~/css/SiteDetails.css" />
+    <link rel="stylesheet" href="~/css/cultural-audio-player.css" />
 }
 
 @section Scripts {
     <script src="~/js/SiteDetails.js"></script>
-}<label for="visitorName" class="form-label" data-translate="Your Name">Your Name</label>
+    
+
+    <script src="~/js/SiteDetails.js"></script>
+    <script src="~/js/cultural-audio-player.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Attempting manual initialization");
+
+            // Get the site ID from the page
+            const siteId = @Model.Id;
+            const siteName = "@Model.Name";
+            const containerId = `cultural-audio-${siteId}`;
+
+            console.log("Initializing player for:", siteId, siteName, containerId);
+
+            // Check if container exists
+            const container = document.getElementById(containerId);
+            if (container) {
+                console.log("Container found, initializing player");
+                new CulturalInfoAudioPlayer(containerId, siteId, siteName);
+            } else {
+                console.error("Container not found:", containerId);
+            }
+        });
+    </script>
+}
+<label for="visitorName" class="form-label" data-translate="Your Name">Your Name</label>
 <input type="text" class="form-control" id="visitorName" name="visitorName" required>
                     </div>
 <div class="mb-3">
