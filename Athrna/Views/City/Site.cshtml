@@ -396,7 +396,7 @@
             </div>
             <div class="modal-body">
                 <form id="guideContactForm">
-                    <input type="hidden" id="guideEmail" name="guideEmail" value="">
+                    <input type="hidden" id="guideId" name="guideId" value="">
                     <div class="mb-3">
                         <label for="groupSize" class="form-label" data-translate="Group Size">Group Size</label>
                         <select class="form-select" id="groupSize" name="groupSize" required>
@@ -451,6 +451,71 @@
                 new CulturalInfoAudioPlayer(containerId, siteId, siteName);
             } else {
                 console.error("Container not found:", containerId);
+            }
+        });
+        // Add to SiteDetails.js or include in Site.cshtml's Scripts section
+        document.addEventListener('DOMContentLoaded', function () {
+            // Handle guide contact modal
+            const guideContactModal = document.getElementById('guideContactModal');
+            if (guideContactModal) {
+                guideContactModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const guideId = button.getAttribute('data-guide-id');
+                    const guideName = button.getAttribute('data-guide-name');
+
+                    document.getElementById('guideId').value = guideId;
+                    document.getElementById('guideContactModalLabel').textContent = 'Contact ' + guideName;
+                });
+
+                // Handle send message button
+                document.getElementById('sendContactMessage').addEventListener('click', function () {
+                    const guideId = document.getElementById('guideId').value;
+                    const groupSize = document.getElementById('groupSize').value;
+                    const messageText = document.getElementById('message').value;
+
+                    if (!groupSize || !messageText.trim()) {
+                        alert('Please fill in all fields');
+                        return;
+                    }
+
+                    const formattedMessage = `Group Size: ${groupSize}\n\n${messageText}`;
+
+                    // Get the anti-forgery token
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                    // Send message via AJAX
+                    fetch('/Message/SendToGuide', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': token
+                        },
+                        body: new URLSearchParams({
+                            guideId: guideId,
+                            content: formattedMessage
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Hide modal
+                                const modal = bootstrap.Modal.getInstance(guideContactModal);
+                                modal.hide();
+
+                                // Show success message
+                                alert('Your message has been sent successfully. The guide will contact you soon.');
+
+                                // Clear form
+                                document.getElementById('guideContactForm').reset();
+                            } else {
+                                alert('Failed to send message: ' + (data.message || 'Unknown error'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while sending your message.');
+                        });
+                });
             }
         });
     </script>

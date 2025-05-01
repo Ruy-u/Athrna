@@ -289,26 +289,26 @@ namespace Athrna.Controllers
             return RedirectToAction("Availability");
         }
 
+
         // Helper method to get current guide ID
         private async Task<int> GetCurrentGuideId()
         {
-            // Get user ID from claims
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-
-            if (userIdClaim == null)
+            // Get user email from claims
+            var emailClaim = User.FindFirst(ClaimTypes.Email);
+            if (emailClaim == null)
             {
-                throw new ApplicationException("User ID claim not found");
+                throw new ApplicationException("Email claim not found");
             }
 
-            int userId = int.Parse(userIdClaim.Value);
+            string email = emailClaim.Value;
 
-            // Get guide by user ID
+            // Get guide by email
             var guide = await _context.Guide
-                .FirstOrDefaultAsync(g => g.Id == userId);
+                .FirstOrDefaultAsync(g => g.Email == email);
 
             if (guide == null)
             {
-                throw new ApplicationException("Guide not found for user ID: " + userId);
+                throw new ApplicationException("Guide not found for email: " + email);
             }
 
             return guide.Id;
