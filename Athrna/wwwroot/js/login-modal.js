@@ -1,100 +1,154 @@
-﻿[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task < IActionResult > LoginAjax(LoginViewModel model)
-{
-    if (!ModelState.IsValid) {
-        return Json(new { success = false, message = "Invalid form submission" });
+﻿/**
+ * Login Modal JavaScript
+ * This script handles the login modal functionality
+ */
+document.addEventListener('DOMContentLoaded', function () {
+    // Get DOM elements
+    const loginModal = document.getElementById('loginModal');
+    const loginModalForm = document.getElementById('loginModalForm');
+    const loginButtons = document.querySelectorAll('.login-btn');
+    const modalUsername = document.getElementById('modalUsername');
+    const modalPassword = document.getElementById('modalPassword');
+    const passwordToggles = document.querySelectorAll('.password-toggle');
+    const captchaImage = document.getElementById('captchaImage');
+    const refreshCaptchaBtn = document.getElementById('refreshCaptcha');
+    const loginErrorMessage = document.getElementById('loginErrorMessage');
+
+    // Bootstrap Modal object
+    let modalInstance = null;
+
+    if (loginModal) {
+        modalInstance = new bootstrap.Modal(loginModal);
     }
 
-    await Task.Delay(200); // Prevent timing attacks
-
-    var client = await _context.Client.FirstOrDefaultAsync(c => c.Username == model.Username);
-    if (client == null || client.EncryptedPassword != model.Password) {
-        return Json(new { success = false, message = "Invalid username or password" });
-    }
-
-    if (client.IsBanned) {
-        _logger.LogWarning("AJAX login attempt for banned account: {Username}", model.Username);
-        return Json(new
-            {
-                success = false,
-                message = "Your account has been suspended. Please contact support for assistance.",
-                isBanned = true
+    // Add click event listeners to all login buttons
+    if (loginButtons) {
+        loginButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (modalInstance) {
+                    // Generate CAPTCHA when modal opens
+                    generateCaptcha();
+                    modalInstance.show();
+                } else {
+                    // Fallback if modal isn't working
+                    window.location.href = '/Account/Login';
+                }
             });
-    }
-
-    if (!client.IsEmailVerified) {
-        _logger.LogWarning("AJAX login attempt with unverified email for user: {Username}", model.Username);
-        var verificationUrl = Url.Action("ResendVerificationEmail", "Account", new { email = client.Email });
-        return Json(new
-            {
-                success = false,
-                message = "Please verify your email address before logging in.",
-                requireVerification = true,
-                email = client.Email,
-                verificationUrl
-            });
-    }
-
-    // Create claims for the client
-    var claims = new List < Claim >
-    {
-        new Claim(ClaimTypes.Name, client.Username),
-        new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
-        new Claim(ClaimTypes.Email, client.Email)
-    };
-
-    var isAdmin = false;
-    var isGuide = false;
-    int adminRoleLevel = 0;
-    string redirectUrl = "/";
-
-    // Check if client is a guide
-    var guide = await _context.Guide.FirstOrDefaultAsync(g => g.Email == client.Email);
-    if (guide != null) {
-        isGuide = true;
-        claims.Add(new Claim(ClaimTypes.Role, "Guide"));
-    }
-
-    // Check if client is an administrator
-    var admin = await _context.Administrator.FirstOrDefaultAsync(a => a.ClientId == client.Id);
-    if (admin != null) {
-        isAdmin = true;
-        adminRoleLevel = admin.RoleLevel;
-        claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
-        claims.Add(new Claim("AdminRoleLevel", admin.RoleLevel.ToString()));
-
-        _logger.LogInformation("Admin user {Username} logged in with role level {RoleLevel}", client.Username, admin.RoleLevel);
-    }
-
-    // Determine redirect URL
-    if (isAdmin)
-        redirectUrl = "/Admin";
-    else if (isGuide)
-        redirectUrl = "/GuideDashboard";
-
-    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-    var authProperties = new AuthenticationProperties
-    {
-        IsPersistent = model.RememberMe,
-            ExpiresUtc = model.RememberMe ? DateTimeOffset.UtcNow.AddDays(30) : null,
-            AllowRefresh = model.RememberMe
-    };
-
-    await HttpContext.SignInAsync(
-        CookieAuthenticationDefaults.AuthenticationScheme,
-        new ClaimsPrincipal(claimsIdentity),
-        authProperties);
-
-    _logger.LogInformation("User {Username} logged in successfully via AJAX. Remember Me: {RememberMe}", model.Username, model.RememberMe);
-
-    return Json(new
-        {
-            success = true,
-            redirectUrl,
-            isAdmin,
-            isGuide,
-            adminRoleLevel
         });
-}
+    }
+
+    // Handle password visibility toggle
+    if (passwordToggles) {
+        passwordToggles.forEach(toggle => {
+            toggle.addEventListener('click', function () {
+                const passwordInput = this.previousElementSibling;
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+
+                // Toggle eye icon
+                const icon = this.querySelector('i');
+                if (icon) {
+                    if (type === 'text') {
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                    } else {
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                    }
+                }
+            });
+        });
+    }
+
+    // Generate and refresh CAPTCHA
+    function generateCaptcha() {
+        if (captchaImage) {
+            const captchaChars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let captcha = '';
+            for (let i = 0; i < 6; i++) {
+                captcha += captchaChars.charAt(Math.floor(Math.random() * captchaChars.length));
+            }
+            captchaImage.textContent = captcha;
+
+            // Store captcha in sessionStorage for validation
+            sessionStorage.setItem('captcha', captcha);
+        }
+    }
+
+    // Add event listener for CAPTCHA refresh button
+    if (refreshCaptchaBtn) {
+        refreshCaptchaBtn.addEventListener('click', function () {
+            generateCaptcha();
+        });
+    }
+
+    // Handle form submission
+    if (loginModalForm) {
+        loginModalForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Simple validation
+            if (!modalUsername.value || !modalPassword.value) {
+                showError('Please enter both username and password.');
+                return;
+            }
+
+            // Get CSRF token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('Username', modalUsername.value);
+            formData.append('Password', modalPassword.value);
+            formData.append('RememberMe', document.getElementById('modalRememberMe').checked);
+            formData.append('__RequestVerificationToken', token);
+
+            // Send AJAX request
+            fetch('/Account/LoginAjax', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': token
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Successful login
+                        modalInstance.hide();
+
+                        // Store admin status if applicable
+                        if (data.isAdmin) {
+                            localStorage.setItem('isAdmin', 'true');
+                            localStorage.setItem('adminRoleLevel', data.adminRoleLevel);
+                        }
+
+                        // Redirect to appropriate page
+                        window.location.href = data.redirectUrl || '/';
+                    } else {
+                        // Handle errors
+                        if (data.requireVerification) {
+                            showError('Please verify your email before logging in.');
+                        } else if (data.isBanned) {
+                            showError('Your account has been suspended. Please contact support.');
+                        } else {
+                            showError(data.message || 'Invalid username or password');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Login error:', error);
+                    showError('An error occurred during login. Please try again.');
+                });
+        });
+    }
+
+    // Helper function to show error messages
+    function showError(message) {
+        if (loginErrorMessage) {
+            loginErrorMessage.textContent = message;
+            loginErrorMessage.classList.remove('d-none');
+        }
+    }
+});

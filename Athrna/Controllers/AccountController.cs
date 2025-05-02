@@ -154,14 +154,18 @@ namespace Athrna.Controllers
                 return Json(new { success = false, message = "Invalid form submission" });
             }
 
-            await Task.Delay(200); // Prevent timing attacks
+            // Add a small delay to prevent timing attacks
+            await Task.Delay(200);
 
-            var client = await _context.Client.FirstOrDefaultAsync(c => c.Username == model.Username);
+            var client = await _context.Client
+                .FirstOrDefaultAsync(c => c.Username == model.Username);
+
             if (client == null)
             {
                 return Json(new { success = false, message = "Invalid username or password" });
             }
 
+            // Check if the account is banned
             if (client.IsBanned)
             {
                 _logger.LogWarning("AJAX login attempt for banned account: {Username}", model.Username);
@@ -173,8 +177,10 @@ namespace Athrna.Controllers
                 });
             }
 
+            // Direct password comparison instead of hash verification
             if (client.EncryptedPassword == model.Password)
             {
+                // Check if email is verified
                 if (!client.IsEmailVerified)
                 {
                     _logger.LogWarning("AJAX login attempt with unverified email for user: {Username}", model.Username);
@@ -185,10 +191,11 @@ namespace Athrna.Controllers
                         message = "Please verify your email address before logging in.",
                         requireVerification = true,
                         email = client.Email,
-                        verificationUrl
+                        verificationUrl = verificationUrl
                     });
                 }
 
+                // Create claims for the client
                 var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, client.Username),
@@ -196,39 +203,29 @@ namespace Athrna.Controllers
             new Claim(ClaimTypes.Email, client.Email)
         };
 
-                var isAdmin = false;
-                var isGuide = false;
-                string redirectUrl = "/";
-
-                // Check if user is an admin
+                // Check if client is an administrator
                 var admin = await _context.Administrator.FirstOrDefaultAsync(a => a.ClientId == client.Id);
                 if (admin != null)
                 {
-                    isAdmin = true;
                     claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
+
+                    // Add admin role level as a claim
                     claims.Add(new Claim("AdminRoleLevel", admin.RoleLevel.ToString()));
-                    _logger.LogInformation("Admin user {Username} logged in with role level {RoleLevel}", client.Username, admin.RoleLevel);
-                }
 
-                // Check if user is a guide
-                isGuide = await _context.Guide.AnyAsync(g => g.Email == client.Email);
-                if (isGuide)
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, "Guide"));
+                    // Log admin role level for debugging
+                    _logger.LogInformation("Admin user {Username} logged in with role level {RoleLevel}",
+                        client.Username, admin.RoleLevel);
                 }
-
-                // Determine redirect URL
-                if (isAdmin)
-                    redirectUrl = "/Admin";
-                else if (isGuide)
-                    redirectUrl = "/GuideDashboard";
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
+                // Set up auth properties with proper expiration based on Remember Me
                 var authProperties = new AuthenticationProperties
                 {
                     IsPersistent = model.RememberMe,
+                    // If RememberMe is true, use a 30-day expiration, otherwise use the default (2 hours from configuration)
                     ExpiresUtc = model.RememberMe ? DateTimeOffset.UtcNow.AddDays(30) : null,
+                    // Only use sliding expiration for "Remember Me" (refreshes the cookie on activity)
                     AllowRefresh = model.RememberMe
                 };
 
@@ -237,14 +234,18 @@ namespace Athrna.Controllers
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
 
-                _logger.LogInformation("User {Username} logged in successfully via AJAX. Remember Me: {RememberMe}", model.Username, model.RememberMe);
+                // Add a success log entry
+                _logger.LogInformation("User {Username} logged in successfully via AJAX. Remember Me: {RememberMe}",
+                    model.Username, model.RememberMe);
+
+                // Return different redirect URL based on user role
+                string redirectUrl = admin != null ? "/Admin" : "/";
 
                 return Json(new
                 {
                     success = true,
                     redirectUrl,
-                    isAdmin,
-                    isGuide,
+                    isAdmin = admin != null,
                     adminRoleLevel = admin?.RoleLevel ?? 0
                 });
             }
