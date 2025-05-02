@@ -27,6 +27,7 @@ namespace Athrna.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize] // Make sure this attribute is present
         public async Task<IActionResult> SendToGuide(int guideId, string content)
         {
             if (string.IsNullOrEmpty(content))
@@ -36,6 +37,28 @@ namespace Athrna.Controllers
 
             try
             {
+                // Check if the user is a guide
+                bool isGuide = User.IsInRole("Guide");
+
+                if (isGuide)
+                {
+                    string userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+                    // Get the guide being messaged
+                    var guide = await _context.Guide.FirstOrDefaultAsync(g => g.Id == guideId);
+
+                    if (guide == null)
+                    {
+                        return Json(new { success = false, message = "Guide not found." });
+                    }
+
+                    // Check if the guide is trying to message themselves
+                    if (guide.Email == userEmail)
+                    {
+                        return Json(new { success = false, message = "You cannot send messages to yourself." });
+                    }
+                }
+
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
                 var message = new Message
@@ -62,19 +85,22 @@ namespace Athrna.Controllers
         }
 
         [HttpGet]
-        // In MessageController.cs
-        [HttpGet]
+        [Authorize] // Ensure only authenticated users access this
         public async Task<IActionResult> Conversation(int guideId)
         {
-            // If the user is not authenticated, redirect to login
+            // Get user ID
             if (!User.Identity.IsAuthenticated)
             {
                 return RedirectToAction("Login", "Account");
             }
 
             int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            string userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
 
-            // Get the guide
+            // Check if the user is a guide
+            bool isGuide = User.IsInRole("Guide");
+
+            // Get the guide being messaged
             var guide = await _context.Guide
                 .Include(g => g.City)
                 .FirstOrDefaultAsync(g => g.Id == guideId);
@@ -84,12 +110,19 @@ namespace Athrna.Controllers
                 return NotFound();
             }
 
+            if (isGuide && guide.Email == userEmail)
+            {
+                TempData["ErrorMessage"] = "You cannot send messages to yourself.";
+                return RedirectToAction("Index", "Home");
+            }
+
             // Get all messages between user and guide
             var messages = await _context.Messages
-                .Where(m => (m.SenderId == userId && m.SenderType == "Client" &&
-                           m.RecipientId == guideId && m.RecipientType == "Guide") ||
-                           (m.SenderId == guideId && m.SenderType == "Guide" &&
-                           m.RecipientId == userId && m.RecipientType == "Client"))
+                .Where(m =>
+                    (m.SenderId == userId && m.SenderType == "Client" &&
+                     m.RecipientId == guideId && m.RecipientType == "Guide") ||
+                    (m.SenderId == guideId && m.SenderType == "Guide" &&
+                     m.RecipientId == userId && m.RecipientType == "Client"))
                 .OrderBy(m => m.SentAt)
                 .ToListAsync();
 
@@ -119,9 +152,9 @@ namespace Athrna.Controllers
 
             ViewBag.Guide = guide;
 
-            // Make sure we're explicitly returning the Conversation view
             return View("Conversation", viewModel);
         }
+
 
         // Display a list of guides that the user can message
         [HttpGet]
