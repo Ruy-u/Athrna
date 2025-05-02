@@ -1,0 +1,97 @@
+﻿@model List<Athrna.Models.Site>
+@{
+    ViewData["Title"] = "Map Site IDs";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <h6 class="mb-0">Map Site IDs Reference</h6>
+                        <a asp-action="Index" class="btn btn-outline-secondary btn-sm ms-auto">
+                            <i class="bi bi-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <p>This page displays all site IDs for reference when configuring the interactive map. Use this to verify site IDs match between the database and the map JavaScript.</p>
+                    </div>
+
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Database ID</th>
+                                <th>Site Name</th>
+                                <th>City</th>
+                                <th>Map Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var site in Model.OrderBy(s => s.CityId).ThenBy(s => s.Id))
+                            {
+                                <tr>
+                                    <td>@site.Id</td>
+                                    <td>@site.Name</td>
+                                    <td>@site.City.Name</td>
+                                    <td id="map-status-@site.Id">
+                                        <span class="badge bg-warning">Not verified</span>
+                                    </td>
+                                    <td>
+                                        <a href="/City/Site/@site.Id" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-box-arrow-up-right"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sample database site IDs mapping
+            // This should match the mapping in your interactive-map.js file
+            const databaseSiteIds = {
+                // Madinah sites
+                1: 1,  // Prophet's Mosque
+                2: 2,  // Quba Mosque
+                3: 3,  // Battlefield of Uhud
+                4: 4,  // Al-Baqi Cemetery
+
+                // Riyadh sites
+                5: 5,  // Diriyah
+                6: 6,  // Masmak Fortress
+                7: 7,  // National Museum
+                8: 8,  // Murabba Palace
+
+                // AlUla sites
+                9: 9,   // Hegra
+                10: 10,  // Dadan
+                11: 11,  // Jabal Ikmah
+                12: 12   // Old Town of AlUla
+            };
+
+            // Validate mappings
+            for (const [jsId, dbId] of Object.entries(databaseSiteIds)) {
+                const statusElement = document.getElementById(`map-status-${dbId}`);
+                if (statusElement) {
+                    if (parseInt(jsId) === dbId) {
+                        statusElement.innerHTML = '<span class="badge bg-success">Mapped correctly</span>';
+                    } else {
+                        statusElement.innerHTML = `<span class="badge bg-warning">Map JS ID: ${jsId}</span>`;
+                    }
+                }
+            }
+        });
+    </script>
+}

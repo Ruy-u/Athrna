@@ -49,6 +49,10 @@
             <a asp-controller="City" asp-action="Explore" asp-route-id="alula" class="explore-btn">@Html.T("Explore") @Html.T("AlUla")</a>
         </div>
     </div>
+    <!-- Interactive Map Section -->
+    @await Html.PartialAsync("_InteractiveMapPartial")
+
+    @section Styles {
+        <link rel="stylesheet" href="~/css/google-maps-styles.css" />
+    }
 </div>
-<!-- Interactive Map Section -->
-@await Html.PartialAsync("_MapPartial")

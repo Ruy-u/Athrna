@@ -1,0 +1,260 @@
+﻿/* google-maps-styles.css */
+
+/* Main container for Google Maps */
+.google-map-container {
+    position: relative;
+    width: 100%;
+    height: 550px;
+    aspect-ratio: 16/9; /* Force 16:9 aspect ratio */
+    margin: 30px auto;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    max-width: 1000px; /* Set a max-width to prevent it from getting too wide */
+}
+
+/* The map element itself */
+#googleMap {
+    width: 100% !important; /* Force full width */
+    height: 100% !important; /* Force full height */
+    min-height: 500px;
+}
+
+/* Interactive map section styles */
+.interactive-map-section {
+    padding: 40px 0;
+    background-color: #121212;
+    color: white;
+    text-align: center;
+}
+
+    .interactive-map-section h2 {
+        margin-bottom: 20px;
+        color: white;
+    }
+
+    .interactive-map-section .container {
+        max-width: 1200px;
+        padding: 0 15px;
+        margin: 0 auto;
+    }
+
+/* City selector buttons */
+.city-selector {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+    background-color: #1a3b29;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+    .city-selector h3 {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+        color: white;
+        text-align: center;
+    }
+
+.city-button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.city-button {
+    display: block;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 120px;
+}
+
+    .city-button:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .city-button.active {
+        background-color: #f8c15c;
+        color: #1a3b29;
+        border-color: #f8c15c;
+    }
+
+/* Map info window styling */
+.map-info-window {
+    max-width: 300px;
+    padding: 5px;
+}
+
+    .map-info-window h3 {
+        margin: 0 0 8px 0;
+        color: #1a3b29;
+        font-size: 16px;
+    }
+
+    .map-info-window p {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        color: #555;
+    }
+
+    .map-info-window .site-image {
+        width: 100%;
+        height: 100px;
+        margin-bottom: 8px;
+        overflow: hidden;
+        border-radius: 4px;
+    }
+
+        .map-info-window .site-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .map-info-window .btn {
+        margin-top: 5px;
+        font-size: 13px;
+        padding: 4px 10px;
+    }
+
+/* Map controls positioning */
+.gm-style-mtc {
+    margin-top: 10px;
+}
+
+/* Map legend */
+.map-legend {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background-color: #1a3b29;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    max-width: 200px;
+}
+
+    .map-legend h3 {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+        color: white;
+        text-align: center;
+    }
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.legend-marker {
+    width: 15px;
+    height: 15px;
+    margin-right: 8px;
+}
+
+    .legend-marker.city {
+        background-color: #1a3b29;
+        border: 2px solid white;
+        border-radius: 50%;
+    }
+
+    .legend-marker.site {
+        background-color: #f8c15c;
+        border: 1px solid #1a3b29;
+        clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+    }
+
+.legend-text {
+    font-size: 14px;
+    color: white;
+}
+
+/* Map error message */
+.map-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 20px;
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .google-map-container {
+        height: 400px;
+        aspect-ratio: 4/3; /* Different aspect ratio on mobile */
+    }
+
+    .city-selector {
+        top: 10px;
+        left: 10px;
+        padding: 8px;
+    }
+
+    .city-button-group {
+        flex-direction: column;
+    }
+
+    .city-button {
+        padding: 6px 10px;
+        font-size: 14px;
+        width: 100px;
+    }
+
+    .map-legend {
+        bottom: 10px;
+        right: 10px;
+        padding: 10px;
+        max-width: 150px;
+    }
+}
+
+/* Dark mode support */
+[data-theme="dark"] .city-selector,
+[data-theme="dark"] .map-legend {
+    background-color: #2c5f46;
+}
+
+[data-theme="dark"] .city-button {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+    [data-theme="dark"] .city-button:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    [data-theme="dark"] .city-button.active {
+        background-color: #f8c15c;
+        color: #1a3b29;
+    }
+
+[data-theme="dark"] .map-info-window {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+}
+
+    [data-theme="dark"] .map-info-window h3 {
+        color: #e0e0e0;
+    }
+
+    [data-theme="dark"] .map-info-window p {
+        color: #a0a0a0;
+    }

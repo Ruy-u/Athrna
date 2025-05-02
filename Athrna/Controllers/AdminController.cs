@@ -1445,5 +1445,11 @@ namespace Athrna.Controllers
             TempData["ErrorMessage"] = $"You need admin role level {requiredLevel} or higher to access this feature.";
             return RedirectToAction("Index");
         }
+    
+    public async Task<IActionResult> MapSiteIds()
+        {
+            var sites = await _context.Site.Include(s => s.City).ToListAsync();
+            return View(sites);
+        }
     }
 }

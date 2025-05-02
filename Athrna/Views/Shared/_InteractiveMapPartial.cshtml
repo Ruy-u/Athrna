@@ -1,0 +1,39 @@
+﻿@model string
+@{
+    string defaultCity = Model ?? "madinah";
+}
+
+<!-- Interactive Google Map Component -->
+<section class="interactive-map-section">
+    <div class="container">
+        <h2 data-translate="Interactive Map">Interactive Map</h2>
+
+        <div class="google-map-container">
+            <!-- Map Canvas -->
+            <div id="googleMap" data-default-city="@defaultCity"></div>
+
+            <!-- City Selector -->
+            <div class="city-selector">
+                <h3 data-translate="Select City">Select City</h3>
+                <div class="city-button-group">
+                    <button type="button" class="city-button @(defaultCity == "madinah" ? "active" : "")" data-city="madinah" data-translate="Madinah">Madinah</button>
+                    <button type="button" class="city-button @(defaultCity == "riyadh" ? "active" : "")" data-city="riyadh" data-translate="Riyadh">Riyadh</button>
+                    <button type="button" class="city-button @(defaultCity == "alula" ? "active" : "")" data-city="alula" data-translate="AlUla">AlUla</button>
+                </div>
+            </div>
+
+            <!-- Map Legend -->
+            <div class="map-legend">
+                <h3 data-translate="Legend">Legend</h3>
+                <div class="legend-item">
+                    <div class="legend-marker city"></div>
+                    <div class="legend-text" data-translate="City">City</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-marker site"></div>
+                    <div class="legend-text" data-translate="Historical Site">Historical Site</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
