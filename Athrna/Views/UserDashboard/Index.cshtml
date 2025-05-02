@@ -13,20 +13,60 @@
     </div>
 
     <div class="container mt-4">
+        <!-- Recent Unread Messages -->
+        <div class="col-md-6 mb-4">
+            <div class="dashboard-widget">
+                <div class="widget-header">
+                    <h2>Messages</h2>
+                    <a asp-action="Messages" class="view-all">View All</a>
+                </div>
+                <div class="widget-content">
+                    @{
+                        // Calculate unread messages here to avoid database queries in layout
+                        int unreadMessages = 0;
+                        try
+                        {
+                            // Count unread messages from the Ratings list as a proxy
+                            // Will be replaced with actual logic in the controller
+                            unreadMessages = ViewBag.UnreadMessages ?? 0;
+                        }
+                        catch { /* Ignore any errors */ }
+                    }
+                </div>
+            </div>
+        </div>
         <!-- Dashboard Navigation -->
         <div class="dashboard-nav mb-4">
             <ul class="nav nav-tabs">
                 <li class="nav-item">
-                    <a class="nav-link active" asp-action="Index">Dashboard</a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Index" ? "active" : "")"
+                       asp-action="Index">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-action="Bookmarks">My Bookmarks</a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Bookmarks" ? "active" : "")"
+                       asp-action="Bookmarks">My Bookmarks</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-action="Ratings">My Ratings</a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "MyBookings" ? "active" : "")"
+                       asp-controller="Booking" asp-action="MyBookings">My Bookings</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-action="Profile">My Profile</a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Ratings" ? "active" : "")"
+                       asp-action="Ratings">My Ratings</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Messages" ? "active" : "")"
+                       asp-action="Messages">
+                        Messages
+                        @if (Model is UserDashboardViewModel dashboard && dashboard.UnreadMessages > 0)
+                        {
+                            <span class="badge bg-danger">@dashboard.UnreadMessages</span>
+                        }
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Profile" ? "active" : "")"
+                       asp-action="Profile">My Profile</a>
                 </li>
             </ul>
         </div>
@@ -54,17 +94,6 @@
                             <div class="stat-content">
                                 <h3>@Model.Ratings.Count()</h3>
                                 <p>Site Reviews</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="bi bi-geo-alt-fill"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3>@(Model.Bookmarks.Select(b => b.Site.City.Name).Distinct().Count())</h3>
-                                <p>Cities Explored</p>
                             </div>
                         </div>
                     </div>
@@ -155,6 +184,52 @@
                             <div class="empty-content">
                                 <p>You haven't rated any sites yet.</p>
                                 <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Explore and Rate Sites</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Bookings -->
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-widget">
+                    <div class="widget-header">
+                        <h2>Recent Bookings</h2>
+                        <a asp-controller="Booking" asp-action="MyBookings" class="view-all">View All</a>
+                    </div>
+                    <div class="widget-content">
+                        @if (Model.RecentBookings != null && Model.RecentBookings.Any())
+                        {
+                            <div class="booking-list">
+                                @foreach (var booking in Model.RecentBookings.Take(3))
+                                {
+                                    <div class="booking-item">
+                                        <div class="booking-info">
+                                            <h4>@(booking.Site != null ? booking.Site.Name : $"{booking.Guide.City.Name} city tour")</h4>
+                                            <p>Guide: @booking.Guide.FullName</p>
+                                            <div class="booking-meta">
+                                                <span class="booking-date">
+                                                    <i class="bi bi-calendar"></i> @booking.TourDateTime.ToString("MMM dd, yyyy - h:mm tt")
+                                                </span>
+                                                <span class="booking-status badge @(booking.Status == "Pending" ? "bg-warning" : booking.Status == "Confirmed" ? "bg-success" : booking.Status == "Completed" ? "bg-info" : "bg-danger")">
+                                                    @booking.Status
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="booking-actions">
+                                            <a asp-controller="Message" asp-action="Conversation" asp-route-guideId="@booking.GuideId" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-chat"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-content">
+                                <p>You haven't made any bookings yet.</p>
+                                <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Explore and Book Tours</a>
                             </div>
                         }
                     </div>
@@ -392,6 +467,43 @@
 
         .city-explore-card:hover img {
             transform: scale(1.1);
+        }
+
+        .booking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .booking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .booking-info h4 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1.1rem;
+        }
+
+        .booking-info p {
+            margin: 0 0 0.5rem 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .booking-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .booking-date {
+            color: #6c757d;
         }
     </style>
 }

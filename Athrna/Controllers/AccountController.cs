@@ -119,14 +119,25 @@ namespace Athrna.Controllers
                 // Add a success log entry
                 _logger.LogInformation($"User {model.Username} logged in successfully. Remember Me: {model.RememberMe}");
 
-                // Check if user is admin and redirect accordingly
                 if (admin != null)
                 {
                     return RedirectToAction("Index", "Admin");
                 }
                 else
                 {
-                    return RedirectToAction("Index", "Home");
+                    // Check if user is a guide
+                    var guide = await _context.Guide.FirstOrDefaultAsync(g => g.Email == client.Email);
+                    if (guide != null)
+                    {
+                        // Add Guide role claim
+                        claims.Add(new Claim(ClaimTypes.Role, "Guide"));
+
+                        return RedirectToAction("Index", "GuideDashboard");
+                    }
+                    else
+                    {
+                        return RedirectToAction("Index", "Home");
+                    }
                 }
             }
 
@@ -197,13 +208,14 @@ namespace Athrna.Controllers
                 if (admin != null)
                 {
                     claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
-
-                    // Add admin role level as a claim
                     claims.Add(new Claim("AdminRoleLevel", admin.RoleLevel.ToString()));
+                }
 
-                    // Log admin role level for debugging
-                    _logger.LogInformation("Admin user {Username} logged in with role level {RoleLevel}",
-                        client.Username, admin.RoleLevel);
+                // Check if user is a guide - ADD THIS PART
+                var guide = await _context.Guide.FirstOrDefaultAsync(g => g.Email == client.Email);
+                if (guide != null)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, "Guide"));
                 }
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -228,13 +240,27 @@ namespace Athrna.Controllers
                     model.Username, model.RememberMe);
 
                 // Return different redirect URL based on user role
-                string redirectUrl = admin != null ? "/Admin" : "/";
+                string redirectUrl;
+
+                if (admin != null)
+                {
+                    redirectUrl = "/Admin";
+                }
+                else if (guide != null)
+                {
+                    redirectUrl = "/GuideDashboard"; // Redirect guides to guide dashboard
+                }
+                else
+                {
+                    redirectUrl = "/";
+                }
 
                 return Json(new
                 {
                     success = true,
                     redirectUrl,
                     isAdmin = admin != null,
+                    isGuide = guide != null, // Add this to inform client-side about guide status
                     adminRoleLevel = admin?.RoleLevel ?? 0
                 });
             }

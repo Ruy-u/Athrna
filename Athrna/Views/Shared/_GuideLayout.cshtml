@@ -1,0 +1,71 @@
+﻿<!-- Views/Shared/_GuideLayout.cshtml -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Athrna Guide</title>
+    <link rel="icon" href="~/images/logo.jpg" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/guide-dashboard.css" />
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <header class="guide-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <a href="/" class="logo">
+                        <img src="~/images/logo.jpg" alt="Athrna Logo" class="logo-img">
+                        <span class="logo-text">Athrna</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <h1 class="header-title">Guide Dashboard</h1>
+                </div>
+                <div class="col-auto">
+                    <div class="header-actions">
+                        <div class="dropdown">
+                            <button class="user-menu-btn" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="user-avatar">G</span>
+                                <span class="d-none d-md-inline-block">Guide</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" asp-controller="GuideDashboard" asp-action="Profile"><i class="bi bi-person"></i> Profile</a></li>
+                                <li><a class="dropdown-item" asp-controller="GuideDashboard" asp-action="Messages"><i class="bi bi-chat"></i> Messages</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" asp-controller="Home" asp-action="Index"><i class="bi bi-house"></i> Visit Main Site</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        @RenderBody()
+    </main>
+
+    <footer class="guide-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>&copy; @DateTime.Now.Year Athrna - Guide Portal</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>Need help? <a href="mailto:athrnasite@gmail.com">Contact Support</a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/guide-dashboard.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

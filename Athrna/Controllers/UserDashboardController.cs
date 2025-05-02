@@ -45,15 +45,80 @@ namespace Athrna.Controllers
                 .Where(r => r.ClientId == userId)
                 .ToListAsync();
 
-            // Create view model
+            // Get recent bookings
+            var recentBookings = await _context.Booking
+                .Include(b => b.Guide)
+                    .ThenInclude(g => g.City)
+                .Include(b => b.Site)
+                .Where(b => b.ClientId == userId)
+                .OrderByDescending(b => b.BookingDate)
+                .Take(5)
+                .ToListAsync();
+
+            // Get unread messages count
+            int unreadMessages = await _context.Messages
+                .CountAsync(m => m.RecipientId == userId
+                         && m.RecipientType == "Client"
+                         && !m.IsRead);
+
+            // Get count of conversations with unread messages
+            var pendingConversations = await _context.Messages
+                .Where(m => m.RecipientId == userId && m.RecipientType == "Client" && !m.IsRead)
+                .Select(m => m.SenderId)
+                .Distinct()
+                .CountAsync();
+
+            // Create view model with all information
             var viewModel = new UserDashboardViewModel
             {
                 User = user,
                 Bookmarks = bookmarks,
-                Ratings = ratings
+                Ratings = ratings,
+                RecentBookings = recentBookings,
+                UnreadMessages = unreadMessages,
+                PendingConversations = pendingConversations
             };
 
             return View(viewModel);
+        }
+
+        // GET: UserDashboard/Messages
+        public async Task<IActionResult> Messages()
+        {
+            int userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+
+            // Get all message threads for the user
+            var messages = await _context.Messages
+                .Include(m => m.Guide)
+                .Where(m => (m.SenderId == userId && m.SenderType == "Client") ||
+                           (m.RecipientId == userId && m.RecipientType == "Client"))
+                .OrderByDescending(m => m.SentAt)
+                .ToListAsync();
+
+            // Group by conversation with guides
+            var conversations = messages
+                .GroupBy(m => m.SenderType == "Client" ? m.RecipientId : m.SenderId)
+                .Select(g => new
+                {
+                    GuideId = g.Key,
+                    GuideName = g.FirstOrDefault(m => m.Guide != null)?.Guide?.FullName ?? "Guide",
+                    LastMessage = g.OrderByDescending(m => m.SentAt).First(),
+                    UnreadCount = g.Count(m => m.RecipientId == userId &&
+                                         m.RecipientType == "Client" &&
+                                         !m.IsRead)
+                })
+                .ToList();
+
+            // Convert to view models
+            var viewModels = conversations.Select(c => new ConversationViewModel
+            {
+                GuideId = c.GuideId,
+                GuideName = c.GuideName,
+                LastMessage = c.LastMessage,
+                UnreadCount = c.UnreadCount
+            }).ToList();
+
+            return View(viewModels);
         }
 
         // GET: UserDashboard/Bookmarks

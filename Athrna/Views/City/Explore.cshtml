@@ -52,24 +52,30 @@
 
     <!-- City Guides Section -->
     <section class="guides-section mt-5">
-        <h2>Available Guides in @Model.City.Name</h2>
+        <h2 data-translate="Available Guides in">Available Guides in @Model.City.Name</h2>
 
         <div class="row">
             @foreach (var guide in Model.Guides)
             {
                 <div class="col-md-6 col-lg-3 mb-4">
                     <div class="guide-card">
-                        <div class="guide-avatar">
-                            <img src="/api/placeholder/150/150" alt="@guide.FullName" class="rounded-circle">
-                        </div>
+                        <!-- Existing guide info -->
                         <div class="guide-content">
                             <h4>@guide.FullName</h4>
                             <p class="guide-contact">
                                 <i class="bi bi-envelope"></i> @guide.Email
                             </p>
-                            <button class="btn btn-outline-primary btn-sm mt-2">Contact Guide</button>
+                            <p class="guide-phone">
+                                <i class="bi bi-telephone"></i> +966 50 123 @(4000 + guide.Id)
+                            </p>
+                            <div class="guide-actions">
+                                <a asp-controller="Message" asp-action="Conversation" asp-route-guideId="@guide.Id"
+                                   class="btn btn-outline-primary btn-sm mt-2"
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   title="Start a conversation with @guide.FullName">Contact Guide</a>
+                            </div>
                         </div>
-                    </div>
+                </div>
                 </div>
             }
         </div>
@@ -274,7 +280,7 @@
 
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const cityMap = document.getElementById('cityMap');
 
             // Simulate map with site markers
@@ -288,10 +294,10 @@
         @foreach (var site in Model.Sites)
         {
             <text>
-                        createMarker('@site.Id', '@site.Name', '@site.Location', '@site.Description.Replace("'", "\\'").Replace("\n", " ")');
+                            createMarker('@site.Id', '@site.Name', '@site.Location', '@site.Description.Replace("'", "\\'").Replace("\n", " ")');
             </text>
         }
-            }
+                    }
 
             function createMarker(id, name, location, description) {
                 // Parse location string to get coordinates
@@ -334,7 +340,7 @@
                 marker.style.boxShadow = '0 0 0 4px rgba(255, 255, 255, 0.5)';
 
                 // Add click event
-                marker.addEventListener('click', function() {
+                marker.addEventListener('click', function () {
                     window.location.href = '/City/Site/' + id;
                 });
 
@@ -343,6 +349,12 @@
 
                 cityMap.appendChild(marker);
             }
+
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
         });
     </script>
 }

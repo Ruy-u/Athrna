@@ -1,0 +1,110 @@
+﻿/* Add to guide-dashboard.css */
+.guide-header {
+    background-color: #1a3b29;
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    color: white;
+    text-decoration: none;
+}
+
+    .logo:hover {
+        color: rgba(255,255,255,0.9);
+    }
+
+.logo-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.header-title {
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.user-menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.user-avatar {
+    width: 30px;
+    height: 30px;
+    background-color: white;
+    color: #1a3b29;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.dashboard-container {
+    min-height: calc(100vh - 140px);
+    background-color: #f8f9fa;
+    padding-bottom: 2rem;
+}
+
+.dashboard-header {
+    background-color: #1a3b29;
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+
+.dashboard-widget {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.widget-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .widget-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: #1a3b29;
+    }
+    
+.widget-content {
+    padding: 1.5rem;
+}
+
+.view-all {
+    color: #1a3b29;
+    text-decoration: none;
+    font-size: 0.875rem;
+}
+
+.guide-footer {
+    background-color: #343a40;
+    color: rgba(255,255,255,0.6);
+    padding: 1.5rem 0;
+    font-size: 0.875rem;
+}
+
+    .guide-footer a {
+        color: rgba(255,255,255,0.8);
+    }

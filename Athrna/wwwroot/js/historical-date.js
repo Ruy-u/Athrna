@@ -1,5 +1,4 @@
-﻿// Add this script directly to your EditSite.cshtml file in the @section Scripts block
-
+﻿
 document.addEventListener('DOMContentLoaded', function () {
     // Get the date input - could be either ID depending on the form
     const dateInput = document.getElementById('CulturalInfo_EstablishedDate') ||

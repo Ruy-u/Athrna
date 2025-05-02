@@ -1,0 +1,166 @@
+﻿<!-- Views/GuideDashboard/Availability.cshtml -->
+@model IEnumerable<Athrna.Models.GuideAvailability>
+
+@{
+    ViewData["Title"] = "Manage Availability";
+    Layout = "_GuideLayout";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="container">
+            <h1>Manage Availability</h1>
+            <p>Set your available hours for tour bookings.</p>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Dashboard Navigation -->
+        <div class="dashboard-nav mb-4">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Index">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Messages">
+                        Messages
+                        <span class="badge bg-primary">@ViewBag.UnreadMessages</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Bookings">Bookings</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" asp-action="Availability">Availability</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Profile">My Profile</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="dashboard-widget">
+                    <div class="widget-header">
+                        <h2>Weekly Schedule</h2>
+                    </div>
+                    <div class="widget-content">
+                        <form asp-action="UpdateAvailability" method="post">
+                            <div class="availability-grid">
+                                <div class="day-header">Day</div>
+                                <div class="time-header">Available</div>
+                                <div class="time-header">Start Time</div>
+                                <div class="time-header">End Time</div>
+
+                                @foreach (var day in Enum.GetValues<DayOfWeek>())
+                                {
+                                    var availability = Model.FirstOrDefault(a => a.DayOfWeek == day);
+                                    var isAvailable = availability?.IsAvailable ?? true;
+                                    var startTime = availability?.StartTime ?? new TimeSpan(9, 0, 0);
+                                    var endTime = availability?.EndTime ?? new TimeSpan(17, 0, 0);
+
+                                    <div class="day-name">@day.ToString()</div>
+                                    <div class="availability-toggle">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input availability-checkbox" type="checkbox"
+                                                   id="available-@((int)day)"
+                                                   name="availability[@((int)day)].IsAvailable"
+                                                   value="true"
+                                            @(isAvailable ? "checked" : "")>
+                                            <label class="form-check-label" for="available-@((int)day)">Available</label>
+                                        </div>
+                                    </div>
+                                    <div class="time-picker">
+                                        <input type="time" class="form-control time-input"
+                                               id="start-@((int)day)"
+                                               name="availability[@((int)day)].StartTime"
+                                               value="@startTime.ToString(@"hh\:mm")"
+                                        @(!isAvailable ? "disabled" : "")>
+                                        <input type="hidden" name="availability[@((int)day)].DayOfWeek" value="@((int)day)">
+                                    </div>
+                                    <div class="time-picker">
+                                        <input type="time" class="form-control time-input"
+                                               id="end-@((int)day)"
+                                               name="availability[@((int)day)].EndTime"
+                                               value="@endTime.ToString(@"hh\:mm")"
+                                        @(!isAvailable ? "disabled" : "")>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">Save Availability</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Enable/disable time inputs based on availability checkbox
+            const availabilityCheckboxes = document.querySelectorAll('.availability-checkbox');
+
+            availabilityCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    const dayIndex = this.id.split('-')[1];
+                    const startTime = document.getElementById(`start-${dayIndex}`);
+                    const endTime = document.getElementById(`end-${dayIndex}`);
+
+                    if (this.checked) {
+                        startTime.removeAttribute('disabled');
+                        endTime.removeAttribute('disabled');
+                    } else {
+                        startTime.setAttribute('disabled', 'disabled');
+                        endTime.setAttribute('disabled', 'disabled');
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .availability-grid {
+            display: grid;
+            grid-template-columns: 120px 120px 200px 200px;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .day-header, .time-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .day-name {
+            font-weight: 500;
+        }
+
+        .time-picker {
+            display: flex;
+            align-items: center;
+        }
+
+        .time-input {
+            width: 150px;
+        }
+
+        @@media (max-width: 768px) {
+            .availability-grid {
+                grid-template-columns: 100px 100px 1fr 1fr;
+                font-size: 0.9rem;
+            }
+
+            .time-input {
+                width: 100%;
+            }
+        }
+    </style>
+}

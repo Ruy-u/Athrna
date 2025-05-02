@@ -4,6 +4,18 @@
     ViewData["Title"] = Model.Name;
 }
 
+<!-- Add Toast Container for Notifications - Add this near the top -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1500">
+    <div id="bookmarkToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMessage">
+                <!-- Message will be inserted here via JavaScript -->
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
 <div class="site-hero" data-site-id="@Model.Id">
     <div class="site-overlay"></div>
     @if (!string.IsNullOrEmpty(Model.ImagePath))
@@ -124,7 +136,6 @@
                 </div>
             </section>
 
-            <!-- Available Guides Section -->
             <section class="site-description-section mt-5">
                 <h2 data-translate="Available Guides">Available Guides</h2>
                 <div class="row mt-4">
@@ -158,9 +169,16 @@
                                         <p class="guide-details">
                                             <i class="bi bi-envelope"></i> @guide.Email
                                         </p>
-                                        <div class="guide-action">
-                                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#guideContactModal" data-guide-name="@guide.FullName" data-guide-email="@guide.Email">
-                                                <span data-translate="Contact Guide">Contact Guide</span>
+
+                                        <!-- Guide Action Buttons - UPDATED WITH PROMINENT BOOKING BUTTON -->
+                                        <div class="guide-action mt-3">
+                                            <!-- Primary CTA - Book a Tour -->
+                                            <a asp-controller="Booking" asp-action="Request" asp-route-id="@guide.Id" asp-route-siteId="@Model.Id" class="btn btn-primary me-2">
+                                                <i class="bi bi-calendar-plus"></i> Book a Tour
+                                            </a>
+                                            <!-- Secondary CTA - Contact Guide -->
+                                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#guideContactModal" data-guide-id="@guide.Id" data-guide-name="@guide.FullName" data-guide-email="@guide.Email">
+                                                <i class="bi bi-chat"></i> Contact Guide
                                             </button>
                                         </div>
                                     </div>
@@ -310,10 +328,13 @@
                 <div class="sidebar-widget">
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <form asp-action="Bookmark" method="post">
+                        <form asp-action="Bookmark" method="post" id="bookmarkForm">
                             <input type="hidden" name="id" value="@Model.Id" />
-                            <button type="submit" class="btn btn-outline-primary btn-block">
-                                <i class="bi bi-bookmark"></i> <span data-translate="Bookmark this Site">Bookmark this Site</span>
+                            <button type="submit" class="btn @(ViewBag.IsBookmarked ? "btn-danger" : "btn-outline-primary") btn-block" id="bookmarkButton">
+                                <i class="bi @(ViewBag.IsBookmarked ? "bi-bookmark-check-fill" : "bi-bookmark")"></i>
+                                <span id="bookmarkButtonText">
+                                    @(ViewBag.IsBookmarked ? "Remove Bookmark" : "Bookmark this Site")
+                                </span>
                             </button>
                         </form>
                     }
@@ -396,7 +417,7 @@
             </div>
             <div class="modal-body">
                 <form id="guideContactForm">
-                    <input type="hidden" id="guideEmail" name="guideEmail" value="">
+                    <input type="hidden" id="guideId" name="guideId" value="">
                     <div class="mb-3">
                         <label for="groupSize" class="form-label" data-translate="Group Size">Group Size</label>
                         <select class="form-select" id="groupSize" name="groupSize" required>
@@ -425,17 +446,56 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="~/css/SiteDetails.css" />
     <link rel="stylesheet" href="~/css/cultural-audio-player.css" />
+    <style>
+        .guide-action .btn-primary {
+            background-color: #1a3b29;
+            border-color: #1a3b29;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+            .guide-action .btn-primary:hover {
+                background-color: #142e21;
+                border-color: #142e21;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+    </style>
 }
 
 @section Scripts {
     <script src="~/js/SiteDetails.js"></script>
-    
-
-    <script src="~/js/SiteDetails.js"></script>
     <script src="~/js/cultural-audio-player.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("Attempting manual initialization");
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check for TempData message and show toast if it exists
+        @if (TempData["Message"] != null)
+        {
+            <text>
+                            // Get the message from TempData
+                        const message = '@TempData["Message"]';
+
+                        // Set message in toast
+                        document.getElementById('toastMessage').innerText = message;
+
+                        // Show toast notification
+                        const bookmarkToast = new bootstrap.Toast(document.getElementById('bookmarkToast'));
+                        bookmarkToast.show();
+
+                        // Change toast background based on message
+                        const toastElement = document.getElementById('bookmarkToast');
+                        if (message.includes('removed')) {
+                            toastElement.classList.remove('bg-success');
+                        toastElement.classList.add('bg-danger');
+                            } else {
+                            toastElement.classList.remove('bg-danger');
+                        toastElement.classList.add('bg-success');
+                            }
+            </text>
+        }
+
+                console.log("Attempting manual initialization");
 
             // Get the site ID from the page
             const siteId = @Model.Id;
@@ -453,17 +513,71 @@
                 console.error("Container not found:", containerId);
             }
         });
+
+        // Add to SiteDetails.js or include in Site.cshtml's Scripts section
+        document.addEventListener('DOMContentLoaded', function () {
+            // Handle guide contact modal
+            const guideContactModal = document.getElementById('guideContactModal');
+            if (guideContactModal) {
+                guideContactModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const guideId = button.getAttribute('data-guide-id');
+                    const guideName = button.getAttribute('data-guide-name');
+
+                    document.getElementById('guideId').value = guideId;
+                    document.getElementById('guideContactModalLabel').textContent = 'Contact ' + guideName;
+                });
+
+                // Handle send message button
+                document.getElementById('sendContactMessage').addEventListener('click', function () {
+                    const guideId = document.getElementById('guideId').value;
+                    const groupSize = document.getElementById('groupSize').value;
+                    const messageText = document.getElementById('message').value;
+
+                    if (!groupSize || !messageText.trim()) {
+                        alert('Please fill in all fields');
+                        return;
+                    }
+
+                    const formattedMessage = `Group Size: ${groupSize}\n\n${messageText}`;
+
+                    // Get the anti-forgery token
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                    // Send message via AJAX
+                    fetch('/Message/SendToGuide', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': token
+                        },
+                        body: new URLSearchParams({
+                            guideId: guideId,
+                            content: formattedMessage
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Hide modal
+                                const modal = bootstrap.Modal.getInstance(guideContactModal);
+                                modal.hide();
+
+                                // Show success message
+                                alert('Your message has been sent successfully. The guide will contact you soon.');
+
+                                // Clear form
+                                document.getElementById('guideContactForm').reset();
+                            } else {
+                                alert('Failed to send message: ' + (data.message || 'Unknown error'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while sending your message.');
+                        });
+                });
+            }
+        });
     </script>
 }
-<label for="visitorName" class="form-label" data-translate="Your Name">Your Name</label>
-<input type="text" class="form-control" id="visitorName" name="visitorName" required>
-                    </div>
-<div class="mb-3">
-    <label for="visitorEmail" class="form-label" data-translate="Your Email">Your Email</label>
-    <input type="email" class="form-control" id="visitorEmail" name="visitorEmail" required>
-</div>
-<div class="mb-3">
-    <label for="visitDate" class="form-label" data-translate="Preferred Visit Date">Preferred Visit Date</label>
-    <input type="date" class="form-control" id="visitDate" name="visitDate" required>
-</div>
-<div class="mb-3">

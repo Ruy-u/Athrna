@@ -1,4 +1,4 @@
-﻿/* Login Modal and CAPTCHA Styles */
+﻿/* Enhanced Login Modal and CAPTCHA Styles */
 .captcha-container {
     margin-top: 20px;
     border-top: 1px solid #eee;
@@ -49,13 +49,125 @@
     border-bottom-left-radius: 0;
 }
 
+/* Improved Modal Styles */
+.modal-header {
+    background-color: #1a3b29;
+    color: white;
+}
+
+    .modal-header .modal-title {
+        font-weight: 600;
+    }
+
+    .modal-header .btn-close {
+        color: white;
+        opacity: 0.8;
+        filter: brightness(2);
+    }
+
+.modal .form-label {
+    font-weight: 500;
+}
+
+.modal .form-control:focus {
+    border-color: #1a3b29;
+    box-shadow: 0 0 0 0.25rem rgba(26, 59, 41, 0.25);
+}
+
+.modal .btn-primary {
+    background-color: #1a3b29;
+    border-color: #1a3b29;
+}
+
+    .modal .btn-primary:hover {
+        background-color: #0f2419;
+        border-color: #0f2419;
+    }
+
+/* Animation for Modal */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+    transform: translate(0, -50px);
+}
+
+.modal.show .modal-dialog {
+    transform: none;
+}
+
+/* Handling visibility of login buttons */
+.auth-btn.login-btn {
+    cursor: pointer;
+}
+
+    .auth-btn.login-btn:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+
+/* Loading state for login button */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+    .btn-loading::after {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        top: calc(50% - 8px);
+        right: 10px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+    }
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* Dark mode support */
-.dark-mode .captcha-image {
+[data-theme="dark"] .captcha-image {
     background-color: #333;
     border-color: #555;
     color: #f5f5f5;
 }
 
-    .dark-mode .captcha-image::before {
+    [data-theme="dark"] .captcha-image::before {
         background-image: linear-gradient(45deg, transparent 45%, #444 45%, #444 55%, transparent 55%), linear-gradient(135deg, transparent 45%, #444 45%, #444 55%, transparent 55%);
+    }
+
+[data-theme="dark"] .modal-content {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .modal-header {
+    background-color: #1a3b29;
+    border-bottom-color: #444;
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top-color: #444;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: #3a3a3a;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+    [data-theme="dark"] .form-control:focus,
+    [data-theme="dark"] .form-select:focus {
+        border-color: #1a3b29;
+        background-color: #3a3a3a;
+    }
+
+    [data-theme="dark"] .form-control::placeholder {
+        color: #a0a0a0;
     }

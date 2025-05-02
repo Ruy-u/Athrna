@@ -1,0 +1,153 @@
+﻿@model IEnumerable<Athrna.Models.Booking>
+
+@{
+    ViewData["Title"] = "My Bookings";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h2 class="h4 mb-0">My Tour Bookings</h2>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (!Model.Any())
+                    {
+                        <div class="text-center py-5">
+                            <div class="mb-4">
+                                <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
+                            </div>
+                            <h3 class="h5 mb-3">You don't have any bookings yet</h3>
+                            <p class="text-muted mb-4">Book a tour with one of our guides to explore the historical sites!</p>
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Find Guides
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        <th>Guide</th>
+                                        <th>Location</th>
+                                        <th>Date & Time</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var booking in Model)
+                                    {
+                                        <tr>
+                                            <td>#@booking.Id</td>
+                                            <td>@booking.Guide.FullName</td>
+                                            <td>
+                                                @if (booking.Site != null)
+                                                {
+                                                    <a asp-controller="City" asp-action="Site" asp-route-id="@booking.SiteId">
+                                                        @booking.Site.Name
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <span>@booking.Guide.City.Name city tour</span>
+                                                }
+                                            </td>
+                                            <td>@booking.TourDateTime.ToString("MMM dd, yyyy - h:mm tt")</td>
+                                            <td>
+                                                @{
+                                                    string badgeClass = booking.Status switch
+                                                    {
+                                                        "Pending" => "bg-warning",
+                                                        "Confirmed" => "bg-success",
+                                                        "Completed" => "bg-info",
+                                                        "Cancelled" => "bg-danger",
+                                                        _ => "bg-secondary"
+                                                    };
+                                                }
+                                                <span class="badge @badgeClass">@booking.Status</span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a asp-controller="Message" asp-action="Conversation" asp-route-guideId="@booking.GuideId"
+                                                       class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Message Guide">
+                                                        <i class="bi bi-chat-dots"></i>
+                                                    </a>
+
+                                                    @if (booking.Status == "Pending" || booking.Status == "Confirmed")
+                                                    {
+                                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                                data-bs-toggle="modal" data-bs-target="#cancelModal-@booking.Id"
+                                                                data-bs-toggle="tooltip" title="Cancel Booking">
+                                                            <i class="bi bi-x-circle"></i>
+                                                        </button>
+
+                                                        <!-- Cancel Modal -->
+                                                        <div class="modal fade" id="cancelModal-@booking.Id" tabindex="-1" aria-labelledby="cancelModalLabel-@booking.Id" aria-hidden="true">
+                                                            <div class="modal-dialog">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title" id="cancelModalLabel-@booking.Id">Confirm Cancellation</h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <p>Are you sure you want to cancel your booking with @booking.Guide.FullName on @booking.TourDateTime.ToString("MMM dd, yyyy")?</p>
+                                                                        <p class="text-danger">This action cannot be undone.</p>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <form asp-action="Cancel" method="post">
+                                                                            @Html.AntiForgeryToken()
+                                                                            <input type="hidden" name="id" value="@booking.Id" />
+                                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                            <button type="submit" class="btn btn-danger">Cancel Booking</button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        });
+    </script>
+}
