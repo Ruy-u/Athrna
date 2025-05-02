@@ -1,0 +1,150 @@
+﻿@model Athrna.Models.Booking
+
+@{
+    ViewData["Title"] = "Booking Details";
+    Layout = "_GuideLayout";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="container">
+            <h1>
+                <a asp-action="Bookings" class="back-link">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                Booking Details
+            </h1>
+            <p>View and manage tour booking details.</p>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="dashboard-widget">
+                    <div class="widget-header">
+                        <h2>Booking Information</h2>
+                        <span class="badge @GetStatusBadgeClass(Model.Status)">@Model.Status</span>
+                    </div>
+                    <div class="widget-content">
+                        <div class="booking-details">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <h4>Basic Information</h4>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Booking ID:</strong> #@Model.Id</li>
+                                        <li><strong>Booking Date:</strong> @Model.BookingDate.ToString("MMM dd, yyyy")</li>
+                                        <li><strong>Tour Date & Time:</strong> @Model.TourDateTime.ToString("MMM dd, yyyy - h:mm tt")</li>
+                                        <li><strong>Group Size:</strong> @Model.GroupSize @(Model.GroupSize == 1 ? "person" : "people")</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h4>Tourist Information</h4>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Tourist:</strong> @Model.Client.Username</li>
+                                        <li><strong>Email:</strong> @Model.Client.Email</li>
+                                        <li>
+                                            <a asp-controller="GuideDashboard" asp-action="Conversation" asp-route-id="@Model.ClientId" class="btn btn-sm btn-outline-primary mt-2">
+                                                <i class="bi bi-chat-dots"></i> Message Tourist
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <h4>Tour Location</h4>
+                                    @if (Model.Site != null)
+                                    {
+                                        <ul class="list-unstyled">
+                                            <li><strong>Site:</strong> @Model.Site.Name</li>
+                                            <li><strong>Type:</strong> @Model.Site.SiteType</li>
+                                            <li><strong>City:</strong> @Model.Site.City.Name</li>
+                                            <li><strong>Location:</strong> @Model.Site.Location</li>
+                                        </ul>
+                                    }
+                                    else
+                                    {
+                                        <p>General city tour in @Model.Guide.City.Name</p>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.Notes))
+                            {
+                                <div class="row mb-4">
+                                    <div class="col-md-12">
+                                        <h4>Additional Notes</h4>
+                                        <div class="notes-content p-3 bg-light rounded">
+                                            @Model.Notes
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="dashboard-widget">
+                    <div class="widget-header">
+                        <h2>Actions</h2>
+                    </div>
+                    <div class="widget-content">
+                        @if (Model.Status == "Pending")
+                        {
+                            <div class="d-grid gap-2 mb-3">
+                                <a asp-action="UpdateStatus" asp-route-id="@Model.Id" asp-route-status="Confirmed" class="btn btn-success">
+                                    <i class="bi bi-check-circle"></i> Confirm Booking
+                                </a>
+                                <a asp-action="UpdateStatus" asp-route-id="@Model.Id" asp-route-status="Cancelled" class="btn btn-danger">
+                                    <i class="bi bi-x-circle"></i> Cancel Booking
+                                </a>
+                            </div>
+                        }
+                        else if (Model.Status == "Confirmed")
+                        {
+                            <div class="d-grid gap-2 mb-3">
+                                <a asp-action="UpdateStatus" asp-route-id="@Model.Id" asp-route-status="Completed" class="btn btn-info">
+                                    <i class="bi bi-check2-all"></i> Mark as Completed
+                                </a>
+                                <a asp-action="UpdateStatus" asp-route-id="@Model.Id" asp-route-status="Cancelled" class="btn btn-danger">
+                                    <i class="bi bi-x-circle"></i> Cancel Booking
+                                </a>
+                            </div>
+                        }
+
+                        <div class="calendar-reminder p-3 bg-light rounded mt-3">
+                            <h5><i class="bi bi-calendar-check"></i> Calendar</h5>
+                            <p>Add this booking to your calendar:</p>
+                            <div class="d-grid gap-2">
+                                <a href="#" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-calendar-plus"></i> Add to Google Calendar
+                                </a>
+                                <a href="#" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-calendar-plus"></i> Add to iCal/Outlook
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bg-warning",
+            "Confirmed" => "bg-success",
+            "Completed" => "bg-info",
+            "Cancelled" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

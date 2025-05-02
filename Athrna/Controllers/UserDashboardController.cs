@@ -46,7 +46,7 @@ namespace Athrna.Controllers
                 .ToListAsync();
 
             // Get recent bookings
-            var recentBookings = await _context.Bookings
+            var recentBookings = await _context.Booking
                 .Include(b => b.Guide)
                     .ThenInclude(g => g.City)
                 .Include(b => b.Site)

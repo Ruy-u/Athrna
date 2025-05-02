@@ -28,9 +28,9 @@ namespace Athrna.Models
         public string Notes { get; set; }
 
         // Available time slots
-        public List<TimeSlot> AvailableTimeSlots { get; set; }
+        public List<TimeSlot> AvailableTimeSlots { get; set; } = new List<TimeSlot>();
 
         // Available dates (for date selection)
-        public List<DateTime> AvailableDates { get; set; }
+        public List<DateTime> AvailableDates { get; set; } = new List<DateTime>();
     }
 }

@@ -23,7 +23,7 @@ namespace Athrna.Data
         public DbSet<CulturalInfo> CulturalInfo { get; set; }
         public DbSet<Administrator> Administrator { get; set; }
         public DbSet<Message> Messages { get; set; }
-        public DbSet<Booking> Bookings { get; set; }
+        public DbSet<Booking> Booking { get; set; }
         public DbSet<GuideAvailability> GuideAvailabilities { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

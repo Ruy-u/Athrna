@@ -69,9 +69,6 @@
                                 <i class="bi bi-telephone"></i> +966 50 123 @(4000 + guide.Id)
                             </p>
                             <div class="guide-actions">
-                                <a asp-controller="Booking" asp-action="Create" asp-route-id="@guide.Id" class="btn btn-outline-primary btn-sm mt-2">
-                                    <i class="bi bi-calendar-plus"></i> Book Tour
-                                </a>
                                 <a asp-controller="Message" asp-action="Conversation" asp-route-guideId="@guide.Id"
                                    class="btn btn-outline-primary btn-sm mt-2"
                                    data-bs-toggle="tooltip" data-bs-placement="top"

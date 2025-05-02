@@ -42,7 +42,7 @@ namespace Athrna.Controllers
                 }
 
                 // Get recent bookings
-                var recentBookings = await _context.Bookings
+                var recentBookings = await _context.Booking
                     .Include(b => b.Client)
                     .Include(b => b.Site)
                     .Where(b => b.GuideId == guideId)
@@ -155,77 +155,111 @@ namespace Athrna.Controllers
         // GET: GuideDashboard/Messages
         public async Task<IActionResult> Messages()
         {
-            int guideId = await GetCurrentGuideId();
+            try
+            {
+                int guideId = await GetCurrentGuideId();
 
-            // Get all message threads for the guide
-            var messages = await _context.Messages
-                .Include(m => m.Client)
-                .Where(m => (m.SenderId == guideId && m.SenderType == "Guide") ||
-                           (m.RecipientId == guideId && m.RecipientType == "Guide"))
-                .OrderByDescending(m => m.SentAt)
-                .ToListAsync();
+                // Get all message threads for the guide
+                var messages = await _context.Messages
+                    .Include(m => m.Client)  // Include Client information
+                    .Where(m => (m.SenderId == guideId && m.SenderType == "Guide") ||
+                               (m.RecipientId == guideId && m.RecipientType == "Guide"))
+                    .OrderByDescending(m => m.SentAt)
+                    .ToListAsync();
 
-            // Group by conversation
-            var conversations = messages
-                .GroupBy(m => m.SenderType == "Guide" ? m.RecipientId : m.SenderId)
-                .Select(g => new ConversationViewModel
-                {
-                    ClientId = g.Key,
-                    ClientName = g.First().Client?.Username ?? "Unknown Client",
-                    LastMessage = g.OrderByDescending(m => m.SentAt).First(),
-                    UnreadCount = g.Count(m => m.RecipientId == guideId &&
-                                         m.RecipientType == "Guide" &&
-                                         !m.IsRead)
-                })
-                .ToList();
+                // Group by conversation
+                var conversations = messages
+                    .GroupBy(m => m.SenderType == "Guide" ? m.RecipientId : m.SenderId)
+                    .Select(g => new ConversationViewModel
+                    {
+                        ClientId = g.Key,
+                        // Safely get the client name by checking if Client is null first
+                        ClientName = g.FirstOrDefault(m => m.Client != null)?.Client?.Username ??
+                                   (g.Any(m => m.SenderType == "Client" && m.SenderId == g.Key) ?
+                                   "Client #" + g.Key : "Unknown Client"),
+                        LastMessage = g.OrderByDescending(m => m.SentAt).First(),
+                        UnreadCount = g.Count(m => m.RecipientId == guideId &&
+                                             m.RecipientType == "Guide" &&
+                                             !m.IsRead)
+                    })
+                    .ToList();
 
-            return View(conversations);
+                _logger.LogInformation("Guide {GuideId} viewed messages list with {ConversationCount} conversations",
+                    guideId, conversations.Count);
+
+                return View(conversations);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading messages for guide ID: {GuideId}",
+                    User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+                TempData["ErrorMessage"] = "An error occurred while loading your messages.";
+                return RedirectToAction("Index");
+            }
         }
 
         // GET: GuideDashboard/Conversation/5
         public async Task<IActionResult> Conversation(int id)
         {
-            int guideId = await GetCurrentGuideId();
-            var guide = await _context.Guide.FindAsync(guideId);
-
-            // Get the client
-            var client = await _context.Client.FindAsync(id);
-            if (client == null)
+            try
             {
-                return NotFound();
+                int guideId = await GetCurrentGuideId();
+                var guide = await _context.Guide.FindAsync(guideId);
+
+                // Get the client with better error handling
+                var client = await _context.Client.FindAsync(id);
+                if (client == null)
+                {
+                    _logger.LogWarning("Client not found for ID: {ClientId}", id);
+                    TempData["ErrorMessage"] = "Client not found.";
+                    return RedirectToAction("Messages");
+                }
+
+                // Get all messages between guide and client
+                var messages = await _context.Messages
+                    .Where(m => (m.SenderId == guideId && m.SenderType == "Guide" &&
+                               m.RecipientId == id && m.RecipientType == "Client") ||
+                               (m.SenderId == id && m.SenderType == "Client" &&
+                               m.RecipientId == guideId && m.RecipientType == "Guide"))
+                    .OrderBy(m => m.SentAt)
+                    .ToListAsync();
+
+                // Mark unread messages as read
+                var unreadMessages = messages.Where(m => m.RecipientId == guideId &&
+                                         m.RecipientType == "Guide" &&
+                                         !m.IsRead).ToList();
+
+                if (unreadMessages.Any())
+                {
+                    foreach (var message in unreadMessages)
+                    {
+                        message.IsRead = true;
+                    }
+
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Marked {Count} messages as read in conversation between guide {GuideId} and client {ClientId}",
+                        unreadMessages.Count, guideId, id);
+                }
+
+                var viewModel = new ConversationDetailViewModel
+                {
+                    ClientId = id,
+                    ClientName = client.Username,  // Use the actual client username
+                    Messages = messages,
+                    GuideId = guideId,
+                    GuideName = guide?.FullName ?? "Guide"
+                };
+
+                _logger.LogInformation("Guide {GuideId} viewed conversation with client {ClientId}", guideId, id);
+                return View(viewModel);
             }
-
-            // Get all messages between guide and client
-            var messages = await _context.Messages
-                .Where(m => (m.SenderId == guideId && m.SenderType == "Guide" &&
-                           m.RecipientId == id && m.RecipientType == "Client") ||
-                           (m.SenderId == id && m.SenderType == "Client" &&
-                           m.RecipientId == guideId && m.RecipientType == "Guide"))
-                .OrderBy(m => m.SentAt)
-                .ToListAsync();
-
-            // Mark unread messages as read
-            var unreadMessages = messages.Where(m => m.RecipientId == guideId &&
-                                     m.RecipientType == "Guide" &&
-                                     !m.IsRead).ToList();
-
-            foreach (var message in unreadMessages)
+            catch (Exception ex)
             {
-                message.IsRead = true;
+                _logger.LogError(ex, "Error loading conversation with client ID: {ClientId}", id);
+                TempData["ErrorMessage"] = "An error occurred while loading the conversation.";
+                return RedirectToAction("Messages");
             }
-
-            await _context.SaveChangesAsync();
-
-            var viewModel = new ConversationDetailViewModel
-            {
-                ClientId = id,
-                ClientName = client.Username,
-                Messages = messages,
-                GuideId = guideId,
-                GuideName = guide?.FullName ?? "Guide"
-            };
-
-            return View(viewModel);
         }
 
         // In GuideDashboardController.cs
@@ -273,7 +307,7 @@ namespace Athrna.Controllers
         {
             int guideId = await GetCurrentGuideId();
 
-            var bookings = await _context.Bookings
+            var bookings = await _context.Booking
                 .Include(b => b.Client)
                 .Include(b => b.Site)
                 .Where(b => b.GuideId == guideId)
@@ -281,6 +315,38 @@ namespace Athrna.Controllers
                 .ToListAsync();
 
             return View(bookings);
+        }
+
+        // GET: GuideDashboard/ViewBooking/5
+        public async Task<IActionResult> ViewBooking(int id)
+        {
+            try
+            {
+                int guideId = await GetCurrentGuideId();
+
+                // Get booking with related data
+                var booking = await _context.Booking
+                    .Include(b => b.Client)
+                    .Include(b => b.Site)
+                        .ThenInclude(s => s.City)
+                    .FirstOrDefaultAsync(b => b.Id == id && b.GuideId == guideId);
+
+                if (booking == null)
+                {
+                    _logger.LogWarning("Booking not found or does not belong to the current guide. Booking ID: {BookingId}, Guide ID: {GuideId}",
+                        id, guideId);
+                    return NotFound();
+                }
+
+                _logger.LogInformation("Guide {GuideId} viewed booking {BookingId}", guideId, id);
+                return View(booking);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving booking details for ID: {BookingId}", id);
+                TempData["ErrorMessage"] = "An error occurred while retrieving booking details.";
+                return RedirectToAction("Bookings");
+            }
         }
 
         // GET: GuideDashboard/UpdateStatus/5?status=Confirmed
@@ -296,7 +362,7 @@ namespace Athrna.Controllers
             int guideId = await GetCurrentGuideId();
 
             // Get the booking
-            var booking = await _context.Bookings
+            var booking = await _context.Booking
                 .FirstOrDefaultAsync(b => b.Id == id && b.GuideId == guideId);
 
             if (booking == null)

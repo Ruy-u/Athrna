@@ -26,6 +26,8 @@
                         <input type="hidden" asp-for="GuideCity" />
                         <input type="hidden" asp-for="SiteId" />
                         <input type="hidden" asp-for="SiteName" />
+                        <!-- NEW: Hidden field for clean time slot value -->
+                        <input type="hidden" id="cleanTimeSlotValue" name="cleanTimeSlotValue" value="" />
 
                         <div class="row mb-4">
                             <div class="col-md-6">
@@ -188,16 +190,16 @@
             transition: all 0.2s ease;
         }
 
-        .date-card:hover {
-            border-color: #1a3b29;
-            background-color: #f8f9fa;
-        }
+            .date-card:hover {
+                border-color: #1a3b29;
+                background-color: #f8f9fa;
+            }
 
-        .date-card.selected {
-            background-color: #1a3b29;
-            color: white;
-            border-color: #1a3b29;
-        }
+            .date-card.selected {
+                background-color: #1a3b29;
+                color: white;
+                border-color: #1a3b29;
+            }
 
         .date-day {
             font-size: 0.8rem;
@@ -234,10 +236,10 @@
             transition: all 0.2s ease;
         }
 
-        .time-slot-label:hover {
-            border-color: #1a3b29;
-            background-color: #f8f9fa;
-        }
+            .time-slot-label:hover {
+                border-color: #1a3b29;
+                background-color: #f8f9fa;
+            }
 
         .time-slot-radio:checked + .time-slot-label {
             background-color: #1a3b29;
@@ -311,6 +313,17 @@
                     console.log('Time slot selected:', this.value);
                     // Enable request button when a time slot is selected
                     requestBookingBtn.disabled = false;
+
+                    // When a time slot is selected, also update a hidden field with just the date part
+                    const dateTimePart = this.value.split('|')[0].trim();
+                    console.log('Extracted date/time:', dateTimePart);
+
+                    // Update the hidden clean time slot value field
+                    const hiddenField = document.getElementById('cleanTimeSlotValue');
+                    if (hiddenField) {
+                        hiddenField.value = dateTimePart;
+                        console.log('Updated hidden field with clean value:', dateTimePart);
+                    }
                 });
             });
 
@@ -335,7 +348,18 @@
                         return false;
                     }
 
+                    // Ensure the clean value is used if present
+                    const hiddenField = document.getElementById('cleanTimeSlotValue');
+                    const slotInput = document.querySelector('input[name="SelectedTimeSlot"]');
+
+                    if (hiddenField && hiddenField.value && slotInput) {
+                        console.log('Using clean date/time value:', hiddenField.value);
+                        // We keep the original selected time slot for the form submission as-is
+                        // The controller will use the clean value from the hidden field
+                    }
+
                     console.log('Form submission proceeding with selected time slot:', selectedSlot.value);
+                    console.log('Clean time value:', hiddenField.value);
                     return true;
                 });
             }
