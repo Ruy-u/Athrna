@@ -107,3 +107,92 @@ document.addEventListener('DOMContentLoaded', function () {
         document.cookie = "message=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     }
 });
+document.addEventListener('DOMContentLoaded', function () {
+    // Handle guide availability toggles
+    document.querySelectorAll('[data-bs-toggle="collapse"][data-bs-target^="#guideAvailability-"]').forEach(button => {
+        button.addEventListener('shown.bs.collapse', function () {
+            const guideId = this.getAttribute('data-bs-target').split('-')[1];
+            loadGuideAvailability(guideId);
+        });
+    });
+
+    // Function to load guide availability
+    function loadGuideAvailability(guideId) {
+        const availabilityContainer = document.getElementById(`availabilityInfo-${guideId}`);
+
+        if (!availabilityContainer) return;
+
+        // Make AJAX request to get guide availability
+        fetch(`/Booking/GetGuideAvailability?guideId=${guideId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load availability');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Clear loading indicator
+                availabilityContainer.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    availabilityContainer.innerHTML = '<div class="text-center">No availability information available.</div>';
+                    return;
+                }
+
+                // Create availability table
+                const table = document.createElement('table');
+                table.className = 'table table-sm table-bordered m-0';
+
+                // Create table header
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+
+                const dayHeader = document.createElement('th');
+                dayHeader.textContent = 'Day';
+
+                const hoursHeader = document.createElement('th');
+                hoursHeader.textContent = 'Available Hours';
+
+                headerRow.appendChild(dayHeader);
+                headerRow.appendChild(hoursHeader);
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                // Create table body
+                const tbody = document.createElement('tbody');
+
+                // Process each day's availability
+                data.forEach(item => {
+                    if (item.isAvailable) {
+                        const row = document.createElement('tr');
+
+                        const dayCell = document.createElement('td');
+                        dayCell.textContent = item.dayOfWeek;
+
+                        const hoursCell = document.createElement('td');
+                        hoursCell.textContent = `${formatTime(item.startTime)} - ${formatTime(item.endTime)}`;
+
+                        row.appendChild(dayCell);
+                        row.appendChild(hoursCell);
+                        tbody.appendChild(row);
+                    }
+                });
+
+                table.appendChild(tbody);
+                availabilityContainer.appendChild(table);
+            })
+            .catch(error => {
+                console.error('Error loading guide availability:', error);
+                availabilityContainer.innerHTML = '<div class="text-center text-danger">Failed to load availability information.</div>';
+            });
+    }
+
+    // Helper function to format time
+    function formatTime(timeString) {
+        const [hours, minutes] = timeString.split(':');
+        const hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:${minutes} ${ampm}`;
+    }
+});

@@ -124,7 +124,6 @@
                 </div>
             </section>
 
-            <!-- Available Guides Section -->
             <section class="site-description-section mt-5">
                 <h2 data-translate="Available Guides">Available Guides</h2>
                 <div class="row mt-4">
@@ -158,9 +157,37 @@
                                         <p class="guide-details">
                                             <i class="bi bi-envelope"></i> @guide.Email
                                         </p>
+
+                                        <!-- Guide Availability Section -->
+                                        <div class="guide-availability mt-2 mb-3">
+                                            <h5 class="h6 mb-2"><i class="bi bi-calendar-check"></i> Availability</h5>
+                                            <button class="btn btn-sm btn-outline-secondary" type="button"
+                                                    data-bs-toggle="collapse" data-bs-target="#guideAvailability-@guide.Id"
+                                                    aria-expanded="false" aria-controls="guideAvailability-@guide.Id">
+                                                Show Available Times <i class="bi bi-chevron-down"></i>
+                                            </button>
+
+                                            <div class="collapse mt-2" id="guideAvailability-@guide.Id">
+                                                <div class="card card-body p-2">
+                                                    <div class="availability-info" id="availabilityInfo-@guide.Id">
+                                                        <div class="text-center">
+                                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                                <span class="visually-hidden">Loading...</span>
+                                                            </div>
+                                                            <span class="ms-2">Loading availability...</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Guide Action Buttons -->
                                         <div class="guide-action">
-                                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#guideContactModal" data-guide-name="@guide.FullName" data-guide-email="@guide.Email">
-                                                <span data-translate="Contact Guide">Contact Guide</span>
+                                            <a asp-controller="Booking" asp-action="Request" asp-route-id="@guide.Id" asp-route-siteId="@Model.Id" class="btn btn-sm btn-primary me-2">
+                                                <i class="bi bi-calendar-plus"></i> Request Booking
+                                            </a>
+                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#guideContactModal" data-guide-id="@guide.Id" data-guide-name="@guide.FullName" data-guide-email="@guide.Email">
+                                                <i class="bi bi-chat"></i> Contact Guide
                                             </button>
                                         </div>
                                     </div>

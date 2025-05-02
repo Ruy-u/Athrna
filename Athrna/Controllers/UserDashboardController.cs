@@ -45,6 +45,16 @@ namespace Athrna.Controllers
                 .Where(r => r.ClientId == userId)
                 .ToListAsync();
 
+            // Get recent bookings
+            var recentBookings = await _context.Bookings
+                .Include(b => b.Guide)
+                    .ThenInclude(g => g.City)
+                .Include(b => b.Site)
+                .Where(b => b.ClientId == userId)
+                .OrderByDescending(b => b.BookingDate)
+                .Take(5)
+                .ToListAsync();
+
             // Get unread messages count
             int unreadMessages = await _context.Messages
                 .CountAsync(m => m.RecipientId == userId
@@ -58,12 +68,13 @@ namespace Athrna.Controllers
                 .Distinct()
                 .CountAsync();
 
-            // Create view model with messages info
+            // Create view model with all information
             var viewModel = new UserDashboardViewModel
             {
                 User = user,
                 Bookmarks = bookmarks,
                 Ratings = ratings,
+                RecentBookings = recentBookings,
                 UnreadMessages = unreadMessages,
                 PendingConversations = pendingConversations
             };

@@ -1,0 +1,314 @@
+﻿@model Athrna.Models.BookingRequestViewModel
+
+@{
+    ViewData["Title"] = "Request a Tour";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0">Request a Tour with @Model.GuideName</h2>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+                    {
+                        <div class="alert alert-danger">
+                            @ViewBag.ErrorMessage
+                        </div>
+                    }
+
+                    <form asp-action="Request" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="GuideId" />
+                        <input type="hidden" asp-for="GuideName" />
+                        <input type="hidden" asp-for="GuideCity" />
+                        <input type="hidden" asp-for="SiteId" />
+                        <input type="hidden" asp-for="SiteName" />
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="guide-info">
+                                    <h4>Guide Information</h4>
+                                    <p><strong>Name:</strong> @Model.GuideName</p>
+                                    <p><strong>City:</strong> @Model.GuideCity</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="site-info">
+                                    <h4>Tour Information</h4>
+                                    @if (Model.SiteId.HasValue)
+                                    {
+                                        <p><strong>Site:</strong> @Model.SiteName</p>
+                                    }
+                                    else
+                                    {
+                                        <p><strong>Type:</strong> General city tour in @Model.GuideCity</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4 class="mb-3">Booking Details</h4>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Available Dates</label>
+
+                                    @if (!Model.AvailableDates.Any())
+                                    {
+                                        <div class="alert alert-warning">
+                                            <p class="mb-0">This guide has no available time slots in the next 14 days. Please contact the guide directly for custom scheduling.</p>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="date-picker-container">
+                                            <div class="date-picker">
+                                                @foreach (var date in Model.AvailableDates)
+                                                {
+                                                    <div class="date-card" data-date="@date.ToString("yyyy-MM-dd")">
+                                                        <div class="date-day">@date.ToString("ddd")</div>
+                                                        <div class="date-number">@date.Day</div>
+                                                        <div class="date-month">@date.ToString("MMM")</div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Available Time Slots</label>
+                                    <div class="time-slots-container">
+                                        <div class="alert alert-info mb-0 text-center" id="selectDatePrompt">
+                                            <p class="mb-0">Please select a date above to see available time slots.</p>
+                                        </div>
+
+                                        <div id="timeSlotsList" class="time-slots-list" style="display: none;">
+                                            @foreach (var date in Model.AvailableDates)
+                                            {
+                                                <div class="date-slots" data-date="@date.ToString("yyyy-MM-dd")" style="display: none;">
+                                                    @{
+                                                        var slotsForDate = Model.AvailableTimeSlots
+                                                        .Where(s => s.StartTime.Date == date.Date)
+                                                        .OrderBy(s => s.StartTime)
+                                                        .ToList();
+                                                    }
+
+                                                    @if (slotsForDate.Any())
+                                                    {
+                                                        foreach (var slot in slotsForDate)
+                                                        {
+                                                            <div class="time-slot-option">
+                                                                <input type="radio" name="SelectedTimeSlot" id="slot-@slot.SlotId"
+                                                                       value="@slot.StartTime.ToString("yyyy-MM-dd HH:mm:ss")|@slot.SlotId"
+                                                                       class="time-slot-radio" />
+                                                                <label for="slot-@slot.SlotId" class="time-slot-label">
+                                                                    @slot.StartTime.ToString("h:mm tt") - @slot.EndTime.ToString("h:mm tt")
+                                                                </label>
+                                                            </div>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="alert alert-warning mb-0">
+                                                            <p class="mb-0">No available time slots for this date.</p>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                    <span asp-validation-for="SelectedTimeSlot" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="GroupSize" class="form-label"></label>
+                                    <input asp-for="GroupSize" class="form-control" type="number" min="1" max="20" required />
+                                    <span asp-validation-for="GroupSize" class="text-danger"></span>
+                                    <small class="form-text text-muted">
+                                        Enter the number of people in your group (including yourself).
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label asp-for="Notes" class="form-label"></label>
+                            <textarea asp-for="Notes" class="form-control" rows="4"
+                                      placeholder="Enter any special requirements, interests, or questions you have for the guide"></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-primary" id="requestBookingBtn" disabled>
+                                <i class="bi bi-calendar-check"></i> Request Booking
+                            </button>
+                            <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .date-picker-container {
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .date-picker {
+            display: flex;
+            gap: 10px;
+            min-width: max-content;
+        }
+
+        .date-card {
+            width: 80px;
+            height: 80px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .date-card:hover {
+            border-color: #1a3b29;
+            background-color: #f8f9fa;
+        }
+
+        .date-card.selected {
+            background-color: #1a3b29;
+            color: white;
+            border-color: #1a3b29;
+        }
+
+        .date-day {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .date-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .date-month {
+            font-size: 0.8rem;
+        }
+
+        .time-slots-list {
+            margin-top: 15px;
+        }
+
+        .time-slot-option {
+            margin-bottom: 10px;
+        }
+
+        .time-slot-radio {
+            display: none;
+        }
+
+        .time-slot-label {
+            display: block;
+            padding: 10px 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .time-slot-label:hover {
+            border-color: #1a3b29;
+            background-color: #f8f9fa;
+        }
+
+        .time-slot-radio:checked + .time-slot-label {
+            background-color: #1a3b29;
+            color: white;
+            border-color: #1a3b29;
+        }
+    </style>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle date selection
+            const dateCards = document.querySelectorAll('.date-card');
+            const dateSlots = document.querySelectorAll('.date-slots');
+            const selectDatePrompt = document.getElementById('selectDatePrompt');
+            const timeSlotsList = document.getElementById('timeSlotsList');
+            const requestBookingBtn = document.getElementById('requestBookingBtn');
+
+            dateCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    // Remove selected class from all date cards
+                    dateCards.forEach(c => c.classList.remove('selected'));
+
+                    // Add selected class to clicked card
+                    this.classList.add('selected');
+
+                    // Hide all date slots
+                    dateSlots.forEach(slot => slot.style.display = 'none');
+
+                    // Show slots for selected date
+                    const selectedDate = this.getAttribute('data-date');
+                    const selectedSlots = document.querySelector(`.date-slots[data-date="${selectedDate}"]`);
+
+                    if (selectedSlots) {
+                        selectDatePrompt.style.display = 'none';
+                        timeSlotsList.style.display = 'block';
+                        selectedSlots.style.display = 'block';
+                    }
+                });
+            });
+
+            // Handle time slot selection
+            const timeSlotRadios = document.querySelectorAll('.time-slot-radio');
+
+            timeSlotRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    // Enable request button when a time slot is selected
+                    requestBookingBtn.disabled = false;
+                });
+            });
+
+            // Handle form submission validation
+            const bookingForm = document.querySelector('form');
+
+            bookingForm.addEventListener('submit', function(e) {
+                // Check if a time slot is selected
+                const selectedSlot = document.querySelector('.time-slot-radio:checked');
+
+                if (!selectedSlot) {
+                    e.preventDefault();
+                    alert('Please select a date and time slot for your booking.');
+                    return false;
+                }
+
+                return true;
+            });
+        });
+    </script>
+}

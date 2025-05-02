@@ -1,0 +1,67 @@
+﻿@model Athrna.Models.Booking
+
+@{
+    ViewData["Title"] = "Booking Confirmation";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h2 class="h4 mb-0">Booking Confirmed</h2>
+                </div>
+                <div class="card-body text-center">
+                    <div class="confirmation-icon mb-4">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                    </div>
+
+                    <h3 class="mb-4">Thank You for Your Booking!</h3>
+
+                    <div class="alert alert-success mb-4">
+                        @TempData["SuccessMessage"]
+                    </div>
+
+                    <div class="booking-details mb-4 text-start">
+                        <h4>Booking Information</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Booking ID:</strong> #@Model.Id</p>
+                                <p><strong>Status:</strong> <span class="badge bg-warning">@Model.Status</span></p>
+                                <p><strong>Guide:</strong> @Model.Guide.FullName</p>
+                                <p><strong>Tour Date & Time:</strong> @Model.TourDateTime.ToString("MMM dd, yyyy - h:mm tt")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Location:</strong> @(Model.Site != null ? Model.Site.Name : $"{Model.Guide.City.Name} city tour")</p>
+                                <p><strong>Group Size:</strong> @Model.GroupSize @(Model.GroupSize == 1 ? "person" : "people")</p>
+                                <p><strong>Booked On:</strong> @Model.BookingDate.ToString("MMM dd, yyyy")</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="next-steps mb-4 text-start">
+                        <h4>Next Steps</h4>
+                        <ul>
+                            <li>Your booking is now pending confirmation from the guide.</li>
+                            <li>You will receive a message from the guide to confirm the details.</li>
+                            <li>You can view and manage your bookings from your dashboard.</li>
+                            <li>Remember to arrive at the meeting point on time.</li>
+                        </ul>
+                    </div>
+
+                    <div class="action-buttons">
+                        <a asp-action="MyBookings" class="btn btn-primary">
+                            <i class="bi bi-calendar3"></i> View My Bookings
+                        </a>
+                        <a asp-controller="Message" asp-action="Conversation" asp-route-guideId="@Model.GuideId" class="btn btn-outline-primary">
+                            <i class="bi bi-chat-dots"></i> Message Guide
+                        </a>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-house"></i> Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

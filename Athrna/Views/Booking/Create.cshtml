@@ -1,0 +1,162 @@
+﻿@model Athrna.Models.CreateBookingViewModel
+
+@{
+    ViewData["Title"] = "Book a Tour";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0">Book a Tour with @Model.GuideName</h2>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+                    {
+                        <div class="alert alert-danger">
+                            @ViewBag.ErrorMessage
+                        </div>
+                    }
+
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="GuideId" />
+                        <input type="hidden" asp-for="GuideName" />
+                        <input type="hidden" asp-for="GuideCity" />
+                        <input type="hidden" asp-for="SiteId" />
+                        <input type="hidden" asp-for="SiteName" />
+                        <input type="hidden" asp-for="MinDate" />
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="guide-info">
+                                    <h4>Guide Information</h4>
+                                    <p><strong>Name:</strong> @Model.GuideName</p>
+                                    <p><strong>City:</strong> @Model.GuideCity</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="site-info">
+                                    <h4>Tour Information</h4>
+                                    @if (Model.SiteId.HasValue)
+                                    {
+                                        <p><strong>Site:</strong> @Model.SiteName</p>
+                                    }
+                                    else
+                                    {
+                                        <p><strong>Type:</strong> General city tour in @Model.GuideCity</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4 class="mb-3">Booking Details</h4>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="TourDateTime" class="form-label"></label>
+                                    <input asp-for="TourDateTime" class="form-control" type="datetime-local" min="@Model.MinDate" required />
+                                    <span asp-validation-for="TourDateTime" class="text-danger"></span>
+                                    <small class="form-text text-muted">
+                                        Select a date and time for your tour. Tours must be booked at least 1 day in advance.
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="GroupSize" class="form-label"></label>
+                                    <input asp-for="GroupSize" class="form-control" type="number" min="1" max="20" required />
+                                    <span asp-validation-for="GroupSize" class="text-danger"></span>
+                                    <small class="form-text text-muted">
+                                        Enter the number of people in your group (including yourself).
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label asp-for="Notes" class="form-label"></label>
+                            <textarea asp-for="Notes" class="form-control" rows="4"
+                                      placeholder="Enter any special requirements, interests, or questions you have for the guide"></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
+
+                        <div class="guide-availability mb-4">
+                            <h5>Guide Availability</h5>
+                            <div class="alert alert-info">
+                                <p class="mb-0">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    This guide is generally available during the following times. Please select a time within these hours.
+                                </p>
+                            </div>
+
+                            <div class="availability-table">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Day</th>
+                                            <th>Hours</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (Model.GuideAvailability != null && Model.GuideAvailability.Any())
+                                        {
+                                            @foreach (var item in Model.GuideAvailability)
+                                            {
+                                                <tr>
+                                                    <td>@item.DayOfWeek.ToString()</td>
+                                                    <td>@item.StartTime.ToString(@"hh\:mm tt") - @item.EndTime.ToString(@"hh\:mm tt")</td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="2" class="text-center">No availability information provided. Please contact the guide for details.</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-calendar-check"></i> Confirm Booking
+                            </button>
+                            <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set minimum date for datetime-local input
+            const tourDateTimeInput = document.getElementById('TourDateTime');
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            // Format date for datetime-local input (YYYY-MM-DDTHH:MM)
+            const formattedDate = tomorrow.toISOString().slice(0, 16);
+            tourDateTimeInput.min = formattedDate;
+
+            if (!tourDateTimeInput.value) {
+                tourDateTimeInput.value = formattedDate;
+            }
+        });
+    </script>
+}
