@@ -22,7 +22,10 @@
                     <a class="nav-link" asp-action="Index">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-action="Messages">Messages</a>
+                    <a class="nav-link" asp-action="Messages">
+                        Messages
+                        <span class="badge bg-primary">@ViewBag.UnreadMessages</span>
+                    </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" asp-action="Bookings">Bookings</a>
@@ -99,12 +102,12 @@
 
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Enable/disable time inputs based on availability checkbox
             const availabilityCheckboxes = document.querySelectorAll('.availability-checkbox');
 
             availabilityCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
+                checkbox.addEventListener('change', function () {
                     const dayIndex = this.id.split('-')[1];
                     const startTime = document.getElementById(`start-${dayIndex}`);
                     const endTime = document.getElementById(`end-${dayIndex}`);

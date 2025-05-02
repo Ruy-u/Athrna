@@ -7,6 +7,6 @@
         public int UnreadMessages { get; set; }
         public int PendingBookings { get; set; }
         public int CompletedTours { get; set; }
-        public double AverageRating { get; set; }
+        public int CurrentBookings { get; set; }
     }
 }

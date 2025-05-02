@@ -76,11 +76,11 @@
                     <div class="col-md-3">
                         <div class="stat-card">
                             <div class="stat-icon">
-                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-calendar-event-fill"></i>
                             </div>
                             <div class="stat-content">
-                                <h3>@Model.AverageRating.ToString("0.0")</h3>
-                                <p>Average Rating</p>
+                                <h3>@Model.CurrentBookings</h3>
+                                <p>Current Bookings</p>
                             </div>
                         </div>
                     </div>
@@ -163,22 +163,10 @@
                     <div class="widget-content">
                         <div class="row">
                             <div class="col-md-3 text-center">
-                                <div class="guide-avatar">
-                                    <div class="avatar-circle">
-                                        @(Model.Guide.FullName.Substring(0, 1).ToUpper())
-                                    </div>
-                                </div>
-                            </div>
                             <div class="col-md-9">
                                 <h3>@Model.Guide.FullName</h3>
                                 <p><i class="bi bi-geo-alt"></i> @Model.Guide.City.Name</p>
                                 <p><i class="bi bi-envelope"></i> @Model.Guide.Email</p>
-                                <p>
-                                    <strong>Guiding Since:</strong> <span id="guidingSince">2023</span>
-                                </p>
-                                <p>
-                                    <strong>Licensed Guide:</strong> Yes
-                                </p>
                             </div>
                         </div>
                     </div>

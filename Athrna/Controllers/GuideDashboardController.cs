@@ -50,6 +50,19 @@ namespace Athrna.Controllers
                     .Take(5)
                     .ToListAsync();
 
+                // Get count of pending bookings
+                int pendingBookings = await _context.Booking
+                    .CountAsync(b => b.GuideId == guideId && b.Status == "Pending");
+
+                // Get count of completed tours
+                int completedTours = await _context.Booking
+                    .CountAsync(b => b.GuideId == guideId && b.Status == "Completed");
+
+                // Get count of current bookings (Pending or Confirmed, not Completed or Cancelled)
+                int currentBookings = await _context.Booking
+                    .CountAsync(b => b.GuideId == guideId &&
+                                (b.Status == "Pending" || b.Status == "Confirmed"));
+
                 // Get unread messages count
                 int unreadMessages = await _context.Messages
                     .CountAsync(m => m.RecipientId == guideId
@@ -62,7 +75,10 @@ namespace Athrna.Controllers
                     Guide = guide,
                     RecentBookings = recentBookings,
                     UnreadMessages = unreadMessages,
-                    // Add additional properties as needed
+                    PendingBookings = pendingBookings,
+                    CompletedTours = completedTours,
+                    CurrentBookings = currentBookings,
+                    // Remove the AverageRating property since we're removing guide reviews
                 };
 
                 return View(viewModel);
@@ -75,6 +91,7 @@ namespace Athrna.Controllers
                 return RedirectToAction("Error", "Home", new { message = "Error loading dashboard." });
             }
         }
+
         // GET: GuideDashboard/Profile
         public async Task<IActionResult> Profile()
         {
@@ -82,6 +99,9 @@ namespace Athrna.Controllers
             {
                 // Get current guide ID
                 int guideId = await GetCurrentGuideId();
+
+                // Populate unread messages count in ViewBag
+                await PopulateUnreadMessagesCount(guideId);
 
                 // Get guide with city information
                 var guide = await _context.Guide
@@ -159,6 +179,9 @@ namespace Athrna.Controllers
             {
                 int guideId = await GetCurrentGuideId();
 
+                // Populate unread messages count in ViewBag (will be used in the view)
+                await PopulateUnreadMessagesCount(guideId);
+
                 // Get all message threads for the guide
                 var messages = await _context.Messages
                     .Include(m => m.Client)  // Include Client information
@@ -199,12 +222,17 @@ namespace Athrna.Controllers
             }
         }
 
+
         // GET: GuideDashboard/Conversation/5
         public async Task<IActionResult> Conversation(int id)
         {
             try
             {
                 int guideId = await GetCurrentGuideId();
+
+                // Populate unread messages count in ViewBag
+                await PopulateUnreadMessagesCount(guideId);
+
                 var guide = await _context.Guide.FindAsync(guideId);
 
                 // Get the client with better error handling
@@ -307,6 +335,9 @@ namespace Athrna.Controllers
         {
             int guideId = await GetCurrentGuideId();
 
+            // Populate unread messages count in ViewBag
+            await PopulateUnreadMessagesCount(guideId);
+
             var bookings = await _context.Booking
                 .Include(b => b.Client)
                 .Include(b => b.Site)
@@ -323,6 +354,9 @@ namespace Athrna.Controllers
             try
             {
                 int guideId = await GetCurrentGuideId();
+
+                // Populate unread messages count in ViewBag
+                await PopulateUnreadMessagesCount(guideId);
 
                 // Get booking with related data
                 var booking = await _context.Booking
@@ -382,6 +416,9 @@ namespace Athrna.Controllers
         public async Task<IActionResult> Availability()
         {
             int guideId = await GetCurrentGuideId();
+
+            // Populate unread messages count in ViewBag
+            await PopulateUnreadMessagesCount(guideId);
 
             // Get guide's availability
             var availability = await _context.GuideAvailabilities
@@ -475,6 +512,17 @@ namespace Athrna.Controllers
                 _logger.LogError(ex, "Error getting current guide ID");
                 throw;
             }
+        }
+        // Helper method to populate unread messages count in ViewBag
+        private async Task PopulateUnreadMessagesCount(int guideId)
+        {
+            // Get unread messages count
+            int unreadMessages = await _context.Messages
+                .CountAsync(m => m.RecipientId == guideId
+                         && m.RecipientType == "Guide"
+                         && !m.IsRead);
+
+            ViewBag.UnreadMessages = unreadMessages;
         }
     }
 }

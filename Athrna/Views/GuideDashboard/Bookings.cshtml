@@ -22,7 +22,10 @@
                     <a class="nav-link" asp-action="Index">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-action="Messages">Messages</a>
+                    <a class="nav-link" asp-action="Messages">
+                        Messages
+                        <span class="badge bg-primary">@ViewBag.UnreadMessages</span>
+                    </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link active" asp-action="Bookings">Bookings</a>
@@ -152,13 +155,13 @@
 
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Status filter functionality
             const statusFilter = document.getElementById('statusFilter');
             const bookingRows = document.querySelectorAll('.booking-row');
 
             if (statusFilter) {
-                statusFilter.addEventListener('change', function() {
+                statusFilter.addEventListener('change', function () {
                     const selectedStatus = this.value;
 
                     bookingRows.forEach(row => {

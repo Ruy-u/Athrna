@@ -4,6 +4,18 @@
     ViewData["Title"] = Model.Name;
 }
 
+<!-- Add Toast Container for Notifications - Add this near the top -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1500">
+    <div id="bookmarkToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMessage">
+                <!-- Message will be inserted here via JavaScript -->
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
 <div class="site-hero" data-site-id="@Model.Id">
     <div class="site-overlay"></div>
     @if (!string.IsNullOrEmpty(Model.ImagePath))
@@ -316,10 +328,13 @@
                 <div class="sidebar-widget">
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <form asp-action="Bookmark" method="post">
+                        <form asp-action="Bookmark" method="post" id="bookmarkForm">
                             <input type="hidden" name="id" value="@Model.Id" />
-                            <button type="submit" class="btn btn-outline-primary btn-block">
-                                <i class="bi bi-bookmark"></i> <span data-translate="Bookmark this Site">Bookmark this Site</span>
+                            <button type="submit" class="btn @(ViewBag.IsBookmarked ? "btn-danger" : "btn-outline-primary") btn-block" id="bookmarkButton">
+                                <i class="bi @(ViewBag.IsBookmarked ? "bi-bookmark-check-fill" : "bi-bookmark")"></i>
+                                <span id="bookmarkButtonText">
+                                    @(ViewBag.IsBookmarked ? "Remove Bookmark" : "Bookmark this Site")
+                                </span>
                             </button>
                         </form>
                     }
@@ -451,13 +466,36 @@
 
 @section Scripts {
     <script src="~/js/SiteDetails.js"></script>
-    
-
-    <script src="~/js/SiteDetails.js"></script>
     <script src="~/js/cultural-audio-player.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("Attempting manual initialization");
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check for TempData message and show toast if it exists
+        @if (TempData["Message"] != null)
+        {
+            <text>
+                            // Get the message from TempData
+                        const message = '@TempData["Message"]';
+
+                        // Set message in toast
+                        document.getElementById('toastMessage').innerText = message;
+
+                        // Show toast notification
+                        const bookmarkToast = new bootstrap.Toast(document.getElementById('bookmarkToast'));
+                        bookmarkToast.show();
+
+                        // Change toast background based on message
+                        const toastElement = document.getElementById('bookmarkToast');
+                        if (message.includes('removed')) {
+                            toastElement.classList.remove('bg-success');
+                        toastElement.classList.add('bg-danger');
+                            } else {
+                            toastElement.classList.remove('bg-danger');
+                        toastElement.classList.add('bg-success');
+                            }
+            </text>
+        }
+
+                console.log("Attempting manual initialization");
 
             // Get the site ID from the page
             const siteId = @Model.Id;
@@ -475,6 +513,7 @@
                 console.error("Container not found:", containerId);
             }
         });
+
         // Add to SiteDetails.js or include in Site.cshtml's Scripts section
         document.addEventListener('DOMContentLoaded', function () {
             // Handle guide contact modal
