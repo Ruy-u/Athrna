@@ -75,6 +75,82 @@ namespace Athrna.Controllers
                 return RedirectToAction("Error", "Home", new { message = "Error loading dashboard." });
             }
         }
+        // GET: GuideDashboard/Profile
+        public async Task<IActionResult> Profile()
+        {
+            try
+            {
+                // Get current guide ID
+                int guideId = await GetCurrentGuideId();
+
+                // Get guide with city information
+                var guide = await _context.Guide
+                    .Include(g => g.City)
+                    .FirstOrDefaultAsync(g => g.Id == guideId);
+
+                if (guide == null)
+                {
+                    _logger.LogWarning("Guide not found with ID: {GuideId}", guideId);
+                    return NotFound("Guide profile not found. Please contact support.");
+                }
+
+                // Return guide model directly to the view
+                return View(guide);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading guide profile");
+                TempData["ErrorMessage"] = "An error occurred while loading your profile. Please try again later.";
+                return RedirectToAction("Index");
+            }
+        }
+
+        // POST: GuideDashboard/UpdateProfile
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(Guide model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return View("Profile", model);
+                }
+
+                // Get current guide ID
+                int guideId = await GetCurrentGuideId();
+
+                // Get existing guide
+                var guide = await _context.Guide
+                    .Include(g => g.City)
+                    .FirstOrDefaultAsync(g => g.Id == guideId);
+
+                if (guide == null)
+                {
+                    _logger.LogWarning("Guide not found with ID: {GuideId} during profile update", guideId);
+                    return NotFound("Guide profile not found. Please contact support.");
+                }
+
+                // Update fields that should be updatable
+                guide.FullName = model.FullName;
+                // Note: Email is not updated as it's tied to authentication
+                // Note: Password changes should be handled separately with confirmation
+
+                // Save changes
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Guide profile updated successfully: {GuideId}", guideId);
+                TempData["SuccessMessage"] = "Your profile has been updated successfully.";
+
+                return RedirectToAction("Profile");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating guide profile");
+                TempData["ErrorMessage"] = "An error occurred while updating your profile. Please try again later.";
+                return View("Profile", model);
+            }
+        }
 
         // GET: GuideDashboard/Messages
         public async Task<IActionResult> Messages()
@@ -95,9 +171,7 @@ namespace Athrna.Controllers
                 .Select(g => new ConversationViewModel
                 {
                     ClientId = g.Key,
-                    ClientName = g.First().SenderType == "Guide"
-                        ? g.First().Client.Username
-                        : g.First().Client.Username,
+                    ClientName = g.First().Client?.Username ?? "Unknown Client",
                     LastMessage = g.OrderByDescending(m => m.SentAt).First(),
                     UnreadCount = g.Count(m => m.RecipientId == guideId &&
                                          m.RecipientType == "Guide" &&
@@ -112,6 +186,7 @@ namespace Athrna.Controllers
         public async Task<IActionResult> Conversation(int id)
         {
             int guideId = await GetCurrentGuideId();
+            var guide = await _context.Guide.FindAsync(guideId);
 
             // Get the client
             var client = await _context.Client.FindAsync(id);
@@ -131,8 +206,8 @@ namespace Athrna.Controllers
 
             // Mark unread messages as read
             var unreadMessages = messages.Where(m => m.RecipientId == guideId &&
-                                             m.RecipientType == "Guide" &&
-                                             !m.IsRead).ToList();
+                                     m.RecipientType == "Guide" &&
+                                     !m.IsRead).ToList();
 
             foreach (var message in unreadMessages)
             {
@@ -146,13 +221,14 @@ namespace Athrna.Controllers
                 ClientId = id,
                 ClientName = client.Username,
                 Messages = messages,
-                GuideId = guideId
+                GuideId = guideId,
+                GuideName = guide?.FullName ?? "Guide"
             };
 
             return View(viewModel);
         }
 
-        // POST: GuideDashboard/SendMessage
+        // In GuideDashboardController.cs
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendMessage(int recipientId, string message)
@@ -163,6 +239,13 @@ namespace Athrna.Controllers
             }
 
             int guideId = await GetCurrentGuideId();
+            var guide = await _context.Guide.FindAsync(guideId);
+            var client = await _context.Client.FindAsync(recipientId);
+
+            if (guide == null || client == null)
+            {
+                return NotFound("Guide or client not found");
+            }
 
             // Create new message
             var newMessage = new Message
@@ -173,7 +256,9 @@ namespace Athrna.Controllers
                 RecipientType = "Client",
                 Content = message,
                 SentAt = DateTime.UtcNow,
-                IsRead = false
+                IsRead = false,
+                Guide = guide,
+                Client = client
             };
 
             _context.Messages.Add(newMessage);
@@ -293,25 +378,37 @@ namespace Athrna.Controllers
         // Helper method to get current guide ID
         private async Task<int> GetCurrentGuideId()
         {
-            // Get user email from claims
-            var emailClaim = User.FindFirst(ClaimTypes.Email);
-            if (emailClaim == null)
+            try
             {
-                throw new ApplicationException("Email claim not found");
+                // Get user email from claims
+                var emailClaim = User.FindFirst(ClaimTypes.Email);
+                if (emailClaim == null)
+                {
+                    _logger.LogWarning("Email claim not found for user: {Username}", User.Identity.Name);
+                    throw new ApplicationException("Email claim not found");
+                }
+
+                string email = emailClaim.Value;
+                _logger.LogInformation("Looking up guide for email: {Email}", email);
+
+                // Get guide by email
+                var guide = await _context.Guide
+                    .FirstOrDefaultAsync(g => g.Email == email);
+
+                if (guide == null)
+                {
+                    _logger.LogWarning("No guide found for email: {Email}", email);
+                    throw new ApplicationException("Guide not found for email: " + email);
+                }
+
+                _logger.LogInformation("Found guide: {GuideName} (ID: {GuideId})", guide.FullName, guide.Id);
+                return guide.Id;
             }
-
-            string email = emailClaim.Value;
-
-            // Get guide by email
-            var guide = await _context.Guide
-                .FirstOrDefaultAsync(g => g.Email == email);
-
-            if (guide == null)
+            catch (Exception ex)
             {
-                throw new ApplicationException("Guide not found for email: " + email);
+                _logger.LogError(ex, "Error getting current guide ID");
+                throw;
             }
-
-            return guide.Id;
         }
     }
 }

@@ -13,20 +13,56 @@
     </div>
 
     <div class="container mt-4">
+        <!-- Recent Unread Messages -->
+        <div class="col-md-6 mb-4">
+            <div class="dashboard-widget">
+                <div class="widget-header">
+                    <h2>Messages</h2>
+                    <a asp-action="Messages" class="view-all">View All</a>
+                </div>
+                <div class="widget-content">
+                    @{
+                        // Calculate unread messages here to avoid database queries in layout
+                        int unreadMessages = 0;
+                        try
+                        {
+                            // Count unread messages from the Ratings list as a proxy
+                            // Will be replaced with actual logic in the controller
+                            unreadMessages = ViewBag.UnreadMessages ?? 0;
+                        }
+                        catch { /* Ignore any errors */ }
+                    }
+                </div>
+            </div>
+        </div>
         <!-- Dashboard Navigation -->
         <div class="dashboard-nav mb-4">
             <ul class="nav nav-tabs">
                 <li class="nav-item">
-                    <a class="nav-link active" asp-action="Index">Dashboard</a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Index" ? "active" : "")"
+                       asp-action="Index">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-action="Bookmarks">My Bookmarks</a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Bookmarks" ? "active" : "")"
+                       asp-action="Bookmarks">My Bookmarks</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-action="Ratings">My Ratings</a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Ratings" ? "active" : "")"
+                       asp-action="Ratings">My Ratings</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-action="Profile">My Profile</a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Messages" ? "active" : "")"
+                       asp-action="Messages">
+                        Messages
+                        @if (Model is UserDashboardViewModel dashboard && dashboard.UnreadMessages > 0)
+                        {
+                            <span class="badge bg-danger">@dashboard.UnreadMessages</span>
+                        }
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Profile" ? "active" : "")"
+                       asp-action="Profile">My Profile</a>
                 </li>
             </ul>
         </div>

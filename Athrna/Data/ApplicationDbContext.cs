@@ -72,6 +72,22 @@ namespace Athrna.Data
             modelBuilder.Entity<Message>().ToTable("Message");
             modelBuilder.Entity<Booking>().ToTable("Booking");
             modelBuilder.Entity<GuideAvailability>().ToTable("GuideAvailability");
+
+            // Set up the relationship between Message and Client
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Client)
+                .WithMany()
+                .HasForeignKey("ClientId")
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            // Set up the relationship between Message and Guide
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Guide)
+                .WithMany()
+                .HasForeignKey("GuideId")
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
         }
     }
 }

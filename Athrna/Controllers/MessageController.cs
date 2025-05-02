@@ -4,6 +4,10 @@ using Athrna.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using System;
+using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Athrna.Controllers
 {
@@ -58,14 +62,17 @@ namespace Athrna.Controllers
         }
 
         [HttpGet]
+        // In MessageController.cs
+        [HttpGet]
         public async Task<IActionResult> Conversation(int guideId)
         {
+            // If the user is not authenticated, redirect to login
             if (!User.Identity.IsAuthenticated)
             {
                 return RedirectToAction("Login", "Account");
             }
 
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
             // Get the guide
             var guide = await _context.Guide
@@ -87,9 +94,11 @@ namespace Athrna.Controllers
                 .ToListAsync();
 
             // Mark unread messages as read
-            var unreadMessages = messages.Where(m => m.RecipientId == userId &&
-                                             m.RecipientType == "Client" &&
-                                             !m.IsRead).ToList();
+            var unreadMessages = messages
+                .Where(m => m.RecipientId == userId &&
+                            m.RecipientType == "Client" &&
+                            !m.IsRead)
+                .ToList();
 
             foreach (var message in unreadMessages)
             {
@@ -98,6 +107,7 @@ namespace Athrna.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Create view model
             var viewModel = new ConversationDetailViewModel
             {
                 ClientId = userId,
@@ -109,7 +119,61 @@ namespace Athrna.Controllers
 
             ViewBag.Guide = guide;
 
-            return View(viewModel);
+            // Make sure we're explicitly returning the Conversation view
+            return View("Conversation", viewModel);
+        }
+
+        // Display a list of guides that the user can message
+        [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            var guides = await _context.Guide
+                .Include(g => g.City)
+                .OrderBy(g => g.FullName)
+                .ToListAsync();
+
+            return View(guides);
+        }
+
+        // API endpoint to get new messages
+        [HttpGet]
+        public async Task<IActionResult> GetNewMessages(int guideId)
+        {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return Unauthorized();
+            }
+
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            // Get all unread messages from guide to user
+            var messages = await _context.Messages
+                .Where(m => m.SenderId == guideId &&
+                            m.SenderType == "Guide" &&
+                            m.RecipientId == userId &&
+                            m.RecipientType == "Client" &&
+                            !m.IsRead)
+                .OrderBy(m => m.SentAt)
+                .ToListAsync();
+
+            // Mark messages as read
+            foreach (var message in messages)
+            {
+                message.IsRead = true;
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Format messages for JSON response
+            var formattedMessages = messages.Select(m => new
+            {
+                id = m.Id,
+                content = m.Content,
+                sentAt = m.SentAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                formattedTime = m.SentAt.ToString("MMM dd, h:mm tt")
+            });
+
+            return Json(formattedMessages);
         }
     }
 }

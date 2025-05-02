@@ -124,8 +124,23 @@ document.addEventListener('DOMContentLoaded', function () {
                             localStorage.setItem('adminRoleLevel', data.adminRoleLevel);
                         }
 
+                        // Store guide status if applicable
+                        if (data.isGuide) {
+                            localStorage.setItem('isGuide', 'true');
+                        }
+
+                        // Determine redirect based on user type
+                        let redirectUrl = data.redirectUrl || '/';
+
+                        // Prioritize redirection in this order: Admin > Guide > Regular User
+                        if (data.isAdmin) {
+                            redirectUrl = '/Admin';
+                        } else if (data.isGuide) {
+                            redirectUrl = '/GuideDashboard';
+                        }
+
                         // Redirect to appropriate page
-                        window.location.href = data.redirectUrl || '/';
+                        window.location.href = redirectUrl;
                     } else {
                         // Handle errors
                         if (data.requireVerification) {
