@@ -59,9 +59,7 @@
             {
                 <div class="col-md-6 col-lg-3 mb-4">
                     <div class="guide-card">
-                        <div class="guide-avatar">
-                            <img src="/api/placeholder/150/150" alt="@guide.FullName" class="rounded-circle">
-                        </div>
+                        <!-- Existing guide info -->
                         <div class="guide-content">
                             <h4>@guide.FullName</h4>
                             <p class="guide-contact">
@@ -70,13 +68,17 @@
                             <p class="guide-phone">
                                 <i class="bi bi-telephone"></i> +966 50 123 @(4000 + guide.Id)
                             </p>
-                            <a asp-controller="Message" asp-action="Conversation" asp-route-guideId="@guide.Id"
-                               class="btn btn-outline-primary btn-sm mt-2"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="Start a conversation with @guide.FullName"
-                               data-translate="Contact Guide">Contact Guide</a>
+                            <div class="guide-actions">
+                                <a asp-controller="Booking" asp-action="Create" asp-route-id="@guide.Id" class="btn btn-outline-primary btn-sm mt-2">
+                                    <i class="bi bi-calendar-plus"></i> Book Tour
+                                </a>
+                                <a asp-controller="Message" asp-action="Conversation" asp-route-guideId="@guide.Id"
+                                   class="btn btn-outline-primary btn-sm mt-2"
+                                   data-bs-toggle="tooltip" data-bs-placement="top"
+                                   title="Start a conversation with @guide.FullName">Contact Guide</a>
+                            </div>
                         </div>
-                    </div>
+                </div>
                 </div>
             }
         </div>
@@ -358,6 +360,4 @@
             });
         });
     </script>
-    </script>
-
 }

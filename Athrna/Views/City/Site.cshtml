@@ -181,12 +181,14 @@
                                             </div>
                                         </div>
 
-                                        <!-- Guide Action Buttons -->
-                                        <div class="guide-action">
-                                            <a asp-controller="Booking" asp-action="Request" asp-route-id="@guide.Id" asp-route-siteId="@Model.Id" class="btn btn-sm btn-primary me-2">
-                                                <i class="bi bi-calendar-plus"></i> Request Booking
+                                        <!-- Guide Action Buttons - UPDATED WITH PROMINENT BOOKING BUTTON -->
+                                        <div class="guide-action mt-3">
+                                            <!-- Primary CTA - Book a Tour -->
+                                            <a asp-controller="Booking" asp-action="Request" asp-route-id="@guide.Id" asp-route-siteId="@Model.Id" class="btn btn-primary me-2">
+                                                <i class="bi bi-calendar-plus"></i> Book a Tour
                                             </a>
-                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#guideContactModal" data-guide-id="@guide.Id" data-guide-name="@guide.FullName" data-guide-email="@guide.Email">
+                                            <!-- Secondary CTA - Contact Guide -->
+                                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#guideContactModal" data-guide-id="@guide.Id" data-guide-name="@guide.FullName" data-guide-email="@guide.Email">
                                                 <i class="bi bi-chat"></i> Contact Guide
                                             </button>
                                         </div>
@@ -452,6 +454,22 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="~/css/SiteDetails.css" />
     <link rel="stylesheet" href="~/css/cultural-audio-player.css" />
+    <style>
+        .guide-action .btn-primary {
+            background-color: #1a3b29;
+            border-color: #1a3b29;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+            .guide-action .btn-primary:hover {
+                background-color: #142e21;
+                border-color: #142e21;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+    </style>
 }
 
 @section Scripts {

@@ -300,6 +300,33 @@ namespace Athrna.Controllers
 
             return View(viewModel);
         }
+        public async Task<IActionResult> BookTour(int? cityId)
+        {
+            // Get all cities for filtering
+            var cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+
+            // Get guides, filtered by city if specified
+            var guidesQuery = _context.Guide
+                .Include(g => g.City)
+                .AsQueryable();
+
+            if (cityId.HasValue)
+            {
+                guidesQuery = guidesQuery.Where(g => g.CityId == cityId.Value);
+            }
+
+            var guides = await guidesQuery.ToListAsync();
+
+            // Create view model
+            var viewModel = new BookTourViewModel
+            {
+                Cities = cities,
+                Guides = guides,
+                SelectedCityId = cityId
+            };
+
+            return View(viewModel);
+        }
 
         // Helper method to generate available time slots based on guide availability
         private List<TimeSlot> GenerateAvailableTimeSlots(List<GuideAvailability> availability, int daysToShow)
@@ -345,8 +372,25 @@ namespace Athrna.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Request(BookingRequestViewModel model)
         {
+            // Add detailed logging at the start
+            _logger.LogInformation("Booking request received. GuideId: {GuideId}, SiteId: {SiteId}, SelectedTimeSlot: {TimeSlot}, GroupSize: {GroupSize}",
+                model.GuideId, model.SiteId, model.SelectedTimeSlot, model.GroupSize);
+
+            // Check if user is authenticated
+            if (!User.Identity.IsAuthenticated)
+            {
+                _logger.LogWarning("User not authenticated while attempting to make booking");
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Log model state validity
             if (!ModelState.IsValid)
             {
+                var errors = string.Join(", ", ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage));
+                _logger.LogWarning("Model validation failed for booking: {Errors}", errors);
+
                 // Reload guide and site details on validation failure
                 var guide = await _context.Guide
                     .Include(g => g.City)
@@ -354,6 +398,7 @@ namespace Athrna.Controllers
 
                 if (guide == null)
                 {
+                    _logger.LogWarning("Guide not found for ID {GuideId}", model.GuideId);
                     return NotFound();
                 }
 
@@ -382,14 +427,32 @@ namespace Athrna.Controllers
                 return View(model);
             }
 
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            int userId;
+            try
+            {
+                userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                _logger.LogInformation("Retrieved userId {UserId} for booking", userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get user ID for booking");
+                ModelState.AddModelError("", "User authentication error. Please try logging in again.");
+                return View(model);
+            }
 
             try
             {
+                // Log the selected time slot for debugging
+                _logger.LogInformation("Selected time slot: {TimeSlot}", model.SelectedTimeSlot);
+
                 // Parse selected time slot to get date and time
                 var selectedSlotParts = model.SelectedTimeSlot.Split('|');
+                _logger.LogInformation("Split time slot into {PartCount} parts: {Parts}",
+                    selectedSlotParts.Length, string.Join(", ", selectedSlotParts));
+
                 if (selectedSlotParts.Length != 2)
                 {
+                    _logger.LogWarning("Invalid time slot format: {TimeSlot}", model.SelectedTimeSlot);
                     ModelState.AddModelError("SelectedTimeSlot", "Invalid time slot selected");
                     return View(model);
                 }
@@ -397,11 +460,14 @@ namespace Athrna.Controllers
                 DateTime tourDateTime;
                 if (!DateTime.TryParse(selectedSlotParts[0], out tourDateTime))
                 {
+                    _logger.LogWarning("Failed to parse date/time: {DateTimeString}", selectedSlotParts[0]);
                     ModelState.AddModelError("SelectedTimeSlot", "Invalid date/time format");
                     return View(model);
                 }
 
-                // Create booking
+                _logger.LogInformation("Parsed tour date/time: {TourDateTime}", tourDateTime);
+
+                // Create booking - log before saving
                 var booking = new Booking
                 {
                     ClientId = userId,
@@ -411,11 +477,19 @@ namespace Athrna.Controllers
                     BookingDate = DateTime.UtcNow,
                     GroupSize = model.GroupSize,
                     Status = "Pending",
-                    Notes = model.Notes
+                    Notes = model.Notes ?? ""
                 };
 
+                _logger.LogInformation("Created booking object: ClientId={ClientId}, GuideId={GuideId}, SiteId={SiteId}, TourDateTime={TourDateTime}",
+                    booking.ClientId, booking.GuideId, booking.SiteId, booking.TourDateTime);
+
+                // Log DbContext state for debugging
+                _logger.LogInformation("Adding booking to context");
                 _context.Bookings.Add(booking);
-                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Saving booking to database");
+                var saveResult = await _context.SaveChangesAsync();
+                _logger.LogInformation("SaveChangesAsync result: {SaveResult} records affected", saveResult);
 
                 // Create initial message to guide
                 var message = new Message
@@ -429,18 +503,54 @@ namespace Athrna.Controllers
                     IsRead = false
                 };
 
+                _logger.LogInformation("Adding message to context");
                 _context.Messages.Add(message);
-                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Saving message to database");
+                var messageSaveResult = await _context.SaveChangesAsync();
+                _logger.LogInformation("Message SaveChangesAsync result: {SaveResult} records affected", messageSaveResult);
 
                 _logger.LogInformation("User {UserId} created booking {BookingId} with guide {GuideId}", userId, booking.Id, model.GuideId);
 
                 TempData["SuccessMessage"] = "Your booking request has been submitted successfully. The guide will contact you to confirm the details.";
+                _logger.LogInformation("Redirecting to Confirmation page for booking {BookingId}", booking.Id);
                 return RedirectToAction("Confirmation", new { id = booking.Id });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating booking for user {UserId} with guide {GuideId}", userId, model.GuideId);
                 ModelState.AddModelError("", "An error occurred while creating your booking. Please try again later.");
+
+                // Reload necessary data for the view
+                var guide = await _context.Guide
+                    .Include(g => g.City)
+                    .FirstOrDefaultAsync(g => g.Id == model.GuideId);
+
+                if (guide == null)
+                {
+                    return NotFound();
+                }
+
+                // Get the site if specified
+                if (model.SiteId.HasValue)
+                {
+                    var site = await _context.Site
+                        .FirstOrDefaultAsync(s => s.Id == model.SiteId.Value);
+                    model.SiteName = site?.Name;
+                }
+
+                model.GuideName = guide.FullName;
+                model.GuideCity = guide.City.Name;
+
+                // Regenerate available time slots
+                var availability = await _context.GuideAvailabilities
+                    .Where(a => a.GuideId == model.GuideId && a.IsAvailable)
+                    .OrderBy(a => a.DayOfWeek)
+                    .ToListAsync();
+
+                var availableSlots = GenerateAvailableTimeSlots(availability, 14);
+                model.AvailableTimeSlots = availableSlots;
+                model.AvailableDates = availableSlots.Select(s => s.StartTime.Date).Distinct().OrderBy(d => d).ToList();
 
                 return View(model);
             }

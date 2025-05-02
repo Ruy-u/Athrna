@@ -248,21 +248,33 @@
 }
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Handle date selection
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM loaded - initializing booking form');
+
+            // Get all the necessary elements
             const dateCards = document.querySelectorAll('.date-card');
             const dateSlots = document.querySelectorAll('.date-slots');
             const selectDatePrompt = document.getElementById('selectDatePrompt');
             const timeSlotsList = document.getElementById('timeSlotsList');
             const requestBookingBtn = document.getElementById('requestBookingBtn');
+            const bookingForm = document.querySelector('form');
 
+            // Debug logging
+            console.log(`Found ${dateCards.length} date cards`);
+            console.log(`Found ${dateSlots.length} date slots containers`);
+
+            if (bookingForm) {
+                console.log('Booking form found');
+            } else {
+                console.error('Booking form not found');
+            }
+
+            // Handle date selection
             dateCards.forEach(card => {
-                card.addEventListener('click', function() {
+                card.addEventListener('click', function () {
+                    console.log('Date card clicked:', this.getAttribute('data-date'));
+
                     // Remove selected class from all date cards
                     dateCards.forEach(c => c.classList.remove('selected'));
 
@@ -274,41 +286,59 @@
 
                     // Show slots for selected date
                     const selectedDate = this.getAttribute('data-date');
+                    console.log('Looking for slots with date:', selectedDate);
+
                     const selectedSlots = document.querySelector(`.date-slots[data-date="${selectedDate}"]`);
+                    console.log('Selected slots element:', selectedSlots);
 
                     if (selectedSlots) {
                         selectDatePrompt.style.display = 'none';
                         timeSlotsList.style.display = 'block';
                         selectedSlots.style.display = 'block';
+                        console.log('Showing time slots for selected date');
+                    } else {
+                        console.error('No slots found for date:', selectedDate);
                     }
                 });
             });
 
             // Handle time slot selection
             const timeSlotRadios = document.querySelectorAll('.time-slot-radio');
+            console.log(`Found ${timeSlotRadios.length} time slot radio buttons`);
 
             timeSlotRadios.forEach(radio => {
-                radio.addEventListener('change', function() {
+                radio.addEventListener('change', function () {
+                    console.log('Time slot selected:', this.value);
                     // Enable request button when a time slot is selected
                     requestBookingBtn.disabled = false;
                 });
             });
 
             // Handle form submission validation
-            const bookingForm = document.querySelector('form');
+            if (bookingForm) {
+                bookingForm.addEventListener('submit', function (e) {
+                    console.log('Form submission triggered');
 
-            bookingForm.addEventListener('submit', function(e) {
-                // Check if a time slot is selected
-                const selectedSlot = document.querySelector('.time-slot-radio:checked');
+                    // Check if a time slot is selected
+                    const selectedSlot = document.querySelector('.time-slot-radio:checked');
 
-                if (!selectedSlot) {
-                    e.preventDefault();
-                    alert('Please select a date and time slot for your booking.');
-                    return false;
-                }
+                    // Log form data for debugging
+                    const formData = new FormData(this);
+                    for (let [key, value] of formData.entries()) {
+                        console.log(`${key}: ${value}`);
+                    }
 
-                return true;
-            });
+                    if (!selectedSlot) {
+                        console.error('No time slot selected!');
+                        e.preventDefault();
+                        alert('Please select a date and time slot for your booking.');
+                        return false;
+                    }
+
+                    console.log('Form submission proceeding with selected time slot:', selectedSlot.value);
+                    return true;
+                });
+            }
         });
     </script>
 }

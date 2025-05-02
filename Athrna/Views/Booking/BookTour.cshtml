@@ -1,0 +1,139 @@
+﻿@model Athrna.Models.BookTourViewModel
+
+@{
+    ViewData["Title"] = "Book a Tour Guide";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0">Book a Tour Guide</h2>
+                </div>
+                <div class="card-body">
+                    <p class="lead mb-4">Select a guide to book a tour of historical sites in Saudi Arabia.</p>
+
+                    <!-- City Filter -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="cityFilter" class="form-label">Filter by City:</label>
+                            <select id="cityFilter" class="form-select">
+                                <option value="">All Cities</option>
+                                @foreach (var city in Model.Cities)
+                                {
+                                    <option value="@city.Id" selected="@(Model.SelectedCityId == city.Id)">@city.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    @if (!Model.Guides.Any())
+                    {
+                        <div class="alert alert-info">
+                            <p class="mb-0">No guides are currently available for the selected criteria. Please try a different city or check back later.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row">
+                            @foreach (var guide in Model.Guides)
+                            {
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card h-100 guide-card">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="guide-avatar me-3">
+                                                    <div class="avatar-circle">
+                                                        @(guide.FullName.Substring(0, 1).ToUpper())
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h3 class="h5 mb-1">@guide.FullName</h3>
+                                                    <p class="text-muted mb-0">@guide.City.Name</p>
+                                                </div>
+                                            </div>
+
+                                            <hr class="my-3">
+
+                                            <div class="guide-info">
+                                                <ul class="list-unstyled">
+                                                    <li class="mb-2">
+                                                        <i class="bi bi-geo-alt me-2 text-primary"></i>
+                                                        <strong>City:</strong> @guide.City.Name
+                                                    </li>
+                                                    <li class="mb-2">
+                                                        <i class="bi bi-person-badge me-2 text-primary"></i>
+                                                        <strong>Licensed Guide</strong>
+                                                    </li>
+                                                    <li>
+                                                        <i class="bi bi-envelope me-2 text-primary"></i>
+                                                        <strong>Contact:</strong> <a href="mailto:@guide.Email">Email</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="text-center mt-3">
+                                                <a asp-action="Request" asp-route-id="@guide.Id" class="btn btn-primary">
+                                                    <i class="bi bi-calendar-plus me-2"></i>Book with this Guide
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cityFilter = document.getElementById('cityFilter');
+            
+            if (cityFilter) {
+                cityFilter.addEventListener('change', function() {
+                    const cityId = this.value;
+                    const url = '@Url.Action("BookTour", "Booking")' + (cityId ? '?cityId=' + cityId : '');
+                    window.location.href = url;
+                });
+            }
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .guide-avatar .avatar-circle {
+            width: 60px;
+            height: 60px;
+            background-color: #1a3b29;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .guide-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .guide-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .guide-info li {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+}
