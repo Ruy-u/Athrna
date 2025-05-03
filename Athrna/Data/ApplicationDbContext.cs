@@ -12,11 +12,12 @@ namespace Athrna.Data
 
         public DbSet<Client> Client { get; set; }
         public DbSet<Site> Site { get; set; }
-        public DbSet<Language> Language { get; set; }
-        public DbSet<SiteTranslation> SiteTranslation { get; set; }
-        public DbSet<CulturalInfoTranslation> CulturalInfoTranslation { get; set; }
+        // Remove these lines:
+        // public DbSet<Language> Language { get; set; }
+        // public DbSet<SiteTranslation> SiteTranslation { get; set; }
+        // public DbSet<CulturalInfoTranslation> CulturalInfoTranslation { get; set; }
         public DbSet<Guide> Guide { get; set; }
-        public DbSet<GuideApplication> GuideApplication { get; set; } 
+        public DbSet<GuideApplication> GuideApplication { get; set; }
         public DbSet<Rating> Rating { get; set; }
         public DbSet<Bookmark> Bookmark { get; set; }
         public DbSet<City> City { get; set; }
@@ -60,9 +61,10 @@ namespace Athrna.Data
             // Map entity names to singular table names
             modelBuilder.Entity<City>().ToTable("City");
             modelBuilder.Entity<Site>().ToTable("Site");
-            modelBuilder.Entity<Language>().ToTable("Language");
-            modelBuilder.Entity<SiteTranslation>().ToTable("SiteTranslation");
-            modelBuilder.Entity<CulturalInfoTranslation>().ToTable("CulturalInfoTranslation");
+            // Remove these lines:
+            // modelBuilder.Entity<Language>().ToTable("Language");
+            // modelBuilder.Entity<SiteTranslation>().ToTable("SiteTranslation");
+            // modelBuilder.Entity<CulturalInfoTranslation>().ToTable("CulturalInfoTranslation");
             modelBuilder.Entity<Guide>().ToTable("Guide");
             modelBuilder.Entity<GuideApplication>().ToTable("GuideApplication");
             modelBuilder.Entity<Rating>().ToTable("Rating");

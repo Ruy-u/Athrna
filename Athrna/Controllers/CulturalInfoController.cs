@@ -137,22 +137,5 @@ namespace Athrna.Controllers
                 _logger.LogError(ex, "Error tracking audio access for site ID: {SiteId}", siteId);
             }
         }
-
-        // GET: CulturalInfo/GetLanguages
-        [HttpGet]
-        public async Task<IActionResult> GetLanguages()
-        {
-            try
-            {
-                // Get all available languages
-                var languages = await _context.Language.ToListAsync();
-                return Json(languages);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting languages");
-                return StatusCode(500, new { error = "An error occurred while retrieving languages" });
-            }
-        }
     }
 }

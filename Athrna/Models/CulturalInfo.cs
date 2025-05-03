@@ -19,6 +19,5 @@ namespace Athrna.Models
 
         // Navigation properties
         public virtual Site Site { get; set; }
-        public virtual ICollection<CulturalInfoTranslation> CulturalInfoTranslations { get; set; }
     }
 }

@@ -27,8 +27,6 @@ namespace Athrna.Models
 
         // Navigation properties
         public virtual City City { get; set; }
-        // Removed Guides navigation property
-        public virtual ICollection<SiteTranslation> SiteTranslations { get; set; }
         public virtual ICollection<Rating> Ratings { get; set; }
         public virtual ICollection<Bookmark> Bookmarks { get; set; }
         public virtual CulturalInfo CulturalInfo { get; set; }
