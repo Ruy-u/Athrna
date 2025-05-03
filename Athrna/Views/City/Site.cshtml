@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = Model.Name;
 }
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCfmD2cv4d6ML3shp0YER9gpHT5VHdsvpQ&callback=initSiteLocationMap" async defer></script>
 
 <!-- Add Toast Container for Notifications - Add this near the top -->
 <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1500">
@@ -372,10 +373,21 @@
                 <div class="sidebar-widget">
                     <h4 data-translate="Located in">Located in</h4>
                     <div class="city-card">
-                        <img src="/images/Maps/@(Model.City.Name.ToLower()).jpg" alt="@Model.City.Name" class="city-img" onerror="this.onerror=null; this.src='/api/placeholder/300/150';">
-                        <div class="city-info">
-                            <h5>@Model.City.Name</h5>
-                            <a asp-action="Explore" asp-route-id="@Model.City.Name.ToLower()" class="btn btn-sm btn-primary">
+                        <!-- Map container with location text above it -->
+                        <div class="location-text mb-2">
+                            <i class="bi bi-geo-alt-fill text-primary"></i> <strong>@Model.Name</strong> is located in <strong>@Model.City.Name</strong>
+                            <div class="text-muted small">@Model.Location</div>
+                        </div>
+
+                        <!-- Map container -->
+                        <div id="siteLocationMap" class="site-location-map"
+                             data-site-lat="@Model.Location.Split(',')[0].Trim().Replace("°", "")"
+                             data-site-lng="@Model.Location.Split(',')[1].Trim().Replace("°", "")"
+                             data-site-name="@Model.Name"
+                             data-city-name="@Model.City.Name"></div>
+
+                        <div class="city-info mt-2">
+                            <a asp-action="Explore" asp-route-id="@Model.City.Name.ToLower()" class="btn btn-sm btn-primary w-100">
                                 <span data-translate="Explore">Explore</span> @Model.City.Name
                             </a>
                         </div>
@@ -447,6 +459,14 @@
     <link rel="stylesheet" href="~/css/SiteDetails.css" />
     <link rel="stylesheet" href="~/css/cultural-audio-player.css" />
     <style>
+
+        .site-location-map {
+            width: 100%;
+            height: 180px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
         .guide-action .btn-primary {
             background-color: #1a3b29;
             border-color: #1a3b29;
@@ -460,6 +480,8 @@
                 border-color: #142e21;
                 transform: translateY(-2px);
                 box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+
+
             }
     </style>
 }
@@ -577,6 +599,110 @@
                             alert('An error occurred while sending your message.');
                         });
                 });
+            }
+        });
+                // Initialize the site location map
+        document.addEventListener('DOMContentLoaded', function() {
+            const mapContainer = document.getElementById('siteLocationMap');
+            if (!mapContainer) return;
+
+            // Get coordinates from data attributes
+            const siteLat = parseFloat(mapContainer.getAttribute('data-site-lat')) || 0;
+            const siteLng = parseFloat(mapContainer.getAttribute('data-site-lng')) || 0;
+            const siteName = mapContainer.getAttribute('data-site-name');
+            const cityName = mapContainer.getAttribute('data-city-name');
+
+            // Function to initialize the map
+            function initSiteLocationMap() {
+                // Create map centered on the site location
+                const map = new google.maps.Map(mapContainer, {
+                    center: { lat: siteLat, lng: siteLng },
+                    zoom: 14,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP,
+                    mapTypeControl: false,
+                    streetViewControl: false,
+                    fullscreenControl: false,
+                    zoomControl: true,
+                    scrollwheel: false,
+                    styles: [
+                        {
+                            "featureType": "poi",
+                            "stylers": [{ "visibility": "off" }]
+                        },
+                        {
+                            "featureType": "transit",
+                            "stylers": [{ "visibility": "off" }]
+                        }
+                    ]
+                });
+
+                // Add marker for the site
+                const marker = new google.maps.Marker({
+                    position: { lat: siteLat, lng: siteLng },
+                    map: map,
+                    title: siteName,
+                    animation: google.maps.Animation.DROP,
+                    icon: {
+                        path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                        scale: 5,
+                        fillColor: "#f8c15c",
+                        fillOpacity: 1,
+                        strokeWeight: 2,
+                        strokeColor: "#1a3b29"
+                    }
+                });
+
+                // Add info window and open it immediately
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `<div class="map-info-window"><h3>${siteName}</h3><p>${cityName}</p></div>`,
+                    pixelOffset: new google.maps.Size(0, -30) // Offset to position above marker
+                });
+
+                // Open info window immediately
+                infoWindow.open(map, marker);
+
+                // Add click listener to reopen if closed
+                marker.addListener('click', function() {
+                    infoWindow.open(map, marker);
+                });
+
+                // Use a tighter zoom to show the location clearly
+                map.setZoom(13);
+                map.setCenter({ lat: siteLat, lng: siteLng });
+            }
+
+            // Check if Google Maps API is already loaded
+            if (typeof google !== 'undefined' && google.maps) {
+                initSiteLocationMap();
+            } else {
+                // If not loaded, create a callback to initialize when API loads
+                window.initSiteLocationMap = initSiteLocationMap;
+
+                // Add script to load Google Maps API if not already present
+                if (!document.querySelector('script[src*="maps.googleapis.com/maps/api"]')) {
+                    const script = document.createElement('script');
+                    const apiKey = "AIzaSyCfmD2cv4d6ML3shp0YER9gpHT5VHdsvpQ"; // Using the key from your existing code
+                    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initSiteLocationMap`;
+                    script.async = true;
+                    script.defer = true;
+                    document.body.appendChild(script);
+                } else {
+                    // If script is already present but callback isn't set
+                    const existingScript = document.querySelector('script[src*="maps.googleapis.com/maps/api"]');
+                    const callbackMatch = existingScript.src.match(/callback=([^&]*)/);
+                    if (callbackMatch && callbackMatch[1]) {
+                        // Add our callback to the existing one
+                        const existingCallback = callbackMatch[1];
+                        const oldCallback = window[existingCallback];
+                        window[existingCallback] = function() {
+                            if (oldCallback) oldCallback();
+                            initSiteLocationMap();
+                        };
+                    } else {
+                        // Just wait for the map API to load
+                        setTimeout(initSiteLocationMap, 1000);
+                    }
+                }
             }
         });
     </script>
