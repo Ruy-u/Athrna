@@ -87,7 +87,8 @@ builder.Services.AddDataProtection();
 // Register email services
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<PasswordResetTokenService>();
-
+builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<TranslationService>();
 
 var app = builder.Build();
