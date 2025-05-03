@@ -1,11 +1,11 @@
 ﻿@{
-    ViewData["Title"] = Html.T("Home").ToString();
+    ViewData["Title"] = "Home";
 }
 
 <section class="hero">
-    <h1>@Html.T("Discover Saudi Arabia's Rich Heritage")</h1>
+    <h1>Discover Saudi Arabia's Rich Heritage</h1>
     <p>
-        @Html.T("Explore the historical wonders and cultural treasures of the Kingdom's most iconic cities")
+        Explore the historical wonders and cultural treasures of the Kingdom's most iconic cities
     </p>
 </section>
 
@@ -13,40 +13,40 @@
     <!-- Madinah Card -->
     <div class="card">
         <div class="card-img">
-            <img src="~/images/Madena pic.webp" alt="@Html.T("Madinah")" />
+            <img src="~/images/Madena pic.webp" alt="Madinah" />
         </div>
         <div class="card-content">
-            <h2>@Html.T("Madinah")</h2>
+            <h2>Madinah</h2>
             <p>
-                @Html.T("Madinah, the second holiest city in Islam, is home to the Prophet's Mosque (Al-Masjid an-Nabawi). This sacred city contains numerous historical sites including the Quba Mosque, the first mosque built in Islam, and the historic battlefield of Uhud. Visitors can experience the spiritual atmosphere while exploring its rich Islamic heritage dating back to 622 CE.")
+                Madinah, the second holiest city in Islam, is home to the Prophet's Mosque (Al-Masjid an-Nabawi). This sacred city contains numerous historical sites including the Quba Mosque, the first mosque built in Islam, and the historic battlefield of Uhud. Visitors can experience the spiritual atmosphere while exploring its rich Islamic heritage dating back to 622 CE.
             </p>
-            <a asp-controller="City" asp-action="Explore" asp-route-id="madinah" class="explore-btn">@Html.T("Explore") @Html.T("Madinah")</a>
+            <a asp-controller="City" asp-action="Explore" asp-route-id="madinah" class="explore-btn">Explore Madinah</a>
         </div>
     </div>
     <!-- Riyadh Card -->
     <div class="card">
         <div class="card-img">
-            <img src="~/images/riyadh.jpg" alt="@Html.T("Riyadh")" />
+            <img src="~/images/riyadh.jpg" alt="Riyadh" />
         </div>
         <div class="card-content">
-            <h2>@Html.T("Riyadh")</h2>
+            <h2>Riyadh</h2>
             <p>
-                @Html.T("Riyadh, Saudi Arabia's capital, blends modernity with history. Discover Diriyah, the birthplace of the first Saudi state and a UNESCO World Heritage site. The Masmak Fortress stands as a symbol of Saudi unification, while the National Museum showcases the kingdom's history from prehistoric times to the modern era. Experience traditional architecture at the Murabba Palace.")
+                Riyadh, Saudi Arabia's capital, blends modernity with history. Discover Diriyah, the birthplace of the first Saudi state and a UNESCO World Heritage site. The Masmak Fortress stands as a symbol of Saudi unification, while the National Museum showcases the kingdom's history from prehistoric times to the modern era. Experience traditional architecture at the Murabba Palace.
             </p>
-            <a asp-controller="City" asp-action="Explore" asp-route-id="riyadh" class="explore-btn">@Html.T("Explore") @Html.T("Riyadh")</a>
+            <a asp-controller="City" asp-action="Explore" asp-route-id="riyadh" class="explore-btn">Explore Riyadh</a>
         </div>
     </div>
     <!-- AlUla Card -->
     <div class="card">
         <div class="card-img">
-            <img src="~/images/AULa.jpg" alt="@Html.T("AlUla")" />
+            <img src="~/images/AULa.jpg" alt="AlUla" />
         </div>
         <div class="card-content">
-            <h2>@Html.T("AlUla")</h2>
+            <h2>AlUla</h2>
             <p>
-                @Html.T("AlUla is an archaeological wonder hosting Hegra, Saudi Arabia's first UNESCO World Heritage site. The ancient Nabataean city features over 100 well-preserved tombs carved into sandstone mountains. Discover Dadan, capital of the Dadanite and Lihyanite kingdoms, and the Old Town of AlUla with its mud-brick buildings. The region's dramatic landscapes and 7,000 years of human history make it a living museum.")
+                AlUla is an archaeological wonder hosting Hegra, Saudi Arabia's first UNESCO World Heritage site. The ancient Nabataean city features over 100 well-preserved tombs carved into sandstone mountains. Discover Dadan, capital of the Dadanite and Lihyanite kingdoms, and the Old Town of AlUla with its mud-brick buildings. The region's dramatic landscapes and 7,000 years of human history make it a living museum.
             </p>
-            <a asp-controller="City" asp-action="Explore" asp-route-id="alula" class="explore-btn">@Html.T("Explore") @Html.T("AlUla")</a>
+            <a asp-controller="City" asp-action="Explore" asp-route-id="alula" class="explore-btn">Explore AlUla</a>
         </div>
     </div>
     <!-- Interactive Map Section -->

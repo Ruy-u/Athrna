@@ -1,8 +1,8 @@
-﻿<!DOCTYPE html>
-<html lang="@(Context.Request.Cookies["language"] ?? "en")" dir="@(Context.Request.Cookies["language"] == "ar" ? "rtl" : "ltr")">
-    @using Microsoft.Extensions.DependencyInjection
+﻿@using Microsoft.Extensions.DependencyInjection
 @using System.Security.Claims
 @using Microsoft.EntityFrameworkCore
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,29 +11,13 @@
     <link rel="icon" href="~/images/logo.jpg" />
     <link rel="stylesheet" href="~/css/dark-mode.css" />
     <link rel="stylesheet" href="~/css/google-maps-styles.css" />
-    @if (Context.Request.Cookies["language"] == "ar")
-    {
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.rtl.min.css">
-    }
-    else
-    {
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
-    }
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="~/css/styles.css" />
     <link rel="stylesheet" href="~/css/map.css" />
     <link rel="stylesheet" href="~/css/login-modal.css" />
     <link rel="stylesheet" href="~/css/register.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     @RenderSection("Styles", required: false)
-    @if (Context.Request.Cookies["language"] == "ar")
-    {
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.rtl.min.css">
-        <link rel="stylesheet" href="~/css/rtl.css">
-    }
-    else
-    {
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
-    }
     <style>
         .messages-badge {
             display: inline-flex;
@@ -64,7 +48,7 @@
     </style>
 </head>
 <body>
-    <a href="#main-content" class="skip-link visually-hidden-focusable">@Html.T("Skip to main content")</a>
+    <a href="#main-content" class="skip-link visually-hidden-focusable">Skip to main content</a>
 
     <header role="banner">
         <div class="logo">
@@ -81,8 +65,8 @@
 
         <div class="search-bar" role="search">
             <form asp-controller="Search" asp-action="Index" method="get">
-                <label for="searchInput" class="visually-hidden">@Html.T("Search historical sites")</label>
-                <input type="text" id="searchInput" name="query" placeholder="@Html.T("Search historical sites...")" aria-label="Search historical sites" />
+                <label for="searchInput" class="visually-hidden">Search historical sites</label>
+                <input type="text" id="searchInput" name="query" placeholder="Search historical sites..." aria-label="Search historical sites" />
                 <button type="submit" aria-label="Submit search"><i class="bi bi-search" aria-hidden="true"></i></button>
             </form>
         </div>
@@ -123,8 +107,8 @@
                         <i class="bi bi-chevron-down" aria-hidden="true"></i>
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="userMenuButton">
-                        <li><a class="dropdown-item" asp-controller="UserDashboard" asp-action="Index">@Html.T("My Dashboard")</a></li>
-                        <li><a class="dropdown-item" asp-controller="UserDashboard" asp-action="Bookmarks">@Html.T("My Bookmarks")</a></li>
+                        <li><a class="dropdown-item" asp-controller="UserDashboard" asp-action="Index">My Dashboard</a></li>
+                        <li><a class="dropdown-item" asp-controller="UserDashboard" asp-action="Bookmarks">My Bookmarks</a></li>
                         @if (!User.IsInRole("Administrator") && !User.IsInRole("Guide"))
                         {
                             // Get unread messages count (reusing the variable from above)
@@ -144,41 +128,37 @@
 
                             <li>
                                 <a class="dropdown-item" asp-controller="UserDashboard" asp-action="Messages">
-                                    @Html.T("My Messages")
+                                    My Messages
                                     @if (unreadMessages > 0)
                                     {
                                         <span class="messages-badge">@unreadMessages</span>
                                     }
                                 </a>
                             </li>
-                            <li><a class="dropdown-item" asp-controller="Booking" asp-action="MyBookings">@Html.T("My Bookings")</a></li>
+                            <li><a class="dropdown-item" asp-controller="Booking" asp-action="MyBookings">My Bookings</a></li>
                         }
-                        <li><a class="dropdown-item" asp-controller="UserDashboard" asp-action="Profile">@Html.T("My Profile")</a></li>
+                        <li><a class="dropdown-item" asp-controller="UserDashboard" asp-action="Profile">My Profile</a></li>
                         @if (User.IsInRole("Administrator"))
                         {
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" asp-controller="Admin" asp-action="Index">@Html.T("Admin Dashboard")</a></li>
+                            <li><a class="dropdown-item" asp-controller="Admin" asp-action="Index">Admin Dashboard</a></li>
                         }
                         @if (User.IsInRole("Guide"))
                         {
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" asp-controller="GuideDashboard" asp-action="Index">@Html.T("Guide Dashboard")</a></li>
+                            <li><a class="dropdown-item" asp-controller="GuideDashboard" asp-action="Index">Guide Dashboard</a></li>
                         }
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout">@Html.T("Logout")</a></li>
+                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout">Logout</a></li>
                     </ul>
                 </div>
-                <!-- Language Selector -->
-                @await Component.InvokeAsync("LanguageSelector")
             }
             else
             {
                 <div class="auth-buttons">
-                    <a href="#" class="auth-btn login-btn">@Html.T("Login")</a>
-                    <a asp-controller="Account" asp-action="Register" class="auth-btn register-btn">@Html.T("Register")</a>
+                    <a href="#" class="auth-btn login-btn">Login</a>
+                    <a asp-controller="Account" asp-action="Register" class="auth-btn register-btn">Register</a>
                 </div>
-                <!-- Language Selector -->
-                @await Component.InvokeAsync("LanguageSelector")
             }
         </div>
     </header>
@@ -191,13 +171,13 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <p>&copy; @DateTime.Now.Year @Html.T("Athrna - Saudi Historical Sites") @Html.T("All rights reserved")</p>
+                    <p>&copy; @DateTime.Now.Year Athrna - Saudi Historical Sites All rights reserved</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <ul class="footer-links">
-                        <li><a href="/Home/Privacy">@Html.T("Privacy Policy")</a></li>
-                        <li><a href="/Home/Accessibility">@Html.T("Accessibility")</a></li>
-                        <li><a href="/Home/Contact">@Html.T("Contact Us")</a></li>
+                        <li><a href="/Home/Privacy">Privacy Policy</a></li>
+                        <li><a href="/Home/Accessibility">Accessibility</a></li>
+                        <li><a href="/Home/Contact">Contact Us</a></li>
                     </ul>
                 </div>
             </div>
@@ -212,7 +192,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js"></script>
-    <script src="~/js/translation.js"></script>
     <script src="~/js/login-modal.js"></script>
     <script src="~/js/dark-mode.js"></script>
     @RenderSection("Scripts", required: false)
@@ -228,8 +207,6 @@
             localStorage.removeItem('isRememberedSession');
             console.log('Cleared authentication data from localStorage after logout');
         </script>
-        <script src="~/js/auto-translate-elements.js"></script>
-        <script src="~/js/translation.js"></script>
     }
     @await Html.PartialAsync("_MapScriptsPartial")
     @* Add this to your _Layout.cshtml file as a section at the bottom, before closing </body> tag *@
@@ -246,7 +223,7 @@
                 script.src = 'https://maps.googleapis.com/maps/api/js?key=' + googleMapsApiKey + '&callback=initMap';
                 script.async = true;
                 script.defer = true;
-                script.onerror = function() {
+                script.onerror = function () {
                     console.error('Failed to load Google Maps API');
                     var mapContainer = document.getElementById('googleMap');
                     if (mapContainer) {
@@ -258,7 +235,7 @@
         }
 
         // Load the API on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             loadGoogleMapsAPI();
         });
     </script>

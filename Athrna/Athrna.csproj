@@ -17,9 +17,4 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\audio\cultural\" />
-    <Folder Include="wwwroot\audio\samples\" />
-  </ItemGroup>
-
 </Project>

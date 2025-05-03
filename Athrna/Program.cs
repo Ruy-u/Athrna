@@ -127,11 +127,4 @@ app.MapControllerRoute(
 await EmailTemplateSetupHelper.EnsureEmailTemplateExists(app.Environment);
 await EmailVerificationHelper.EnsureEmailVerificationTemplateExists(app.Environment);
 
-// Setup audio directories and sample files
-using (var scope = app.Services.CreateScope())
-{
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    await AudioSetupHelper.EnsureAudioSetup(app.Environment, logger);
-}
-
 app.Run();

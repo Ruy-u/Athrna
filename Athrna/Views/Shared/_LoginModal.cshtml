@@ -4,7 +4,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="loginModalLabel">@Html.T("Login to Athrna")</h5>
+                <h5 class="modal-title" id="loginModalLabel">Login to Athrna</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -15,34 +15,34 @@
                 <form id="loginModalForm">
                     @Html.AntiForgeryToken()
                     <div class="form-group mb-3">
-                        <label for="modalUsername" class="form-label">@Html.T("Username")</label>
+                        <label for="modalUsername" class="form-label">Username</label>
                         <input type="text" class="form-control" id="modalUsername" name="Username" required aria-required="true">
-                        <div class="invalid-feedback">@Html.T("Username is required")</div>
+                        <div class="invalid-feedback">Username is required</div>
                     </div>
 
                     <div class="form-group mb-3">
-                        <label for="modalPassword" class="form-label">@Html.T("Password")</label>
+                        <label for="modalPassword" class="form-label">Password</label>
                         <div class="input-group">
                             <input type="password" class="form-control" id="modalPassword" name="Password" required aria-required="true">
                             <button class="btn btn-outline-secondary password-toggle" type="button" tabindex="-1">
                                 <i class="bi bi-eye"></i>
                             </button>
                         </div>
-                        <div class="invalid-feedback">@Html.T("Password is required")</div>
+                        <div class="invalid-feedback">Password is required</div>
                     </div>
 
                     <div class="form-group mb-3">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="modalRememberMe" name="RememberMe" value="true">
                             <label class="form-check-label" for="modalRememberMe">
-                                @Html.T("Remember me")
+                                Remember me
                             </label>
                         </div>
                     </div>
 
                     <!-- CAPTCHA Section -->
                     <div class="form-group mb-3 captcha-container">
-                        <label for="captchaInput" class="form-label">@Html.T("Please enter the characters from the image below")</label>
+                        <label for="captchaInput" class="form-label">Please enter the characters from the image below</label>
                         <div class="captcha-box mb-2">
                             <div id="captchaImage" class="captcha-image"></div>
                             <button type="button" class="btn btn-sm btn-outline-secondary refresh-captcha" id="refreshCaptcha" tabindex="-1">
@@ -50,11 +50,11 @@
                             </button>
                         </div>
                         <input type="text" class="form-control" id="captchaInput" name="CaptchaInput" required aria-required="true">
-                        <div class="invalid-feedback">@Html.T("CAPTCHA is required")</div>
+                        <div class="invalid-feedback">CAPTCHA is required</div>
                     </div>
 
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">@Html.T("Login")</button>
+                        <button type="submit" class="btn btn-primary">Login</button>
                     </div>
                 </form>
 
@@ -62,11 +62,11 @@
 
                 <div class="text-center">
                     <p class="mb-0">
-                        <a asp-controller="Account" asp-action="ForgotPassword">@Html.T("Forgot password?")</a>
+                        <a asp-controller="Account" asp-action="ForgotPassword">Forgot password?</a>
                     </p>
                     <p>
-                        @Html.T("Don't have an account?")
-                        <a asp-controller="Account" asp-action="Register">@Html.T("Register here")</a>
+                        Don't have an account?
+                        <a asp-controller="Account" asp-action="Register">Register here</a>
                     </p>
                 </div>
             </div>

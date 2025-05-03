@@ -526,17 +526,6 @@ namespace Athrna.Controllers
                     await _context.SaveChangesAsync();
                 }
 
-                // Then delete related translations
-                var translations = await _context.SiteTranslation
-                    .Where(t => t.SiteId == id)
-                    .ToListAsync();
-
-                if (translations.Any())
-                {
-                    _context.SiteTranslation.RemoveRange(translations);
-                    await _context.SaveChangesAsync();
-                }
-
                 // Delete related bookmarks
                 var bookmarks = await _context.Bookmark
                     .Where(b => b.SiteId == id)
