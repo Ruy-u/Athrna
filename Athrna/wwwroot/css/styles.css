@@ -16,7 +16,8 @@ body {
 header {
     background-color: #1a3b29;
     color: white;
-    padding: 1rem 2rem;
+    padding: 0 20px;
+    height: 70px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -26,6 +27,7 @@ header {
 .logo {
     display: flex;
     align-items: center;
+    margin-right: 20px;
 }
 
     .logo a {
@@ -51,6 +53,96 @@ header {
     display: flex;
     align-items: center;
 }
+
+/* Search Bar */
+.search-bar {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    max-width: 500px;
+    margin-right: 20px;
+}
+
+    .search-bar form {
+        display: flex;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 5px 10px;
+    }
+
+    .search-bar input {
+        background: transparent;
+        border: none;
+        color: white;
+        padding: 5px;
+        width: 200px;
+    }
+
+        .search-bar input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+    .search-bar button {
+        background: transparent;
+        border: none;
+        color: white;
+        cursor: pointer;
+    }
+
+/* Language Selector */
+.language-selector {
+    margin-left: auto;
+    margin-right: 20px;
+}
+
+.language-select-btn {
+    background-color: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    padding: 6px 28px 6px 12px;
+    font-size: 0.9rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+    .language-select-btn:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .language-select-btn::after {
+        content: '';
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top: 4px solid white;
+    }
+
+.language-flag {
+    display: flex;
+    align-items: center;
+}
+
+    .language-flag::before {
+        content: '';
+        display: inline-block;
+        width: 18px;
+        height: 12px;
+        margin-right: 8px;
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+
+    .language-flag.en::before {
+        background-image: url('data:image/svg+xml;base64,...'); /* Truncated */
+    }
 
 /* Auth Buttons */
 .auth-buttons {
@@ -88,7 +180,7 @@ header {
         border-color: #e6a93d;
     }
 
-/* User Menu Styles */
+/* User Menu */
 .user-menu-btn {
     background: none;
     border: none;
@@ -226,8 +318,19 @@ footer {
     margin-top: 2rem;
 }
 
-/* Responsive adjustments */
+/* Responsive Adjustments */
+@media (max-width: 991px) {
+    .search-bar {
+        max-width: 300px;
+    }
+}
+
 @media (max-width: 768px) {
+    header {
+        justify-content: space-between;
+        padding: 0 10px;
+    }
+
     .hero h1 {
         font-size: 2rem;
     }
@@ -252,45 +355,29 @@ footer {
         padding: 8px 12px;
         font-size: 0.9rem;
     }
-}
-.search-bar {
-    display: flex;
-    align-items: center;
-    margin-right: 20px;
-}
 
-    .search-bar form {
-        display: flex;
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        padding: 5px 10px;
-    }
-
-    .search-bar input {
-        background: transparent;
-        border: none;
-        color: white;
-        padding: 5px;
-        width: 200px;
-    }
-
-        .search-bar input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-    .search-bar button {
-        background: transparent;
-        border: none;
-        color: white;
-        cursor: pointer;
-    }
-
-@media (max-width: 768px) {
     .search-bar {
-        margin-right: 10px;
+        display: none;
+        position: absolute;
+        top: 70px;
+        left: 0;
+        right: 0;
+        padding: 10px;
+        background-color: #1a3b29;
+        z-index: 10;
     }
 
-        .search-bar input {
-            width: 120px;
+        .search-bar.active {
+            display: block;
         }
+
+    .language-selector {
+        margin-left: 0;
+        margin-right: 0;
+        order: 3;
+    }
+
+    .header-actions {
+        order: 4;
+    }
 }

@@ -70,10 +70,14 @@
                 <button type="submit" aria-label="Submit search"><i class="bi bi-search" aria-hidden="true"></i></button>
             </form>
         </div>
+
         <!-- Mobile search toggle -->
         <button class="search-toggle d-md-none" aria-label="Toggle search" aria-expanded="false">
             <i class="bi bi-search"></i>
         </button>
+
+        <!-- Language Selector -->
+        @await Component.InvokeAsync("LanguageSelector")
 
         <div class="header-actions">
             @if (User.Identity.IsAuthenticated)

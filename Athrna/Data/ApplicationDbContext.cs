@@ -12,10 +12,6 @@ namespace Athrna.Data
 
         public DbSet<Client> Client { get; set; }
         public DbSet<Site> Site { get; set; }
-        // Remove these lines:
-        // public DbSet<Language> Language { get; set; }
-        // public DbSet<SiteTranslation> SiteTranslation { get; set; }
-        // public DbSet<CulturalInfoTranslation> CulturalInfoTranslation { get; set; }
         public DbSet<Guide> Guide { get; set; }
         public DbSet<GuideApplication> GuideApplication { get; set; }
         public DbSet<Rating> Rating { get; set; }
@@ -26,7 +22,7 @@ namespace Athrna.Data
         public DbSet<Message> Messages { get; set; }
         public DbSet<Booking> Booking { get; set; }
         public DbSet<GuideAvailability> GuideAvailabilities { get; set; }
-
+        public DbSet<Translation> Translation { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -61,10 +57,6 @@ namespace Athrna.Data
             // Map entity names to singular table names
             modelBuilder.Entity<City>().ToTable("City");
             modelBuilder.Entity<Site>().ToTable("Site");
-            // Remove these lines:
-            // modelBuilder.Entity<Language>().ToTable("Language");
-            // modelBuilder.Entity<SiteTranslation>().ToTable("SiteTranslation");
-            // modelBuilder.Entity<CulturalInfoTranslation>().ToTable("CulturalInfoTranslation");
             modelBuilder.Entity<Guide>().ToTable("Guide");
             modelBuilder.Entity<GuideApplication>().ToTable("GuideApplication");
             modelBuilder.Entity<Rating>().ToTable("Rating");
@@ -74,6 +66,10 @@ namespace Athrna.Data
             modelBuilder.Entity<Message>().ToTable("Message");
             modelBuilder.Entity<Booking>().ToTable("Booking");
             modelBuilder.Entity<GuideAvailability>().ToTable("GuideAvailability");
+
+            modelBuilder.Entity<Translation>()
+                .HasIndex(t => new { t.SourceLanguage, t.TargetLanguage, t.TextHash })
+                .IsUnique();
 
             // Set up the relationship between Message and Client
             modelBuilder.Entity<Message>()

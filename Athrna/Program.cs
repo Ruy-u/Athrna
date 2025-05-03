@@ -88,6 +88,8 @@ builder.Services.AddDataProtection();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<PasswordResetTokenService>();
 
+builder.Services.AddScoped<TranslationService>();
+
 var app = builder.Build();
 
 // Ensure database exists with correct schema
@@ -115,6 +117,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseMiddleware<TranslationMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

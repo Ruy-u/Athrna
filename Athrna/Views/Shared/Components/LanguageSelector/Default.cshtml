@@ -1,0 +1,50 @@
+﻿@model Athrna.ViewComponents.LanguageSelectorViewModel
+
+<div class="language-selector">
+    <div class="dropdown">
+        <button class="language-select-btn dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            @foreach (var language in Model.Languages)
+            {
+                if (language.Code == Model.CurrentLanguage)
+                {
+                    <span class="language-flag @language.Code">@language.Name</span>
+                }
+            }
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+            @foreach (var language in Model.Languages)
+            {
+                <li>
+                    <a class="dropdown-item @(language.Code == Model.CurrentLanguage ? "active" : "")"
+                       href="#"
+                       data-language-code="@language.Code">
+                        <span class="language-flag @language.Code">@language.Name</span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const languageItems = document.querySelectorAll('[data-language-code]');
+        if (languageItems) {
+            languageItems.forEach(item => {
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    // Get the selected language
+                    const selectedLanguage = this.getAttribute('data-language-code');
+
+                    // Construct the new URL with the language parameter
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('lang', selectedLanguage);
+
+                    // Reload the page
+                    window.location.href = url.toString();
+                });
+            });
+        }
+    });
+</script>
