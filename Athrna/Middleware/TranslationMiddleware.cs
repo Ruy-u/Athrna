@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
-using HtmlAgilityPack; // We'll use this to properly parse HTML
+using HtmlAgilityPack;
 
 namespace Athrna.Middleware
 {
@@ -153,20 +153,10 @@ namespace Athrna.Middleware
                 var doc = new HtmlDocument();
                 doc.LoadHtml(html);
 
-                // First pass: collect all translatable text nodes and elements with data-translate attribute
+                // Collect all translatable content
                 var textsToTranslate = new Dictionary<string, List<HtmlNode>>();
 
-                // Preserve specific elements that should not be removed during translation
-                var siteDescriptionSections = doc.DocumentNode.SelectNodes("//section[contains(@class, 'site-description-section')]");
-                if (siteDescriptionSections != null)
-                {
-                    foreach (var section in siteDescriptionSections)
-                    {
-                        section.SetAttributeValue("data-preserve", "true");
-                    }
-                }
-
-                // Process elements with data-translate attribute first
+                // Process elements with data-translate attribute
                 var dataTranslateNodes = doc.DocumentNode.SelectNodes("//*[@data-translate]");
                 if (dataTranslateNodes != null)
                 {
@@ -183,7 +173,67 @@ namespace Athrna.Middleware
                     }
                 }
 
-                // Then process regular text nodes
+                // Special handling for site description section and cultural info section
+                var siteDescriptionSections = doc.DocumentNode.SelectNodes("//section[contains(@class, 'site-description-section')]");
+                if (siteDescriptionSections != null)
+                {
+                    foreach (var section in siteDescriptionSections)
+                    {
+                        // For each p element inside the section
+                        var paragraphs = section.SelectNodes(".//p");
+                        if (paragraphs != null)
+                        {
+                            foreach (var paragraph in paragraphs)
+                            {
+                                var text = paragraph.InnerText.Trim();
+                                if (!string.IsNullOrWhiteSpace(text) && text.Length > 3)
+                                {
+                                    // Add to translation dictionary
+                                    if (!textsToTranslate.ContainsKey(text))
+                                        textsToTranslate[text] = new List<HtmlNode>();
+
+                                    textsToTranslate[text].Add(paragraph);
+                                }
+                            }
+                        }
+
+                        // For each div with class cultural-info
+                        var culturalInfos = section.SelectNodes(".//div[contains(@class, 'cultural-info')]");
+                        if (culturalInfos != null)
+                        {
+                            foreach (var infoDiv in culturalInfos)
+                            {
+                                var text = infoDiv.InnerText.Trim();
+                                if (!string.IsNullOrWhiteSpace(text) && text.Length > 3)
+                                {
+                                    if (!textsToTranslate.ContainsKey(text))
+                                        textsToTranslate[text] = new List<HtmlNode>();
+
+                                    textsToTranslate[text].Add(infoDiv);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Special handling for site-description class paragraphs
+                var siteDescriptions = doc.DocumentNode.SelectNodes("//p[contains(@class, 'site-description')]");
+                if (siteDescriptions != null)
+                {
+                    foreach (var description in siteDescriptions)
+                    {
+                        var text = description.InnerText.Trim();
+                        if (!string.IsNullOrWhiteSpace(text) && text.Length > 3)
+                        {
+                            if (!textsToTranslate.ContainsKey(text))
+                                textsToTranslate[text] = new List<HtmlNode>();
+
+                            textsToTranslate[text].Add(description);
+                        }
+                    }
+                }
+
+                // Process regular text nodes
                 var textNodes = doc.DocumentNode.SelectNodes("//text()[normalize-space(.) != '']");
                 if (textNodes != null)
                 {
@@ -225,6 +275,8 @@ namespace Athrna.Middleware
                     }
                 }
 
+                _logger.LogInformation("Translating {Count} unique text segments", textsToTranslate.Count);
+
                 // Translate all texts in smaller batches
                 var allTexts = textsToTranslate.Keys.ToList();
                 var translatedTexts = await translationService.TranslateBatchAsync(allTexts, targetLanguage);
@@ -254,6 +306,11 @@ namespace Athrna.Middleware
                             else if (node.HasAttributes && node.Attributes["data-translate"] != null)
                             {
                                 // Update the InnerHtml of data-translate nodes
+                                node.InnerHtml = translatedText;
+                            }
+                            else
+                            {
+                                // For paragraphs and other elements, replace the inner HTML
                                 node.InnerHtml = translatedText;
                             }
                         }
