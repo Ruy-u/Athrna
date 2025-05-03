@@ -186,7 +186,6 @@ namespace Athrna.Controllers
                     };
                 }
 
-                // Handle image upload if provided
                 if (imageFile != null && imageFile.Length > 0)
                 {
                     var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
@@ -206,7 +205,7 @@ namespace Athrna.Controllers
 
                     // Generate unique filename
                     string uniqueFileName = $"{id}_{Guid.NewGuid().ToString("N")}{extension}";
-                    string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "sites");
+                    string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "sites");
 
                     // Create directory if it doesn't exist
                     if (!Directory.Exists(uploadsFolder))
@@ -216,10 +215,9 @@ namespace Athrna.Controllers
 
                     string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-                    // Delete old image if it exists
                     if (!string.IsNullOrEmpty(site.ImagePath) &&
-                        site.ImagePath.StartsWith("/uploads/sites/") &&
-                        System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", site.ImagePath.TrimStart('/'))))
+        site.ImagePath.StartsWith("/images/sites/") &&
+        System.IO.File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", site.ImagePath.TrimStart('/'))))
                     {
                         try
                         {
@@ -238,7 +236,7 @@ namespace Athrna.Controllers
                     }
 
                     // Update the image path
-                    site.ImagePath = "/uploads/sites/" + uniqueFileName;
+                    site.ImagePath = "/images/sites/" + uniqueFileName;
                     _logger.LogInformation("New image saved at: {0}", site.ImagePath);
                 }
 

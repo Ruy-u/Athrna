@@ -114,7 +114,7 @@ const historicalSites = {
             name: "Jabal Ikmah",
             description: "An open-air library with thousands of inscriptions in various ancient scripts.",
             position: { lat: 26.6211, lng: 37.9259 },
-            image: "/images/sites/jabal_ikmah.jpg",
+            image: "/images/sites/Japal ikmah.jpg",
             year: "1st millennium BCE",
             dbId: 18  // Updated DB ID
         },
