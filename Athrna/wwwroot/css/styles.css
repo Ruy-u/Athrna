@@ -91,27 +91,30 @@ header {
 
 /* Language Selector */
 .language-selector {
-    margin-left: auto;
-    margin-right: 20px;
+    margin: 0 15px;
+    position: relative;
 }
 
 .language-select-btn {
-    background-color: transparent;
+    background-color: rgba(255, 255, 255, 0.1);
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
+    border-radius: 20px; /* Rounded corners */
     padding: 6px 28px 6px 12px;
     font-size: 0.9rem;
     position: relative;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
+    min-width: 100px;
+    justify-content: center;
 }
 
     .language-select-btn:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.2);
         border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-2px);
     }
 
     .language-select-btn::after {
@@ -128,20 +131,65 @@ header {
 .language-flag {
     display: flex;
     align-items: center;
+    font-weight: 500;
 }
 
     .language-flag::before {
         content: '';
         display: inline-block;
-        width: 18px;
-        height: 12px;
+        width: 20px;
+        height: 14px;
         margin-right: 8px;
-        background-size: contain;
-        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center;
+        border-radius: 2px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
 
+    /* English flag (UK flag) */
     .language-flag.en::before {
-        background-image: url('data:image/svg+xml;base64,...'); /* Truncated */
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3Cclippath id='a'%3E%3Cpath d='M0 0v30h60V0z'/%3E%3C/clippath%3E%3CclipPath id='b'%3E%3Cpath d='M30 15h30v15zv15H0zH0V0zV0h30z'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath d='M0 0v30h60V0z' fill='%23012169'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' stroke='%23fff' stroke-width='6'/%3E%3Cpath d='M0 0l60 30m0-30L0 30' clip-path='url(%23b)' stroke='%23C8102E' stroke-width='4'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23fff' stroke-width='10'/%3E%3Cpath d='M30 0v30M0 15h60' stroke='%23C8102E' stroke-width='6'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* Arabic flag (Saudi Arabia flag) */
+    .language-flag.ar::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600'%3E%3Crect width='1200' height='600' fill='%23006c35'/%3E%3Ctext x='50%' y='45%' text-anchor='middle' font-size='120' fill='white' font-family='sans-serif'%3E%D8%A7%D9%84%D9%84%D9%87%20%D8%A3%D9%83%D8%A8%D8%B1%3C/text%3E%3Crect x='300' y='470' width='600' height='30' rx='15' fill='white'/%3E%3C/svg%3E");
+    }
+
+    /* French flag */
+    .language-flag.fr::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 600'%3E%3Cpath fill='%23ED2939' d='M0 0h900v600H0z'/%3E%3Cpath fill='%23fff' d='M0 0h600v600H0z'/%3E%3Cpath fill='%23002395' d='M0 0h300v600H0z'/%3E%3C/svg%3E");
+    }
+
+    /* German flag */
+    .language-flag.de::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 3'%3E%3Cpath d='M0 0h5v3H0z'/%3E%3Cpath fill='%23D00' d='M0 1h5v2H0z'/%3E%3Cpath fill='%23FFCE00' d='M0 2h5v1H0z'/%3E%3C/svg%3E");
+    }
+
+    /* Spanish flag */
+    .language-flag.es::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 750 500'%3E%3Crect width='750' height='500' fill='%23c60b1e'/%3E%3Crect width='750' height='250' fill='%23ffc400' y='125'/%3E%3C/svg%3E");
+    }
+
+.dropdown-menu {
+    min-width: 150px;
+    padding: 0.5rem 0;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    border: none;
+    margin-top: 8px;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+    .dropdown-item:hover,
+    .dropdown-item:focus,
+    .dropdown-item.active {
+        background-color: #f0f7f4;
+        color: #1a3b29;
     }
 
 /* Auth Buttons */
@@ -370,12 +418,6 @@ footer {
         .search-bar.active {
             display: block;
         }
-
-    .language-selector {
-        margin-left: 0;
-        margin-right: 0;
-        order: 3;
-    }
 
     .header-actions {
         order: 4;

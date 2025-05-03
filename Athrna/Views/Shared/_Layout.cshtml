@@ -76,16 +76,13 @@
             <i class="bi bi-search"></i>
         </button>
 
-        <!-- Language Selector -->
-        @await Component.InvokeAsync("LanguageSelector")
-
         <div class="header-actions">
             @if (User.Identity.IsAuthenticated)
             {
                 <div class="dropdown">
                     <button class="user-menu-btn" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">
                         <span class="user-avatar" aria-hidden="true">@User.Identity.Name.Substring(0, 1).ToUpper()</span>
-                        <span class="user-name">@User.Identity.Name</span>
+                        <span class="user-name" data-no-translate="true">@User.Identity.Name</span>
                         @if (!User.IsInRole("Administrator") && !User.IsInRole("Guide"))
                         {
                             // Get unread messages count
@@ -164,6 +161,8 @@
                     <a asp-controller="Account" asp-action="Register" class="auth-btn register-btn">Register</a>
                 </div>
             }
+            <!-- Language Selector -->
+            @await Component.InvokeAsync("LanguageSelector")
         </div>
     </header>
 

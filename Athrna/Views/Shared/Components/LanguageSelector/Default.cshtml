@@ -28,6 +28,13 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Get the current language from cookie or URL parameter
+        let currentLanguage = getCurrentLanguage();
+
+        // Update the dropdown button and menu items to show the current language
+        updateLanguageSelection(currentLanguage);
+
+        // Set up event listeners for language selection
         const languageItems = document.querySelectorAll('[data-language-code]');
         if (languageItems) {
             languageItems.forEach(item => {
@@ -37,6 +44,9 @@
                     // Get the selected language
                     const selectedLanguage = this.getAttribute('data-language-code');
 
+                    // Update the dropdown button and menu items immediately
+                    updateLanguageSelection(selectedLanguage);
+
                     // Construct the new URL with the language parameter
                     const url = new URL(window.location.href);
                     url.searchParams.set('lang', selectedLanguage);
@@ -45,6 +55,62 @@
                     window.location.href = url.toString();
                 });
             });
+        }
+
+        // Function to get current language
+        function getCurrentLanguage() {
+            // First check URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('lang')) {
+                return urlParams.get('lang');
+            }
+
+            // Then check cookie
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'Athrna_Language') {
+                    return value;
+                }
+            }
+
+            // Default to English
+            return 'en';
+        }
+
+        // Function to update the dropdown button and menu items
+        function updateLanguageSelection(language) {
+            // Update dropdown button
+            const languageButton = document.querySelector('.language-select-btn');
+            if (!languageButton) return;
+
+            // Find language info
+            let languageText = '';
+            let languageCode = '';
+
+            // Update dropdown menu items (add 'active' class to selected item)
+            document.querySelectorAll('[data-language-code]').forEach(item => {
+                const itemLanguage = item.getAttribute('data-language-code');
+
+                // Remove 'active' class from all items
+                item.classList.remove('active');
+
+                // Add 'active' class to the selected language
+                if (itemLanguage === language) {
+                    item.classList.add('active');
+                    languageText = item.querySelector('.language-flag').textContent;
+                    languageCode = itemLanguage;
+                }
+            });
+
+            // Update button content
+            if (languageText && languageCode) {
+                languageButton.innerHTML = '';
+                const span = document.createElement('span');
+                span.className = `language-flag ${languageCode}`;
+                span.textContent = languageText;
+                languageButton.appendChild(span);
+            }
         }
     });
 </script>

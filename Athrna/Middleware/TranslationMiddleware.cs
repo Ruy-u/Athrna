@@ -25,7 +25,7 @@ namespace Athrna.Middleware
 
         private static readonly HashSet<string> _excludedAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "href", "src", "alt", "title", "placeholder", "value", "type", "id", "class", "style", "data-"
+            "href", "src", "alt", "title", "placeholder", "value", "type", "id", "class", "style", "data-","name", "for", "action", "method", "required", "disabled", "readonly", "selected"
         };
 
         public TranslationMiddleware(RequestDelegate next, ILogger<TranslationMiddleware> logger)
@@ -42,7 +42,9 @@ namespace Athrna.Middleware
                 path.StartsWith("/js") ||
                 path.StartsWith("/lib") ||
                 path.StartsWith("/images") ||
-                path.StartsWith("/api"))
+                path.StartsWith("/api") ||
+                path.StartsWith("/Admin") ||
+                path.StartsWith("/GuideDashboard"))
             {
                 await _next(context);
                 return;
@@ -154,6 +156,16 @@ namespace Athrna.Middleware
                 // First pass: collect all translatable text nodes and elements with data-translate attribute
                 var textsToTranslate = new Dictionary<string, List<HtmlNode>>();
 
+                // Preserve specific elements that should not be removed during translation
+                var siteDescriptionSections = doc.DocumentNode.SelectNodes("//section[contains(@class, 'site-description-section')]");
+                if (siteDescriptionSections != null)
+                {
+                    foreach (var section in siteDescriptionSections)
+                    {
+                        section.SetAttributeValue("data-preserve", "true");
+                    }
+                }
+
                 // Process elements with data-translate attribute first
                 var dataTranslateNodes = doc.DocumentNode.SelectNodes("//*[@data-translate]");
                 if (dataTranslateNodes != null)
@@ -179,6 +191,22 @@ namespace Athrna.Middleware
                     {
                         // Skip if parent is in excluded elements
                         if (node.ParentNode != null && _excludedElements.Contains(node.ParentNode.Name))
+                            continue;
+
+                        // Skip if parent or any ancestor has data-no-translate attribute
+                        var parent = node.ParentNode;
+                        bool skipTranslation = false;
+                        while (parent != null)
+                        {
+                            if (parent.Attributes["data-no-translate"] != null)
+                            {
+                                skipTranslation = true;
+                                break;
+                            }
+                            parent = parent.ParentNode;
+                        }
+
+                        if (skipTranslation)
                             continue;
 
                         var text = node.InnerText.Trim();

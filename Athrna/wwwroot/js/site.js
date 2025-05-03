@@ -1,7 +1,4 @@
-﻿/**
- * Main Site JavaScript
- * This script handles global site functionality
- */
+﻿
 document.addEventListener('DOMContentLoaded', function () {
     // Mobile menu toggle
     const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
