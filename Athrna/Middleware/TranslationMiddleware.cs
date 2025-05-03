@@ -43,8 +43,9 @@ namespace Athrna.Middleware
                 path.StartsWith("/lib") ||
                 path.StartsWith("/images") ||
                 path.StartsWith("/api") ||
-                path.StartsWith("/Admin") ||
-                path.StartsWith("/GuideDashboard"))
+                path.StartsWith("/Admin") || 
+                path.StartsWith("/Message") ||
+                path.StartsWith("/GuideDashboard")) 
             {
                 await _next(context);
                 return;
