@@ -118,6 +118,10 @@
         const storedCaptcha = sessionStorage.getItem('captcha');
         if (captchaInput && captchaInput.value.trim().toUpperCase() !== storedCaptcha) {
             showError('CAPTCHA does not match.');
+            generateCaptcha(); // Refresh captcha on validation error
+            if (captchaInput) {
+                captchaInput.value = ''; // Clear the captcha input
+            }
             return;
         }
 
@@ -166,6 +170,7 @@
                     } else {
                         showError(data.message || 'Invalid username or password');
                     }
+                    generateCaptcha();
                 }
             })
             .catch(error => {

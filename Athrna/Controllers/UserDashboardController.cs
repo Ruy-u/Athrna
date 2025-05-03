@@ -233,15 +233,15 @@ namespace Athrna.Controllers
                 return NotFound();
             }
 
-            // Check if new email is already taken by another user
-            if (model.Email != user.Email)
+            // Check if username is already taken by another user
+            if (model.Username != user.Username)
             {
-                if (await _context.Client.AnyAsync(c => c.Email == model.Email && c.Id != userId))
+                if (await _context.Client.AnyAsync(c => c.Username == model.Username && c.Id != userId))
                 {
-                    ModelState.AddModelError("Email", "Email is already registered to another account");
+                    ModelState.AddModelError("Username", "Username is already taken by another account");
                     return View("Profile", model);
                 }
-                user.Email = model.Email;
+                user.Username = model.Username;
             }
 
             // Update password if provided
