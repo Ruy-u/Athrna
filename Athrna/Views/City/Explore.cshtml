@@ -50,6 +50,12 @@
         </div>
     </section>
 
+    @{
+        // Check if the current user is a guide
+        bool isCurrentUserGuide = User.IsInRole("Guide");
+        string currentUserEmail = User.Identity.IsAuthenticated ? User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value : "";
+    }
+
     <!-- City Guides Section -->
     <section class="guides-section mt-5">
         <h2 data-translate="Available Guides in">Available Guides in @Model.City.Name</h2>
@@ -59,29 +65,83 @@
             {
                 <div class="col-md-6 col-lg-3 mb-4">
                     <div class="guide-card">
-                        <!-- Existing guide info -->
                         <div class="guide-content">
                             <h4>@guide.FullName</h4>
                             <p class="guide-contact">
                                 <i class="bi bi-envelope"></i> @guide.Email
                             </p>
-                            <p class="guide-phone">
-                                <i class="bi bi-telephone"></i> +966 50 123 @(4000 + guide.Id)
-                            </p>
                             <div class="guide-actions">
-                                <a asp-controller="Message" asp-action="Conversation" asp-route-guideId="@guide.Id"
-                                   class="btn btn-outline-primary btn-sm mt-2"
-                                   data-bs-toggle="tooltip" data-bs-placement="top"
-                                   title="Start a conversation with @guide.FullName">Contact Guide</a>
+                                @if (!User.Identity.IsAuthenticated)
+                                {
+                                    <!-- User is not logged in -->
+                                    <button class="btn btn-outline-primary btn-sm mt-2 login-required-btn" data-action="contact">
+                                        Contact Guide
+                                    </button>
+                                }
+                                else if (isCurrentUserGuide && guide.Email == currentUserEmail)
+                                {
+                                    <!-- Current logged-in guide can't contact themselves -->
+                                    <div class="alert alert-info mt-2 p-1">
+                                        <small>This is your profile</small>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <!-- Regular user or other guide -->
+                                    <a asp-controller="Message" asp-action="Conversation" asp-route-guideId="@guide.Id"
+                                       class="btn btn-outline-primary btn-sm mt-2"
+                                       data-bs-toggle="tooltip" data-bs-placement="top"
+                                       title="Start a conversation with @guide.FullName">Contact Guide</a>
+                                }
                             </div>
                         </div>
-                </div>
+                    </div>
                 </div>
             }
         </div>
     </section>
 
-   
+    <!-- Add Login Required Modal -->
+    <div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-labelledby="loginRequiredModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginRequiredModalLabel">Login Required</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>You need to be logged in to <span id="loginRequiredAction">perform this action</span>.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="#" class="btn btn-primary login-btn">Login Now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Map Section -->
+    <section class="map-section mt-5">
+        <h2>Interactive Map of @Model.City.Name</h2>
+
+        <div class="map-container">
+            <div id="cityMap" class="city-map">
+                <!-- Map will be loaded via JavaScript -->
+            </div>
+            <div class="map-legend">
+                <h4>Legend</h4>
+                <ul>
+                    @foreach (var site in Model.Sites)
+                    {
+                        <li>
+                            <span class="map-marker-icon"></span>
+                            <span>@site.Name</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </section>
 </div>
 
 @section Styles {

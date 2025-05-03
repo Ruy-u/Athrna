@@ -151,6 +151,12 @@
                         }
                     }
 
+                    @{
+                        // Check if the current user is a guide
+                        bool isCurrentUserGuide = User.IsInRole("Guide");
+                        string currentUserEmail = User.Identity.IsAuthenticated ? User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value : "";
+                    }
+
                     @if (guides.Any())
                     {
                         foreach (var guide in guides.Take(3))
@@ -171,16 +177,47 @@
                                             <i class="bi bi-envelope"></i> @guide.Email
                                         </p>
 
-                                        <!-- Guide Action Buttons - UPDATED WITH PROMINENT BOOKING BUTTON -->
+                                        <!-- Guide Action Buttons -->
                                         <div class="guide-action mt-3">
-                                            <!-- Primary CTA - Book a Tour -->
-                                            <a asp-controller="Booking" asp-action="Request" asp-route-id="@guide.Id" asp-route-siteId="@Model.Id" class="btn btn-primary me-2">
-                                                <i class="bi bi-calendar-plus"></i> Book a Tour
-                                            </a>
-                                            <!-- Secondary CTA - Contact Guide -->
-                                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#guideContactModal" data-guide-id="@guide.Id" data-guide-name="@guide.FullName" data-guide-email="@guide.Email">
-                                                <i class="bi bi-chat"></i> Contact Guide
-                                            </button>
+                                            @if (!User.Identity.IsAuthenticated)
+                                            {
+                                                <!-- User is not logged in - Show login-required buttons -->
+                                                <button class="btn btn-primary me-2 login-required-btn" data-action="book">
+                                                    <i class="bi bi-calendar-plus"></i> Book a Tour
+                                                </button>
+                                                <button class="btn btn-outline-primary login-required-btn" data-action="contact">
+                                                    <i class="bi bi-chat"></i> Contact Guide
+                                                </button>
+                                            }
+                                            else if (User.IsInRole("Guide"))
+                                            {
+                                                string userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+                                                @if (guide.Email == userEmail)
+                                                {
+                                                    <!-- Current logged-in guide can't book themselves -->
+                                                    <div class="alert alert-info mt-2 mb-0">
+                                                        <small>This is your guide profile</small>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <!-- Guide contacting other guide - Only allow contact, not booking -->
+                                                    <a asp-controller="Message" asp-action="Conversation" asp-route-guideId="@guide.Id" class="btn btn-outline-primary">
+                                                        <i class="bi bi-chat"></i> Contact Guide
+                                                    </a>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <!-- Regular user can book and contact -->
+                                                <a asp-controller="Booking" asp-action="Request" asp-route-id="@guide.Id" asp-route-siteId="@Model.Id" class="btn btn-primary me-2">
+                                                    <i class="bi bi-calendar-plus"></i> Book a Tour
+                                                </a>
+                                                <a asp-controller="Message" asp-action="Conversation" asp-route-guideId="@guide.Id" class="btn btn-outline-primary">
+                                                    <i class="bi bi-chat"></i> Contact Guide
+                                                </a>
+                                            }
                                         </div>
                                     </div>
                                 </div>
@@ -195,6 +232,25 @@
                             </div>
                         </div>
                     }
+
+                    <!-- Add Login Required Modal -->
+                    <div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-labelledby="loginRequiredModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="loginRequiredModalLabel">Login Required</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>You need to be logged in to <span id="loginRequiredAction">perform this action</span>.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <a href="#" class="btn btn-primary login-btn">Login Now</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -341,9 +397,9 @@
                     }
                     else
                     {
-                        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-block">
-                            <i class="bi bi-bookmark"></i> <span data-translate="Login to Bookmark">Login to Bookmark</span>
-                        </a>
+                        <button class="btn btn-outline-primary btn-block login-required-btn" data-action="bookmark">
+                            <i class="bi bi-bookmark"></i> <span data-translate="Bookmark this Site">Bookmark this Site</span>
+                        </button>
                     }
                 </div>
 
@@ -388,6 +444,9 @@
 
                         <div class="city-info mt-2">
                             <a asp-action="Explore" asp-route-id="@Model.City.Name.ToLower()" class="btn btn-sm btn-primary w-100">
+                        <div class="city-info">
+                            <h5>@Model.City.Name</h5>
+                            <a asp-action="Explore" asp-route-id="@Model.City.Name.ToLower()" class="btn btn-sm btn-primary">
                                 <span data-translate="Explore">Explore</span> @Model.City.Name
                             </a>
                         </div>

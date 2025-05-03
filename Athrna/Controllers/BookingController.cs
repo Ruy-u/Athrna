@@ -23,9 +23,38 @@ namespace Athrna.Controllers
             _logger = logger;
         }
 
+        [Authorize]
         // GET: Booking/Create/5 (5 is the guide ID)
         public async Task<IActionResult> Create(int id, int? siteId)
         {
+            // Check if the user is a guide
+            bool isGuide = User.IsInRole("Guide");
+
+            if (isGuide)
+            {
+                string userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+                // Get the guide being booked
+                var guideCheck = await _context.Guide
+                    .FirstOrDefaultAsync(g => g.Id == id);
+
+                if (guideCheck == null)
+                {
+                    return NotFound();
+                }
+
+                // Check if the guide is trying to book themselves
+                if (guideCheck.Email == userEmail)
+                {
+                    TempData["ErrorMessage"] = "You cannot book yourself as a guide.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                // Guides can't book other guides
+                TempData["ErrorMessage"] = "Guides cannot book other guides.";
+                return RedirectToAction("Index", "Home");
+            }
+
             // Get the guide
             var guide = await _context.Guide
                 .Include(g => g.City)
@@ -67,6 +96,7 @@ namespace Athrna.Controllers
 
             return View(viewModel);
         }
+
 
         // POST: Booking/Create
         [HttpPost]
@@ -255,9 +285,38 @@ namespace Athrna.Controllers
             }
         }
 
+        [Authorize]
         // GET: Booking/Request/5?siteId=10
         public async Task<IActionResult> Request(int id, int? siteId)
         {
+            // Check if the user is a guide
+            bool isGuide = User.IsInRole("Guide");
+
+            if (isGuide)
+            {
+                string userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+                // Get the guide being booked
+                var guideCheck = await _context.Guide
+                    .FirstOrDefaultAsync(g => g.Id == id);
+
+                if (guideCheck == null)
+                {
+                    return NotFound();
+                }
+
+                // Check if the guide is trying to book themselves
+                if (guideCheck.Email == userEmail)
+                {
+                    TempData["ErrorMessage"] = "You cannot book yourself as a guide.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                // Guides can't book other guides
+                TempData["ErrorMessage"] = "Guides cannot book other guides.";
+                return RedirectToAction("Index", "Home");
+            }
+
             // Get the guide
             var guide = await _context.Guide
                 .Include(g => g.City)
@@ -300,6 +359,7 @@ namespace Athrna.Controllers
 
             return View(viewModel);
         }
+
 
         // Helper method to generate available time slots based on guide availability
         private List<TimeSlot> GenerateAvailableTimeSlots(List<GuideAvailability> availability, int daysToShow)
