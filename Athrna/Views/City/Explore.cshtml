@@ -120,28 +120,7 @@
         </div>
     </div>
 
-    <!-- Interactive Map Section -->
-    <section class="map-section mt-5">
-        <h2>Interactive Map of @Model.City.Name</h2>
-
-        <div class="map-container">
-            <div id="cityMap" class="city-map">
-                <!-- Map will be loaded via JavaScript -->
-            </div>
-            <div class="map-legend">
-                <h4>Legend</h4>
-                <ul>
-                    @foreach (var site in Model.Sites)
-                    {
-                        <li>
-                            <span class="map-marker-icon"></span>
-                            <span>@site.Name</span>
-                        </li>
-                    }
-                </ul>
-            </div>
-        </div>
-    </section>
+    
 </div>
 
 @section Styles {
