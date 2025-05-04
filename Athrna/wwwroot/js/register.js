@@ -92,31 +92,101 @@
         });
     }
 
-    // Password visibility toggles
-    document.querySelectorAll('.password-toggle').forEach(button => {
-        button.addEventListener('click', function () {
-            const input = this.previousElementSibling;
-            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-            input.setAttribute('type', type);
+    // Setup password fields with toggle functionality
+    setupPasswordField('password', true); // Main password with toggle
+    setupPasswordField('confirmPassword', false); // Confirm password without toggle
 
-            const icon = this.querySelector('i');
-            if (type === 'text') {
-                icon.classList.remove('bi-eye');
-                icon.classList.add('bi-eye-slash');
-            } else {
-                icon.classList.remove('bi-eye-slash');
-                icon.classList.add('bi-eye');
+    // Function to setup password field with optional toggle
+    function setupPasswordField(fieldId, showToggle) {
+        const passwordField = document.getElementById(fieldId);
+        if (!passwordField) return;
+
+        // Create password container if it doesn't exist
+        let passwordContainer = passwordField.parentElement;
+        if (!passwordContainer.classList.contains('password-container')) {
+            // Create a new container
+            passwordContainer = document.createElement('div');
+            passwordContainer.className = 'password-container';
+
+            // Move password field into container
+            passwordField.parentNode.insertBefore(passwordContainer, passwordField);
+            passwordContainer.appendChild(passwordField);
+        }
+
+        // Add toggle button if needed
+        if (showToggle) {
+            // Check if toggle button already exists
+            let toggleButton = passwordContainer.querySelector('.password-toggle');
+
+            if (!toggleButton) {
+                toggleButton = document.createElement('button');
+                toggleButton.type = 'button';
+                toggleButton.className = 'password-toggle';
+                toggleButton.setAttribute('aria-label', 'Toggle password visibility');
+                toggleButton.innerHTML = '<i class="bi bi-eye"></i>';
+
+                passwordContainer.appendChild(toggleButton);
+
+                // Add toggle functionality
+                toggleButton.addEventListener('click', function () {
+                    const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordField.setAttribute('type', type);
+
+                    // Update icon
+                    const icon = this.querySelector('i');
+                    if (type === 'text') {
+                        icon.classList.remove('bi bi-eye');
+                        icon.classList.add('bi bi-eye-slash');
+                    } else {
+                        icon.classList.remove('bi bi-eye-slash');
+                        icon.classList.add('bi bi-eye');
+                    }
+                });
             }
-        });
-    });
+        }
+    }
 
     // Password strength meter
     const passwordField = document.getElementById('password');
-    const strengthMeter = document.querySelector('.password-strength-meter');
-    const progressBar = document.querySelector('.progress-bar');
-    const strengthText = document.querySelector('.strength-text');
+    if (passwordField) {
+        // Create strength meter if it doesn't exist
+        let strengthMeter = document.querySelector('.password-strength-meter');
+        if (!strengthMeter) {
+            strengthMeter = document.createElement('div');
+            strengthMeter.className = 'password-strength-meter mt-2';
 
-    if (passwordField && strengthMeter && progressBar && strengthText) {
+            // Create progress bar
+            const progressContainer = document.createElement('div');
+            progressContainer.className = 'progress';
+
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressBar.setAttribute('role', 'progressbar');
+            progressBar.setAttribute('aria-valuenow', '0');
+            progressBar.setAttribute('aria-valuemin', '0');
+            progressBar.setAttribute('aria-valuemax', '100');
+            progressBar.style.width = '0%';
+
+            progressContainer.appendChild(progressBar);
+
+            // Create strength text
+            const strengthText = document.createElement('small');
+            strengthText.className = 'form-text strength-text';
+            strengthText.textContent = 'Password strength: Weak';
+
+            // Add elements to meter
+            strengthMeter.appendChild(progressContainer);
+            strengthMeter.appendChild(strengthText);
+
+            // Add meter after password container
+            const passwordContainer = passwordField.closest('.password-container');
+            if (passwordContainer) {
+                passwordContainer.after(strengthMeter);
+            } else {
+                passwordField.after(strengthMeter);
+            }
+        }
+
         // Show strength meter when password field is focused
         passwordField.addEventListener('focus', function () {
             strengthMeter.style.display = 'block';
@@ -134,6 +204,9 @@
             if (/\d/.test(password)) strength += 20;
             if (/[^a-zA-Z0-9]/.test(password)) strength += 20;
 
+            const progressBar = strengthMeter.querySelector('.progress-bar');
+            const strengthTextElement = strengthMeter.querySelector('.strength-text');
+
             // Update progress bar
             progressBar.style.width = `${strength}%`;
             progressBar.setAttribute('aria-valuenow', strength);
@@ -141,16 +214,16 @@
             // Update text and color
             if (strength < 40) {
                 progressBar.className = 'progress-bar bg-danger';
-                strengthText.textContent = 'Weak';
-                strengthText.className = 'text-danger';
+                strengthTextElement.textContent = 'Password strength: Weak';
+                strengthTextElement.className = 'form-text strength-text text-danger';
             } else if (strength < 70) {
                 progressBar.className = 'progress-bar bg-warning';
-                strengthText.textContent = 'Moderate';
-                strengthText.className = 'text-warning';
+                strengthTextElement.textContent = 'Password strength: Moderate';
+                strengthTextElement.className = 'form-text strength-text text-warning';
             } else {
                 progressBar.className = 'progress-bar bg-success';
-                strengthText.textContent = 'Strong';
-                strengthText.className = 'text-success';
+                strengthTextElement.textContent = 'Password strength: Strong';
+                strengthTextElement.className = 'form-text strength-text text-success';
             }
         });
     }
@@ -160,7 +233,7 @@
     if (form) {
         form.addEventListener('submit', function (e) {
             // Clear guide fields if not registering as guide
-            if (!guideCheckbox.checked) {
+            if (guideCheckbox && !guideCheckbox.checked) {
                 guideFields.forEach(field => {
                     field.value = '';
                 });
