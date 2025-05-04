@@ -1,8 +1,14 @@
 ﻿@model IEnumerable<Athrna.Models.Guide>
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.DependencyInjection
+@using Athrna.Data
 
 @{
     ViewData["Title"] = "Manage Guides";
     Layout = "_AdminLayout";
+
+    // Get the database context to look up client accounts
+    var dbContext = Context.RequestServices.GetRequiredService<ApplicationDbContext>();
 }
 
 <div class="container-fluid py-4">
@@ -26,12 +32,20 @@
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">City</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">National ID</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Email</th>
-                                    <th class="text-secondary opacity-7"></th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Status</th>
+                                    <th class="text-secondary opacity-7">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var guide in Model)
                                 {
+                                    // Get the ban status from the associated client account
+                                    var clientAccount = dbContext.Client.FirstOrDefault(c => c.Email == guide.Email);
+
+                                    bool isBanned = clientAccount?.IsBanned ?? false;
+                                    string banReason = clientAccount?.BanReason ?? "";
+                                    DateTime? bannedAt = clientAccount?.BannedAt;
+
                                     <tr>
                                         <td>
                                             <div class="d-flex px-3 py-1">
@@ -49,41 +63,85 @@
                                         <td>
                                             <p class="text-sm text-secondary mb-0">@guide.Email</p>
                                         </td>
+                                        <td>
+                                            @if (isBanned)
+                                            {
+                                                <span class="badge bg-danger">Banned</span>
+                                                @if (!string.IsNullOrEmpty(banReason))
+                                                {
+                                                    <div class="text-xs text-secondary mt-1">
+                                                        <strong>Reason:</strong> @banReason
+                                                    </div>
+                                                }
+                                                @if (bannedAt.HasValue)
+                                                {
+                                                    <div class="text-xs text-secondary">
+                                                        <strong>Since:</strong> @bannedAt.Value.ToString("yyyy-MM-dd")
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                        </td>
                                         <td class="align-middle">
                                             <div class="d-flex gap-2">
                                                 <a asp-action="EditGuide" asp-route-id="@guide.Id" class="btn btn-sm btn-outline-primary">
                                                     <i class="bi bi-pencil"></i> Edit
                                                 </a>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@guide.Id">
-                                                    <i class="bi bi-trash"></i> Delete
-                                                </button>
+
+                                                @if (isBanned)
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-success"
+                                                            onclick="confirmUnban(@guide.Id, '@guide.FullName')">
+                                                        <i class="bi bi-unlock"></i> Unban
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                                            data-bs-toggle="modal" data-bs-target="#banGuideModal-@guide.Id">
+                                                        <i class="bi bi-ban"></i> Ban
+                                                    </button>
+                                                }
                                             </div>
                                         </td>
                                     </tr>
 
-                                    <!-- Delete Modal -->
-                                    <div class="modal fade" id="deleteModal-@guide.Id" tabindex="-1" aria-labelledby="deleteModalLabel-@guide.Id" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="deleteModalLabel-@guide.Id">Delete Guide</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <p>Are you sure you want to delete the guide <strong>@guide.FullName</strong>?</p>
-                                                    <p class="text-danger">This action cannot be undone.</p>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                    <form asp-action="DeleteGuide" method="post">
+                                    <!-- Ban Guide Modal -->
+                                    @if (!isBanned)
+                                    {
+                                        <div class="modal fade" id="banGuideModal-@guide.Id" tabindex="-1" aria-labelledby="banGuideModalLabel-@guide.Id" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="banGuideModalLabel-@guide.Id">Ban Guide: @guide.FullName</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <form asp-action="BanGuide" method="post">
                                                         @Html.AntiForgeryToken()
-                                                        <input type="hidden" name="id" value="@guide.Id" />
-                                                        <button type="submit" class="btn btn-danger">Delete Guide</button>
+                                                        <div class="modal-body">
+                                                            <input type="hidden" name="id" value="@guide.Id" />
+
+                                                            <p>Are you sure you want to ban the guide <strong>@guide.FullName</strong>?</p>
+                                                            <p class="text-danger">This will prevent the guide from logging in and accessing the site.</p>
+
+                                                            <div class="mb-3">
+                                                                <label for="banReason-@guide.Id" class="form-label">Ban Reason (optional)</label>
+                                                                <textarea id="banReason-@guide.Id" name="banReason" class="form-control" rows="3" placeholder="Enter a reason for banning this guide..."></textarea>
+                                                                <div class="form-text">This reason will be visible to administrators only.</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-danger">Ban Guide</button>
+                                                        </div>
                                                     </form>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    }
                                 }
                             </tbody>
                         </table>
@@ -101,9 +159,15 @@
     </div>
 </div>
 
+<!-- Hidden form for unbanning guides -->
+<form id="unbanForm" asp-action="UnbanGuide" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="unbanGuideId" name="id" value="" />
+</form>
+
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Add search functionality
             const searchBox = document.createElement('input');
             searchBox.type = 'text';
@@ -116,7 +180,7 @@
 
             const tableRows = document.querySelectorAll('tbody tr');
 
-            searchBox.addEventListener('keyup', function() {
+            searchBox.addEventListener('keyup', function () {
                 const searchTerm = this.value.toLowerCase();
 
                 tableRows.forEach(row => {
@@ -136,5 +200,13 @@
                 });
             });
         });
+
+        // Function to confirm and submit the unban form
+        function confirmUnban(guideId, guideName) {
+            if (confirm(`Are you sure you want to unban guide "${guideName}"?`)) {
+                document.getElementById('unbanGuideId').value = guideId;
+                document.getElementById('unbanForm').submit();
+            }
+        }
     </script>
 }

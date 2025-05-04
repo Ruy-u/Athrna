@@ -867,64 +867,182 @@ namespace Athrna.Controllers
         // POST: Admin/EditGuide/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditGuide(int id, Guide guide)
+        public async Task<IActionResult> EditGuide(int id, IFormCollection form)
         {
             // Guide management (level 3 or higher)
             if (!await HasRequiredRoleLevel(3))
                 return Unauthorized(3);
 
-            if (id != guide.Id)
+            try
             {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
+                // Log what we received
+                _logger.LogInformation("EditGuide POST received for ID: {Id}", id);
+                foreach (var key in form.Keys)
                 {
-                    _context.Update(guide);
-                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Form field: {Key} = {Value}", key, form[key]);
+                }
 
-                    TempData["SuccessMessage"] = "Guide information updated successfully!";
+                // Fetch the existing guide from the database first
+                var existingGuide = await _context.Guide
+                    .FirstOrDefaultAsync(g => g.Id == id);
+
+                if (existingGuide == null)
+                {
+                    _logger.LogWarning("Guide not found with ID: {Id}", id);
+                    return NotFound();
+                }
+
+                // Update only the specific properties we want to allow editing
+                // Parse the form values manually
+                if (form.TryGetValue("FullName", out var fullNameValues) && !string.IsNullOrEmpty(fullNameValues))
+                {
+                    existingGuide.FullName = fullNameValues;
+                }
+
+                if (form.TryGetValue("NationalId", out var nationalIdValues) && !string.IsNullOrEmpty(nationalIdValues))
+                {
+                    existingGuide.NationalId = nationalIdValues;
+                }
+
+                if (form.TryGetValue("CityId", out var cityIdValues) && int.TryParse(cityIdValues, out int cityId))
+                {
+                    existingGuide.CityId = cityId;
+                }
+
+                // Email is NOT updated - we keep the existing email
+                // Password is NOT updated - we keep the existing password
+
+                // Save the changes
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Guide updated successfully: ID {Id}, Name: {Name}", existingGuide.Id, existingGuide.FullName);
+                TempData["SuccessMessage"] = "Guide information updated successfully!";
+                return RedirectToAction(nameof(ManageGuides));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating guide with ID: {Id}", id);
+                ModelState.AddModelError("", $"An error occurred while updating the guide: {ex.Message}");
+
+                // Load the guide again for the view
+                var guide = await _context.Guide
+                    .Include(g => g.City)
+                    .FirstOrDefaultAsync(g => g.Id == id);
+
+                ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
+                ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
+                return View(guide);
+            }
+        }
+        // POST: Admin/BanGuide/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BanGuide(int id, string banReason)
+        {
+            // Guide management (level 3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+            try
+            {
+                _logger.LogInformation("Attempting to ban guide with ID: {Id}", id);
+
+                // First find the guide
+                var guide = await _context.Guide
+                    .FirstOrDefaultAsync(g => g.Id == id);
+
+                if (guide == null)
+                {
+                    _logger.LogWarning("Guide not found with ID: {Id}", id);
+                    return NotFound();
+                }
+
+                // Find the associated client account by email
+                var client = await _context.Client
+                    .FirstOrDefaultAsync(c => c.Email == guide.Email);
+
+                if (client == null)
+                {
+                    _logger.LogWarning("No client account found for Guide ID: {Id}, Email: {Email}", id, guide.Email);
+                    TempData["ErrorMessage"] = "Could not find a client account associated with this guide.";
                     return RedirectToAction(nameof(ManageGuides));
                 }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!GuideExists(guide.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-            }
 
-            ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
-            return View(guide);
+                // Set ban properties on the client account
+                client.IsBanned = true;
+                client.BanReason = banReason;
+                client.BannedAt = DateTime.UtcNow;
+
+                _context.Update(client);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Guide banned successfully through client account: Guide ID: {GuideId}, Client ID: {ClientId}, Name: {FullName}",
+                    guide.Id, client.Id, guide.FullName);
+                TempData["SuccessMessage"] = $"Guide '{guide.FullName}' has been banned successfully.";
+
+                return RedirectToAction(nameof(ManageGuides));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error banning guide with ID {Id}", id);
+                TempData["ErrorMessage"] = "An error occurred while banning the guide. Please try again.";
+                return RedirectToAction(nameof(ManageGuides));
+            }
         }
 
-        // POST: Admin/DeleteGuide/5
-        [HttpPost, ActionName("DeleteGuide")]
+        // POST: Admin/UnbanGuide/5
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteGuideConfirmed(int id)
+        public async Task<IActionResult> UnbanGuide(int id)
         {
             // Guide management (level 3 or higher)
             if (!await HasRequiredRoleLevel(3))
                 return Unauthorized(3);
-
-            var guide = await _context.Guide.FindAsync(id);
-            if (guide != null)
+            try
             {
-                _context.Guide.Remove(guide);
+                _logger.LogInformation("Attempting to unban guide with ID: {Id}", id);
+
+                // First find the guide
+                var guide = await _context.Guide
+                    .FirstOrDefaultAsync(g => g.Id == id);
+
+                if (guide == null)
+                {
+                    _logger.LogWarning("Guide not found with ID: {Id}", id);
+                    return NotFound();
+                }
+
+                // Find the associated client account by email
+                var client = await _context.Client
+                    .FirstOrDefaultAsync(c => c.Email == guide.Email);
+
+                if (client == null)
+                {
+                    _logger.LogWarning("No client account found for Guide ID: {Id}, Email: {Email}", id, guide.Email);
+                    TempData["ErrorMessage"] = "Could not find a client account associated with this guide.";
+                    return RedirectToAction(nameof(ManageGuides));
+                }
+
+                // Clear ban properties on the client account
+                client.IsBanned = false;
+                client.BanReason = null;
+                client.BannedAt = null;
+
+                _context.Update(client);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Guide deleted successfully.";
+
+                _logger.LogInformation("Guide unbanned successfully through client account: Guide ID: {GuideId}, Client ID: {ClientId}, Name: {FullName}",
+                    guide.Id, client.Id, guide.FullName);
+                TempData["SuccessMessage"] = $"Guide '{guide.FullName}' has been unbanned successfully.";
+
+                return RedirectToAction(nameof(ManageGuides));
             }
-
-            return RedirectToAction(nameof(ManageGuides));
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error unbanning guide with ID {Id}", id);
+                TempData["ErrorMessage"] = "An error occurred while unbanning the guide. Please try again.";
+                return RedirectToAction(nameof(ManageGuides));
+            }
         }
-
         private bool GuideExists(int id)
         {
             return _context.Guide.Any(e => e.Id == id);

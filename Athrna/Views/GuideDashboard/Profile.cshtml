@@ -1,9 +1,15 @@
-﻿<!-- Views/GuideDashboard/Profile.cshtml -->
-@model Athrna.Models.Guide
+﻿@model Athrna.Models.Guide
 
 @{
     ViewData["Title"] = "My Profile";
     Layout = "_GuideLayout";
+
+    // Add a null check for the model
+    if (Model == null)
+    {
+        <div class="alert alert-danger">Error: Profile data could not be loaded.</div>
+        return;
+    }
 }
 
 <div class="dashboard-container">
@@ -63,8 +69,8 @@
                                 <span class="info-value">@Model.City.Name</span>
                             </div>
                             <div class="info-item">
-                                <span class="info-label">License Number</span>
-                                <span class="info-value">TR-1234</span>
+                                <span class="info-label">Username</span>
+                                <span class="info-value">@User.Identity.Name</span>
                             </div>
                         </div>
                     </div>
@@ -85,13 +91,35 @@
                             </div>
                         }
 
+                        @if (TempData["ErrorMessage"] != null)
+                        {
+                            <div class="alert alert-danger mb-4">
+                                @TempData["ErrorMessage"]
+                            </div>
+                        }
+
+                        @if (TempData["InfoMessage"] != null)
+                        {
+                            <div class="alert alert-info mb-4">
+                                @TempData["InfoMessage"]
+                            </div>
+                        }
+
                         <form asp-action="UpdateProfile" method="post">
                             <div class="mb-4">
-                                <h4 class="form-section-title">Personal Information</h4>
+                                <h4 class="form-section-title">Account Information</h4>
+
+                                <div class="form-group mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" id="username" name="username" class="form-control" value="@User.Identity.Name" />
+                                    <span class="text-danger">@Html.ValidationMessage("username")</span>
+                                    <small class="form-text text-muted">You can change your username.</small>
+                                </div>
 
                                 <div class="form-group mb-3">
                                     <label for="FullName" class="form-label">Full Name</label>
-                                    <input type="text" id="FullName" name="FullName" class="form-control" value="@Model.FullName" required />
+                                    <input type="text" id="FullName" name="FullName" class="form-control" value="@Model.FullName" readonly />
+                                    <small class="form-text text-muted">Full name cannot be changed.</small>
                                 </div>
 
                                 <div class="form-group mb-3">
@@ -106,18 +134,22 @@
                                 <p class="text-muted mb-3">Leave blank if you don't want to change your password.</p>
 
                                 <div class="form-group mb-3">
-                                    <label for="CurrentPassword" class="form-label">Current Password</label>
-                                    <input type="password" id="CurrentPassword" name="CurrentPassword" class="form-control" />
+                                    <label for="currentPassword" class="form-label">Current Password</label>
+                                    <input type="password" id="currentPassword" name="currentPassword" class="form-control" />
+                                    <span class="text-danger">@Html.ValidationMessage("currentPassword")</span>
                                 </div>
 
                                 <div class="form-group mb-3">
-                                    <label for="NewPassword" class="form-label">New Password</label>
-                                    <input type="password" id="NewPassword" name="NewPassword" class="form-control" />
+                                    <label for="newPassword" class="form-label">New Password</label>
+                                    <input type="password" id="newPassword" name="newPassword" class="form-control" />
+                                    <span class="text-danger">@Html.ValidationMessage("newPassword")</span>
+                                    <small class="form-text text-muted">Password must be at least 8 characters and include lowercase, uppercase, digit, and special character.</small>
                                 </div>
 
                                 <div class="form-group mb-3">
-                                    <label for="ConfirmPassword" class="form-label">Confirm Password</label>
-                                    <input type="password" id="ConfirmPassword" name="ConfirmPassword" class="form-control" />
+                                    <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" />
+                                    <span class="text-danger">@Html.ValidationMessage("confirmPassword")</span>
                                 </div>
                             </div>
 

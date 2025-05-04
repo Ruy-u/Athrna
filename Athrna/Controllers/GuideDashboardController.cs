@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 
 namespace Athrna.Controllers
 {
@@ -93,6 +96,7 @@ namespace Athrna.Controllers
         }
 
         // GET: GuideDashboard/Profile
+        // GET: GuideDashboard/Profile
         public async Task<IActionResult> Profile()
         {
             try
@@ -114,7 +118,7 @@ namespace Athrna.Controllers
                     return NotFound("Guide profile not found. Please contact support.");
                 }
 
-                // Return guide model directly to the view
+                // Make sure we're not returning null
                 return View(guide);
             }
             catch (Exception ex)
@@ -125,22 +129,16 @@ namespace Athrna.Controllers
             }
         }
 
-        // POST: GuideDashboard/UpdateProfile
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateProfile(Guide model)
+        public async Task<IActionResult> UpdateProfile(Guide model, string username, string currentPassword, string newPassword, string confirmPassword)
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    return View("Profile", model);
-                }
-
                 // Get current guide ID
                 int guideId = await GetCurrentGuideId();
 
-                // Get existing guide
+                // Get existing guide with City included
                 var guide = await _context.Guide
                     .Include(g => g.City)
                     .FirstOrDefaultAsync(g => g.Id == guideId);
@@ -151,17 +149,147 @@ namespace Athrna.Controllers
                     return NotFound("Guide profile not found. Please contact support.");
                 }
 
-                // Update fields that should be updatable
-                guide.FullName = model.FullName;
-                // Note: Email is not updated as it's tied to authentication
-                // Note: Password changes should be handled separately with confirmation
+                // Keep the original values we don't want to update
+                model.Email = guide.Email;
+                model.CityId = guide.CityId;
+                model.City = guide.City;
 
-                // Save changes
-                await _context.SaveChangesAsync();
+                // Get the client associated with this guide via email
+                var client = await _context.Client.FirstOrDefaultAsync(c => c.Email == guide.Email);
+                if (client == null)
+                {
+                    _logger.LogWarning("Client not found for guide with email: {Email}", guide.Email);
+                    ModelState.AddModelError("", "Associated user account not found.");
+                    return View("Profile", guide);
+                }
 
-                _logger.LogInformation("Guide profile updated successfully: {GuideId}", guideId);
-                TempData["SuccessMessage"] = "Your profile has been updated successfully.";
+                // Also get the guide application if it exists
+                var guideApplication = await _context.GuideApplication
+                    .FirstOrDefaultAsync(ga => ga.Email == guide.Email);
 
+                bool changesMade = false;
+                bool usernameChanged = false;
+
+                // Update the username if provided
+                if (!string.IsNullOrEmpty(username) && username != client.Username)
+                {
+                    // Check if username is already taken (by someone else)
+                    var existingUser = await _context.Client.FirstOrDefaultAsync(c =>
+                        c.Username.ToLower() == username.ToLower() && c.Id != client.Id);
+
+                    if (existingUser != null)
+                    {
+                        ModelState.AddModelError("username", "This username is already taken");
+                        return View("Profile", guide);
+                    }
+
+                    // Update username in Client table
+                    client.Username = username;
+
+                    // Also update in GuideApplication table if it exists
+                    if (guideApplication != null)
+                    {
+                        guideApplication.Username = username;
+                        _context.Update(guideApplication);
+                    }
+
+                    changesMade = true;
+                    usernameChanged = true;
+                }
+
+                // Handle password change if provided
+                if (!string.IsNullOrEmpty(newPassword))
+                {
+                    // Validate current password
+                    if (string.IsNullOrEmpty(currentPassword))
+                    {
+                        ModelState.AddModelError("currentPassword", "Current password is required to set a new password");
+                        return View("Profile", guide);
+                    }
+
+                    // Check if current password matches
+                    if (client.EncryptedPassword != currentPassword)
+                    {
+                        ModelState.AddModelError("currentPassword", "Current password is incorrect");
+                        return View("Profile", guide);
+                    }
+
+                    // Confirm passwords match
+                    if (newPassword != confirmPassword)
+                    {
+                        ModelState.AddModelError("confirmPassword", "New password and confirmation do not match");
+                        return View("Profile", guide);
+                    }
+
+                    // Validate password strength
+                    if (!IsStrongPassword(newPassword))
+                    {
+                        ModelState.AddModelError("newPassword", "Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character");
+                        return View("Profile", guide);
+                    }
+
+                    // Update password in Client table
+                    client.EncryptedPassword = newPassword;
+
+                    // Also update in Guide table
+                    guide.Password = newPassword;
+                    _context.Update(guide);
+
+                    // Also update in GuideApplication table if it exists
+                    if (guideApplication != null)
+                    {
+                        guideApplication.Password = newPassword;
+                        _context.Update(guideApplication);
+                    }
+
+                    changesMade = true;
+                }
+
+                // Save changes if any were made
+                if (changesMade)
+                {
+                    _context.Update(client);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Guide account updated successfully: {GuideId}", guideId);
+                    TempData["SuccessMessage"] = "Your account has been updated successfully.";
+
+                    // If username changed, we need to update authentication cookie
+                    if (usernameChanged)
+                    {
+                        // Get existing claims
+                        var identity = (ClaimsIdentity)User.Identity;
+                        var existingClaims = identity.Claims.ToList();
+
+                        // Sign out current user
+                        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                        // Create new claims identity with updated username
+                        var newClaims = existingClaims.Where(c => c.Type != ClaimTypes.Name).ToList();
+                        newClaims.Add(new Claim(ClaimTypes.Name, username));
+                        var newIdentity = new ClaimsIdentity(newClaims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                        // Sign in with new claims
+                        var authProperties = new AuthenticationProperties
+                        {
+                            IsPersistent = true,
+                            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(30)
+                        };
+
+                        await HttpContext.SignInAsync(
+                            CookieAuthenticationDefaults.AuthenticationScheme,
+                            new ClaimsPrincipal(newIdentity),
+                            authProperties);
+
+                        _logger.LogInformation("User authentication cookie updated with new username: {Username}", username);
+                    }
+                }
+                else
+                {
+                    TempData["InfoMessage"] = "No changes were made to your account.";
+                }
+
+                // Return to profile page
                 return RedirectToAction("Profile");
             }
             catch (Exception ex)
@@ -172,6 +300,33 @@ namespace Athrna.Controllers
             }
         }
 
+        private bool IsStrongPassword(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+                return false;
+
+            // Check length (at least 8 characters)
+            if (password.Length < 8)
+                return false;
+
+            // Check for at least one lowercase letter
+            if (!Regex.IsMatch(password, "[a-z]"))
+                return false;
+
+            // Check for at least one uppercase letter
+            if (!Regex.IsMatch(password, "[A-Z]"))
+                return false;
+
+            // Check for at least one digit
+            if (!Regex.IsMatch(password, "[0-9]"))
+                return false;
+
+            // Check for at least one special character
+            if (!Regex.IsMatch(password, "[^a-zA-Z0-9]"))
+                return false;
+
+            return true;
+        }
         // GET: GuideDashboard/Messages
         public async Task<IActionResult> Messages()
         {
@@ -450,7 +605,6 @@ namespace Athrna.Controllers
             return View(availability);
         }
 
-        // POST: GuideDashboard/UpdateAvailability
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateAvailability(List<GuideAvailability> availability)
@@ -474,9 +628,11 @@ namespace Athrna.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Add success message
+            TempData["SuccessMessage"] = "Your availability has been updated successfully.";
+
             return RedirectToAction("Availability");
         }
-
 
         // Helper method to get current guide ID
         private async Task<int> GetCurrentGuideId()
