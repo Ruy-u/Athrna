@@ -40,7 +40,7 @@ const historicalSites = {
             position: { lat: 24.4854, lng: 39.6169 },
             image: "/images/sites/uhud.jpg",
             year: "625 CE",
-            dbId: 3  // Keep original ID
+            dbId: 24  // Keep original ID
         },
         {
             id: 4,
