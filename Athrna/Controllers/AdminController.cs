@@ -591,106 +591,25 @@ namespace Athrna.Controllers
                 return RedirectToAction(nameof(Sites));
             }
         }
+
         // GET: Admin/EditCity/5
-        public async Task<IActionResult> EditCity(int? id)
+        public Task<IActionResult> EditCity(int? id)
         {
-            if (!await HasRequiredRoleLevel(3))
-                return Unauthorized(3);
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var city = await _context.City
-                .Include(c => c.Sites)
-                .Include(c => c.Guides)
-                .FirstOrDefaultAsync(c => c.Id == id);
-
-            if (city == null)
-            {
-                return NotFound();
-            }
-            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
-            return View(city);
+            // Return unauthorized with a message
+            TempData["ErrorMessage"] = "Editing cities is not allowed in this system.";
+            return Task.FromResult<IActionResult>(RedirectToAction(nameof(Cities)));
         }
 
         // POST: Admin/EditCity/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditCity(int id, string Name)
+        public Task<IActionResult> EditCity(int id, string Name)
         {
-            // Content management (level 3 or higher)
-            if (!await HasRequiredRoleLevel(3))
-                return Unauthorized(3);
-
-            if (string.IsNullOrEmpty(Name))
-            {
-                ModelState.AddModelError("Name", "City name is required");
-                var city = await _context.City.FindAsync(id);
-                return View(city);
-            }
-
-            if (id <= 0)
-            {
-                return NotFound();
-            }
-
-            try
-            {
-                _logger.LogInformation("Updating city ID {Id} with name: {Name}", id, Name);
-
-                // Check if city exists
-                var city = await _context.City.FindAsync(id);
-                if (city == null)
-                {
-                    _logger.LogWarning("City not found with ID: {Id}", id);
-                    return NotFound();
-                }
-
-                // Check if new name conflicts with existing city (other than this one)
-                var existingCity = await _context.City.FirstOrDefaultAsync(c =>
-                    c.Id != id && c.Name.ToLower() == Name.ToLower());
-
-                if (existingCity != null)
-                {
-                    ModelState.AddModelError("Name", "A city with this name already exists");
-                    return View(city);
-                }
-
-                // Update city name
-                city.Name = Name;
-
-                _context.Update(city);
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("City updated successfully");
-                TempData["SuccessMessage"] = "City updated successfully!";
-
-                return RedirectToAction(nameof(Cities));
-            }
-            catch (DbUpdateConcurrencyException ex)
-            {
-                if (!CityExists(id))
-                {
-                    _logger.LogWarning("City not found with ID: {Id}", id);
-                    return NotFound();
-                }
-                else
-                {
-                    _logger.LogError(ex, "Concurrency error updating city: {Id}", id);
-                    ModelState.AddModelError("", "The city was modified by another user. Please try again.");
-                    var city = await _context.City.FindAsync(id);
-                    return View(city);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating city: {Error}", ex.Message);
-                ModelState.AddModelError("", $"An error occurred while updating the city: {ex.Message}");
-                var city = await _context.City.FindAsync(id);
-                return View(city);
-            }
+            // Return unauthorized with a message
+            TempData["ErrorMessage"] = "Editing cities is not allowed in this system.";
+            return Task.FromResult<IActionResult>(RedirectToAction(nameof(Cities)));
         }
+
 
         // GET: Admin/GuideApplications
         [Authorize(Policy = "ContentManagement")]
@@ -1053,151 +972,36 @@ namespace Athrna.Controllers
         // GET: Admin/CreateCity
         public IActionResult CreateCity()
         {
-            return View();
+            // Return unauthorized with a message
+            TempData["ErrorMessage"] = "Adding new cities is not allowed in this system.";
+            return RedirectToAction(nameof(Cities));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateCity(string Name, int? AdminRoleLevel)
+        public Task<IActionResult> CreateCity(string Name, int? AdminRoleLevel)
         {
-            // Use AdminRoleLevel from form if provided
-            if (AdminRoleLevel.HasValue)
-            {
-                TempData["AdminRoleLevel"] = AdminRoleLevel.Value;
-            }
-
-            if (string.IsNullOrEmpty(Name))
-            {
-                ModelState.AddModelError("Name", "City name is required");
-                return View();
-            }
-
-            try
-            {
-                _logger.LogInformation("Creating new city: {Name}", Name);
-
-                // Check if city with same name already exists
-                var existingCity = await _context.City.FirstOrDefaultAsync(c => c.Name.ToLower() == Name.ToLower());
-                if (existingCity != null)
-                {
-                    ModelState.AddModelError("Name", "A city with this name already exists");
-                    return View();
-                }
-
-                var city = new City
-                {
-                    Name = Name
-                };
-
-                _context.City.Add(city);
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("City created successfully with ID: {Id}", city.Id);
-                TempData["SuccessMessage"] = "City created successfully!";
-
-                return RedirectToAction(nameof(Cities));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating city: {Error}", ex.Message);
-                ModelState.AddModelError("", $"An error occurred while creating the city: {ex.Message}");
-                return View();
-            }
+            // Return unauthorized with a message
+            TempData["ErrorMessage"] = "Adding new cities is not allowed in this system.";
+            return Task.FromResult<IActionResult>(RedirectToAction(nameof(Cities)));
         }
 
         // GET: Admin/DeleteCity/5
-        public async Task<IActionResult> DeleteCity(int? id)
+        public Task<IActionResult> DeleteCity(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            try
-            {
-                var city = await _context.City
-                    .FirstOrDefaultAsync(c => c.Id == id);
-
-                if (city == null)
-                {
-                    return NotFound();
-                }
-
-                // Check if there are sites associated with this city
-                var hasSites = await _context.Site.AnyAsync(s => s.CityId == id);
-                if (hasSites)
-                {
-                    TempData["ErrorMessage"] = "Cannot delete this city because there are sites associated with it. Delete the sites first.";
-                    return RedirectToAction(nameof(Cities));
-                }
-
-                // Check if there are guides associated with this city
-                var hasGuides = await _context.Guide.AnyAsync(g => g.CityId == id);
-                if (hasGuides)
-                {
-                    TempData["ErrorMessage"] = "Cannot delete this city because there are guides associated with it. Reassign the guides first.";
-                    return RedirectToAction(nameof(Cities));
-                }
-
-                return View(city);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving city for deletion: {Id}", id);
-                TempData["ErrorMessage"] = "An error occurred while retrieving the city.";
-                return RedirectToAction(nameof(Cities));
-            }
+            // Return unauthorized with a message
+            TempData["ErrorMessage"] = "Deleting cities is not allowed in this system.";
+            return Task.FromResult<IActionResult>(RedirectToAction(nameof(Cities)));
         }
 
         // POST: Admin/DeleteCity/5
         [HttpPost, ActionName("DeleteCity")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteCityConfirmed(int id)
+        public Task<IActionResult> DeleteCityConfirmed(int id)
         {
-            try
-            {
-                _logger.LogInformation("Attempting to delete city ID: {Id}", id);
-
-                // Check again if there are sites or guides associated with this city
-                var hasSites = await _context.Site.AnyAsync(s => s.CityId == id);
-                if (hasSites)
-                {
-                    _logger.LogWarning("Cannot delete city {Id} - has associated sites", id);
-                    TempData["ErrorMessage"] = "Cannot delete this city because there are sites associated with it. Delete the sites first.";
-                    return RedirectToAction(nameof(Cities));
-                }
-
-                var hasGuides = await _context.Guide.AnyAsync(g => g.CityId == id);
-                if (hasGuides)
-                {
-                    _logger.LogWarning("Cannot delete city {Id} - has associated guides", id);
-                    TempData["ErrorMessage"] = "Cannot delete this city because there are guides associated with it. Reassign the guides first.";
-                    return RedirectToAction(nameof(Cities));
-                }
-
-                // Get the city
-                var city = await _context.City.FindAsync(id);
-                if (city == null)
-                {
-                    _logger.LogWarning("City not found with ID: {Id}", id);
-                    return NotFound();
-                }
-
-                // Delete the city
-                _context.City.Remove(city);
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("City deleted successfully: {Id}", id);
-                TempData["SuccessMessage"] = "City deleted successfully!";
-
-                return RedirectToAction(nameof(Cities));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting city: {Id}", id);
-                TempData["ErrorMessage"] = "An error occurred while deleting the city. Please try again.";
-                return RedirectToAction(nameof(Cities));
-            }
+            // Return unauthorized with a message
+            TempData["ErrorMessage"] = "Deleting cities is not allowed in this system.";
+            return Task.FromResult<IActionResult>(RedirectToAction(nameof(Cities)));
         }
 
         // GET: Admin/ToggleAdmin/5

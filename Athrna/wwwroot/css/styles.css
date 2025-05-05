@@ -423,3 +423,70 @@ footer {
         order: 4;
     }
 }
+header .auth-buttons {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+header .auth-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    height: 42px;
+    min-width: 100px;
+    box-sizing: border-box;
+    line-height: 1; /* Ensures no extra space inside */
+    vertical-align: middle;
+}
+
+/* LOGIN */
+header .login-btn {
+    background-color: transparent;
+    color: white;
+    border: 2px solid white;
+}
+
+    header .login-btn:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+/* REGISTER */
+header .register-btn {
+    background-color: #f8c15c;
+    color: #1a3b29;
+    border: 2px solid #f8c15c;
+    padding: 10px 20px !important;
+    height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    font-size: 0.95rem !important;
+    box-sizing: border-box !important;
+}
+
+    header .register-btn:hover {
+        background-color: #e6a93d;
+        border-color: #e6a93d;
+    }
+
+/* DARK MODE */
+[data-theme="dark"] header .register-btn {
+    background-color: #f8c15c;
+    color: #1a3b29;
+    border: 2px solid #f8c15c;
+}
+
+    [data-theme="dark"] header .register-btn:hover {
+        background-color: #e6a93d;
+        border-color: #e6a93d;
+    }
+
