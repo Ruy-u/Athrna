@@ -65,72 +65,38 @@
             <section class="site-description-section mt-5">
                 <h2 data-translate="Available Services">Available Services</h2>
                 <div class="row mt-4">
-                    <div class="col-md-6 mb-3">
-                        <div class="service-item">
-                            <div class="service-icon">
-                                <i class="bi bi-p-circle-fill"></i>
+                    @if (Model.Services != null && Model.Services.Any())
+                    {
+                        foreach (var service in Model.Services)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="service-item">
+                                    <div class="service-icon">
+                                        <i class="@service.IconName"></i>
+                                    </div>
+                                    <div class="service-details">
+                                        <h4 data-translate="@service.Name">@service.Name</h4>
+                                        <p data-translate="@service.Description">@service.Description</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="service-details">
-                                <h4 data-translate="Parking">Parking</h4>
-                                <p data-translate="Free parking available for visitors">Free parking available for visitors</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="service-item">
-                            <div class="service-icon">
-                                <i class="bi bi-info-circle-fill"></i>
-                            </div>
-                            <div class="service-details">
-                                <h4 data-translate="Information Center">Information Center</h4>
-                                <p data-translate="Tourist information and guides">Tourist information and guides</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="service-item">
-                            <div class="service-icon">
-                                <i class="bi bi-cup-hot-fill"></i>
-                            </div>
-                            <div class="service-details">
-                                <h4 data-translate="Café">Café</h4>
-                                <p data-translate="Traditional Saudi coffee and refreshments">Traditional Saudi coffee and refreshments</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="service-item">
-                            <div class="service-icon">
-                                <i class="bi bi-shop"></i>
-                            </div>
-                            <div class="service-details">
-                                <h4 data-translate="Gift Shop">Gift Shop</h4>
-                                <p data-translate="Local crafts and souvenirs">Local crafts and souvenirs</p>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Default services if none are defined -->
+                        <div class="col-md-6 mb-3">
+                            <div class="service-item">
+                                <div class="service-icon">
+                                    <i class="bi bi-p-circle-fill"></i>
+                                </div>
+                                <div class="service-details">
+                                    <h4 data-translate="Parking">Parking</h4>
+                                    <p data-translate="Free parking available for visitors">Free parking available for visitors</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="service-item">
-                            <div class="service-icon">
-                                <i class="bi bi-wifi"></i>
-                            </div>
-                            <div class="service-details">
-                                <h4 data-translate="Free Wi-Fi">Free Wi-Fi</h4>
-                                <p data-translate="Available throughout the site">Available throughout the site</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="service-item">
-                            <div class="service-icon">
-                                <i class="bi bi-universal-access"></i>
-                            </div>
-                            <div class="service-details">
-                                <h4 data-translate="Accessibility">Accessibility</h4>
-                                <p data-translate="Wheelchair ramps and accessible facilities">Wheelchair ramps and accessible facilities</p>
-                            </div>
-                        </div>
-                    </div>
+                    }
                 </div>
             </section>
 

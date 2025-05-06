@@ -158,6 +158,16 @@ CREATE TABLE [Rating] (
     CONSTRAINT [FK_Rating_Site_SiteId] FOREIGN KEY ([SiteId]) REFERENCES [Site] ([Id]) ON DELETE CASCADE
 );
 
+CREATE TABLE [Service] (
+    [Id] int NOT NULL IDENTITY,
+    [SiteId] int NOT NULL,
+    [Name] nvarchar(100) NOT NULL,
+    [Description] nvarchar(255) NOT NULL,
+    [IconName] nvarchar(50) NOT NULL,
+    CONSTRAINT [PK_Service] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Service_Site_SiteId] FOREIGN KEY ([SiteId]) REFERENCES [Site] ([Id]) ON DELETE CASCADE
+);
+
 CREATE UNIQUE INDEX [IX_Administrator_ClientId] ON [Administrator] ([ClientId]);
 
 CREATE INDEX [IX_Booking_ClientId] ON [Booking] ([ClientId]);
@@ -190,11 +200,14 @@ CREATE INDEX [IX_Rating_ClientId] ON [Rating] ([ClientId]);
 
 CREATE INDEX [IX_Rating_SiteId] ON [Rating] ([SiteId]);
 
+CREATE INDEX [IX_Service_SiteId] ON [Service] ([SiteId]);
+
 CREATE INDEX [IX_Site_CityId] ON [Site] ([CityId]);
 
 CREATE UNIQUE INDEX [IX_Translation_SourceLanguage_TargetLanguage_TextHash] ON [Translation] ([SourceLanguage], [TargetLanguage], [TextHash]);
 
 INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20250505142009_InitialCreate', N'9.0.3');
+VALUES (N'20250506192604_InitialCreate', N'9.0.3');
 
+COMMIT;
 GO

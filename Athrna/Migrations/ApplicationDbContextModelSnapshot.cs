@@ -398,6 +398,39 @@ namespace Athrna.Migrations
                     b.ToTable("Rating", (string)null);
                 });
 
+            modelBuilder.Entity("Athrna.Models.Service", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("IconName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("SiteId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId");
+
+                    b.ToTable("Service", (string)null);
+                });
+
             modelBuilder.Entity("Athrna.Models.Site", b =>
                 {
                     b.Property<int>("Id")
@@ -614,6 +647,17 @@ namespace Athrna.Migrations
                     b.Navigation("Site");
                 });
 
+            modelBuilder.Entity("Athrna.Models.Service", b =>
+                {
+                    b.HasOne("Athrna.Models.Site", "Site")
+                        .WithMany("Services")
+                        .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Site");
+                });
+
             modelBuilder.Entity("Athrna.Models.Site", b =>
                 {
                     b.HasOne("Athrna.Models.City", "City")
@@ -650,6 +694,8 @@ namespace Athrna.Migrations
                         .IsRequired();
 
                     b.Navigation("Ratings");
+
+                    b.Navigation("Services");
                 });
 #pragma warning restore 612, 618
         }

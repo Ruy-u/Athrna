@@ -62,6 +62,7 @@ namespace Athrna.Controllers
             var sites = await _context.Site
                 .Include(s => s.City)
                 .Include(s => s.CulturalInfo)
+                .Include(s => s.Services) // Include the Services
                 .ToListAsync();
 
             ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
@@ -109,6 +110,7 @@ namespace Athrna.Controllers
                 .Include(s => s.CulturalInfo)
                 .Include(s => s.Bookmarks)
                 .Include(s => s.Ratings)
+                .Include(s => s.Services) // Include the Services
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (site == null)
@@ -490,6 +492,7 @@ namespace Athrna.Controllers
                     .Include(s => s.Bookmarks)
                     .Include(s => s.Ratings)
                     .Include(s => s.CulturalInfo)
+                    .Include(s => s.Services) // Include the Services
                     .FirstOrDefaultAsync(s => s.Id == id);
 
                 if (site == null)
@@ -516,7 +519,18 @@ namespace Athrna.Controllers
                 return Unauthorized(3);
             try
             {
-                // First delete related cultural info
+                // First delete related services
+                var services = await _context.Service
+                    .Where(s => s.SiteId == id)
+                    .ToListAsync();
+
+                if (services.Any())
+                {
+                    _context.Service.RemoveRange(services);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Then delete related cultural info
                 var culturalInfo = await _context.CulturalInfo
                     .FirstOrDefaultAsync(c => c.SiteId == id);
 
@@ -1083,6 +1097,107 @@ namespace Athrna.Controllers
                 TempData["ErrorMessage"] = "An error occurred while deleting the rating. Please try again.";
                 return RedirectToAction(nameof(Ratings));
             }
+        }
+        // GET: Admin/SiteServices/5
+        public async Task<IActionResult> SiteServices(int id)
+        {
+            var site = await _context.Site
+                .Include(s => s.Services)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (site == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.AdminRoleLevel = await GetCurrentAdminRoleLevel();
+            return View(site);
+        }
+
+        // POST: Admin/AddService
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddService(int siteId, string name, string description, string iconName)
+        {
+            // Check if the user has required role level (3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(description) || string.IsNullOrEmpty(iconName))
+            {
+                TempData["ErrorMessage"] = "All fields are required";
+                return RedirectToAction("SiteServices", new { id = siteId });
+            }
+
+            var service = new Service
+            {
+                SiteId = siteId,
+                Name = name,
+                Description = description,
+                IconName = iconName
+            };
+
+            _context.Service.Add(service);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Service added successfully";
+            return RedirectToAction("SiteServices", new { id = siteId });
+        }
+
+        // POST: Admin/EditService
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditService(int id, string name, string description, string iconName)
+        {
+            // Check if the user has required role level (3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+
+            var service = await _context.Service.FindAsync(id);
+            if (service == null)
+            {
+                return NotFound();
+            }
+
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(description) || string.IsNullOrEmpty(iconName))
+            {
+                TempData["ErrorMessage"] = "All fields are required";
+                return RedirectToAction("SiteServices", new { id = service.SiteId });
+            }
+
+            service.Name = name;
+            service.Description = description;
+            service.IconName = iconName;
+
+            _context.Update(service);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Service updated successfully";
+            return RedirectToAction("SiteServices", new { id = service.SiteId });
+        }
+
+        // POST: Admin/DeleteService/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteService(int id)
+        {
+            // Check if the user has required role level (3 or higher)
+            if (!await HasRequiredRoleLevel(3))
+                return Unauthorized(3);
+
+            var service = await _context.Service.FindAsync(id);
+            if (service == null)
+            {
+                return NotFound();
+            }
+
+            int siteId = service.SiteId;
+
+            _context.Service.Remove(service);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Service deleted successfully";
+            return RedirectToAction("SiteServices", new { id = siteId });
         }
 
         // POST: Admin/BanUser/5

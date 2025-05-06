@@ -73,6 +73,7 @@ namespace Athrna.Controllers
                 .Include(s => s.CulturalInfo)
                 .Include(s => s.Ratings)
                     .ThenInclude(r => r.Client)
+                .Include(s => s.Services) // Include the Services
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (site == null)
@@ -113,7 +114,6 @@ namespace Athrna.Controllers
 
             return View(site);
         }
-
         // POST: City/Bookmark/5
         [HttpPost]
         [ValidateAntiForgeryToken]

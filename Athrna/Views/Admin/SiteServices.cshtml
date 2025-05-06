@@ -1,0 +1,332 @@
+﻿@model Athrna.Models.Site
+
+@{
+    ViewData["Title"] = "Manage Site Services";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <h6 class="mb-0">Manage Services for @Model.Name</h6>
+                        <a asp-action="EditSite" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm ms-auto me-2">
+                            <i class="bi bi-arrow-left"></i> Back to Site
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            @if (!string.IsNullOrEmpty(Model.ImagePath))
+                            {
+                                <img src="@Model.ImagePath" alt="@Model.Name" class="img-fluid rounded" style="max-height: 200px;">
+                            }
+                            else
+                            {
+                                <img src="/api/placeholder/400/300" alt="@Model.Name" class="img-fluid rounded" style="max-height: 200px;">
+                            }
+                        </div>
+                        <div class="col-md-8">
+                            <h3>@Model.Name</h3>
+                            <p><strong>City:</strong> @Model.City?.Name</p>
+                            <p><strong>Type:</strong> @Model.SiteType</p>
+                        </div>
+                    </div>
+
+                    <!-- Add New Service Form -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Add New Service</h6>
+                        </div>
+                        <div class="card-body">
+                            <form asp-action="AddService" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="siteId" value="@Model.Id" />
+                                <input type="hidden" name="AdminRoleLevel" value="@ViewBag.AdminRoleLevel" />
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label for="name" class="form-label">Service Name</label>
+                                            <input type="text" class="form-control" id="name" name="name" required maxlength="100">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label for="iconName" class="form-label">Icon</label>
+                                            <select class="form-select" id="iconName" name="iconName" required>
+                                                <option value="">-- Select Icon --</option>
+                                                <option value="bi-p-circle-fill">Parking</option>
+                                                <option value="bi-info-circle-fill">Information</option>
+                                                <option value="bi-cup-hot-fill">Café</option>
+                                                <option value="bi-shop">Gift Shop</option>
+                                                <option value="bi-wifi">Wi-Fi</option>
+                                                <option value="bi-universal-access">Accessibility</option>
+                                                <option value="bi-camera-fill">Photography</option>
+                                                <option value="bi-credit-card">Payment</option>
+                                                <option value="bi-ticket-perforated">Tickets</option>
+                                                <option value="bi-signpost-2">Guided Tours</option>
+                                                <option value="bi-translate">Translation</option>
+                                                <option value="bi-bicycle">Rentals</option>
+                                                <option value="bi-car-front">Parking</option>
+                                                <option value="bi-bus-front">Transportation</option>
+                                                <option value="bi-puzzle">Kids Area</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label for="description" class="form-label">Description</label>
+                                            <input type="text" class="form-control" id="description" name="description" required maxlength="255">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary">Add Service</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Services List -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Current Services</h6>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.Services != null && Model.Services.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table align-items-center mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Icon</th>
+                                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
+                                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Description</th>
+                                                <th class="text-secondary opacity-7">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var service in Model.Services)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex px-3 py-1">
+                                                            <div class="d-flex flex-column justify-content-center">
+                                                                <i class="@service.IconName" style="font-size: 24px;"></i>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex px-3 py-1">
+                                                            <div class="d-flex flex-column justify-content-center">
+                                                                <h6 class="mb-0 text-sm">@service.Name</h6>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <p class="text-sm text-secondary mb-0">@service.Description</p>
+                                                    </td>
+                                                    <td class="align-middle">
+                                                        <div class="d-flex gap-2">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editServiceModal-@service.Id">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteServiceModal-@service.Id">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                <!-- Edit Service Modal -->
+                                                <div class="modal fade" id="editServiceModal-@service.Id" tabindex="-1" aria-labelledby="editServiceModalLabel-@service.Id" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editServiceModalLabel-@service.Id">Edit Service</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <form asp-action="EditService" method="post">
+                                                                @Html.AntiForgeryToken()
+                                                                <div class="modal-body">
+                                                                    <input type="hidden" name="id" value="@service.Id" />
+                                                                    <input type="hidden" name="AdminRoleLevel" value="@ViewBag.AdminRoleLevel" />
+
+                                                                    <div class="form-group mb-3">
+                                                                        <label for="edit-name-@service.Id" class="form-label">Service Name</label>
+                                                                        <input type="text" class="form-control" id="edit-name-@service.Id" name="name" value="@service.Name" required maxlength="100">
+                                                                    </div>
+
+                                                                    <div class="form-group mb-3">
+                                                                        <label for="edit-iconName-@service.Id" class="form-label">Icon</label>
+                                                                        <select class="form-select" id="edit-iconName-@service.Id" name="iconName" required>
+                                                                            <option value="">-- Select Icon --</option>
+                                                                            <option value="bi-p-circle-fill" selected="@(service.IconName == "bi-p-circle-fill")">Parking</option>
+                                                                            <option value="bi-info-circle-fill" selected="@(service.IconName == "bi-info-circle-fill")">Information</option>
+                                                                            <option value="bi-cup-hot-fill" selected="@(service.IconName == "bi-cup-hot-fill")">Café</option>
+                                                                            <option value="bi-shop" selected="@(service.IconName == "bi-shop")">Gift Shop</option>
+                                                                            <option value="bi-wifi" selected="@(service.IconName == "bi-wifi")">Wi-Fi</option>
+                                                                            <option value="bi-universal-access" selected="@(service.IconName == "bi-universal-access")">Accessibility</option>
+                                                                            <option value="bi-camera-fill" selected="@(service.IconName == "bi-camera-fill")">Photography</option>
+                                                                            <option value="bi-credit-card" selected="@(service.IconName == "bi-credit-card")">Payment</option>
+                                                                            <option value="bi-ticket-perforated" selected="@(service.IconName == "bi-ticket-perforated")">Tickets</option>
+                                                                            <option value="bi-signpost-2" selected="@(service.IconName == "bi-signpost-2")">Guided Tours</option>
+                                                                            <option value="bi-translate" selected="@(service.IconName == "bi-translate")">Translation</option>
+                                                                            <option value="bi-bicycle" selected="@(service.IconName == "bi-bicycle")">Rentals</option>
+                                                                            <option value="bi-car-front" selected="@(service.IconName == "bi-car-front")">Parking</option>
+                                                                            <option value="bi-bus-front" selected="@(service.IconName == "bi-bus-front")">Transportation</option>
+                                                                            <option value="bi-puzzle" selected="@(service.IconName == "bi-puzzle")">Kids Area</option>
+                                                                        </select>
+                                                                    </div>
+
+                                                                    <div class="form-group mb-3">
+                                                                        <label for="edit-description-@service.Id" class="form-label">Description</label>
+                                                                        <input type="text" class="form-control" id="edit-description-@service.Id" name="description" value="@service.Description" required maxlength="255">
+                                                                    </div>
+
+                                                                    <div class="icon-preview text-center">
+                                                                        <p>Icon Preview:</p>
+                                                                        <i class="@service.IconName" style="font-size: 40px;"></i>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Delete Service Modal -->
+                                                <div class="modal fade" id="deleteServiceModal-@service.Id" tabindex="-1" aria-labelledby="deleteServiceModalLabel-@service.Id" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="deleteServiceModalLabel-@service.Id">Delete Service</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <p>Are you sure you want to delete the service <strong>@service.Name</strong>?</p>
+                                                                <p class="text-danger">This action cannot be undone.</p>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                <form asp-action="DeleteService" method="post">
+                                                                    @Html.AntiForgeryToken()
+                                                                    <input type="hidden" name="id" value="@service.Id" />
+                                                                    <input type="hidden" name="AdminRoleLevel" value="@ViewBag.AdminRoleLevel" />
+                                                                    <button type="submit" class="btn btn-danger">Delete Service</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <p class="mb-0">No services have been added for this site yet. Use the form above to add services.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Icon preview functionality for Add form
+            const iconSelect = document.getElementById('iconName');
+            if (iconSelect) {
+                iconSelect.addEventListener('change', function() {
+                    const iconPreview = document.getElementById('iconPreview');
+                    if (iconPreview) {
+                        iconPreview.className = this.value;
+                    }
+                });
+            }
+
+            // Icon preview functionality for Edit forms
+            @foreach (var service in Model.Services ?? new List<Service>())
+            {
+                <text>
+                const editIconSelect@(service.Id) = document.getElementById('edit-iconName-@service.Id');
+                if (editIconSelect@(service.Id)) {
+                    editIconSelect@(service.Id).addEventListener('change', function() {
+                        // Update the icon class in the preview
+                        const iconPreviewElements = document.querySelectorAll('#editServiceModal-@service.Id .icon-preview i');
+                        iconPreviewElements.forEach(function(el) {
+                            // Remove all existing bi- classes
+                            el.classList.forEach(cls => {
+                                if (cls.startsWith('bi-')) {
+                                    el.classList.remove(cls);
+                                }
+                            });
+                            // Add the new class
+                            el.classList.add(this.value);
+                        });
+                    });
+                }
+                </text>
+            }
+
+            // Show toasts for success/error messages
+            const successMessage = '@TempData["SuccessMessage"]';
+            const errorMessage = '@TempData["ErrorMessage"]';
+            
+            if (successMessage && successMessage !== '') {
+                // Create and show success toast
+                const toast = document.createElement('div');
+                toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-3';
+                toast.setAttribute('role', 'alert');
+                toast.setAttribute('aria-live', 'assertive');
+                toast.setAttribute('aria-atomic', 'true');
+                toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${successMessage}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
+            }
+            
+            if (errorMessage && errorMessage !== '') {
+                // Create and show error toast
+                const toast = document.createElement('div');
+                toast.className = 'toast align-items-center text-white bg-danger border-0 position-fixed bottom-0 end-0 m-3';
+                toast.setAttribute('role', 'alert');
+                toast.setAttribute('aria-live', 'assertive');
+                toast.setAttribute('aria-atomic', 'true');
+                toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${errorMessage}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
+            }
+        });
+    </script>
+}

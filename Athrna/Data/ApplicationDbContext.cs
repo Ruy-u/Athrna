@@ -23,6 +23,7 @@ namespace Athrna.Data
         public DbSet<Booking> Booking { get; set; }
         public DbSet<GuideAvailability> GuideAvailabilities { get; set; }
         public DbSet<Translation> Translation { get; set; }
+        public DbSet<Service> Service { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -66,6 +67,7 @@ namespace Athrna.Data
             modelBuilder.Entity<Message>().ToTable("Message");
             modelBuilder.Entity<Booking>().ToTable("Booking");
             modelBuilder.Entity<GuideAvailability>().ToTable("GuideAvailability");
+            modelBuilder.Entity<Service>().ToTable("Service");
 
             modelBuilder.Entity<Translation>()
                 .HasIndex(t => new { t.SourceLanguage, t.TargetLanguage, t.TextHash })
@@ -86,6 +88,11 @@ namespace Athrna.Data
                 .HasForeignKey("GuideId")
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
+
+            modelBuilder.Entity<Service>()
+                .HasOne(s => s.Site)
+                .WithMany(s => s.Services)
+                .HasForeignKey(s => s.SiteId);
         }
     }
 }
