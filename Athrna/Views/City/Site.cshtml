@@ -27,12 +27,9 @@
         <img src="/api/placeholder/1200/400" alt="@Model.Name" class="site-hero-img">
     }
     <div class="container">
-        <h1 class="site-title" data-translate="site-title">@Model.Name</h1>
+        <h1 class="site-title" data-translate="@Model.Name">@Model.Name</h1>
         <div class="site-meta">
-            <span class="site-type" data-translate="site-type">@Model.SiteType</span>
-            <span class="site-location">
-                <i class="bi bi-geo-alt"></i> @Model.Location
-            </span>
+            <span class="site-type" data-translate="@Model.SiteType">@Model.SiteType</span>
             @if (Model.CulturalInfo != null)
             {
                 <span class="site-year">
@@ -325,7 +322,7 @@
 
                             <div class="form-group mb-3">
                                 <label for="review" data-translate="Your Review (optional)">Your Review (optional)</label>
-                                <textarea id="review" name="review" class="form-control" rows="4" placeholder="Share your experience..."></textarea>
+                                <textarea id="review" name="review" class="form-control" rows="4"></textarea>
                             </div>
 
                             <button type="submit" class="btn btn-primary" data-translate="Submit Review">Submit Review</button>
@@ -363,28 +360,6 @@
                             <i class="bi bi-bookmark"></i> <span data-translate="Bookmark this Site">Bookmark this Site</span>
                         </button>
                     }
-                </div>
-
-                <!-- Opening Hours -->
-                <div class="sidebar-widget">
-                    <h4 data-translate="Opening Hours">Opening Hours</h4>
-                    <ul class="hours-list">
-                        <li><span>Sunday - Thursday:</span> <span>9:00 AM - 5:00 PM</span></li>
-                        <li><span>Friday:</span> <span>2:00 PM - 5:00 PM</span></li>
-                        <li><span>Saturday:</span> <span>9:00 AM - 5:00 PM</span></li>
-                    </ul>
-                </div>
-
-                <!-- Admission Fees -->
-                <div class="sidebar-widget">
-                    <h4 data-translate="Admission Fees">Admission Fees</h4>
-                    <ul class="fees-list">
-                        <li><span data-translate="Adults">Adults</span>: <span>50 SAR</span></li>
-                        <li><span data-translate="Children (under 12)">Children (under 12)</span>: <span>25 SAR</span></li>
-                        <li><span data-translate="Students">Students</span>: <span>35 SAR</span></li>
-                        <li><span data-translate="Seniors (65+)">Seniors (65+)</span>: <span>35 SAR</span></li>
-                        <li><span data-translate="Saudi Nationals">Saudi Nationals</span>: <span data-translate="Free">Free</span></li>
-                    </ul>
                 </div>
 
                 <!-- City Information -->
