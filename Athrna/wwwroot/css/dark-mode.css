@@ -164,7 +164,8 @@
     }
 
     /* Guide profiles */
-    [data-theme="dark"] .guide-profile {
+    [data-theme="dark"] .guide-profile,
+    [data-theme="dark"] alert alert-info {
         background-color: var(--secondary-bg) !important;
     }
 
