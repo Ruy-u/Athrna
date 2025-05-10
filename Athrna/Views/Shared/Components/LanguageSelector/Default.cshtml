@@ -17,7 +17,8 @@
                 <li>
                     <a class="dropdown-item @(language.Code == Model.CurrentLanguage ? "active" : "")"
                        href="#"
-                       data-language-code="@language.Code">
+                       data-language-code="@language.Code"
+                       data-is-rtl="@language.IsRtl.ToString().ToLower()">
                         <span class="language-flag @language.Code">@language.Name</span>
                     </a>
                 </li>
@@ -28,74 +29,65 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Get the current language from cookie or URL parameter
-        let currentLanguage = getCurrentLanguage();
+        // Wait until all elements are rendered
+        setTimeout(() => {
+            let currentLanguage = getCurrentLanguage();
+            updateLanguageSelection(currentLanguage);
 
-        // Update the dropdown button and menu items to show the current language
-        updateLanguageSelection(currentLanguage);
+            const isRtl = isCurrentLanguageRtl();
+            applyRtlTextHandling(isRtl);
+        }, 0);
 
-        // Set up event listeners for language selection
-        const languageItems = document.querySelectorAll('[data-language-code]');
-        if (languageItems) {
-            languageItems.forEach(item => {
-                item.addEventListener('click', function (e) {
-                    e.preventDefault();
+        // Set up event listeners for language change
+        document.querySelectorAll('[data-language-code]').forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
 
-                    // Get the selected language
-                    const selectedLanguage = this.getAttribute('data-language-code');
+                const selectedLanguage = this.getAttribute('data-language-code');
+                const isRtl = this.getAttribute('data-is-rtl') === 'true';
 
-                    // Update the dropdown button and menu items immediately
-                    updateLanguageSelection(selectedLanguage);
+                updateLanguageSelection(selectedLanguage);
+                sessionStorage.setItem('Athrna_IsRtl', isRtl);
 
-                    // Construct the new URL with the language parameter
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('lang', selectedLanguage);
-
-                    // Reload the page
-                    window.location.href = url.toString();
-                });
+                const url = new URL(window.location.href);
+                url.searchParams.set('lang', selectedLanguage);
+                window.location.href = url.toString();
             });
-        }
+        });
 
-        // Function to get current language
         function getCurrentLanguage() {
-            // First check URL parameter
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('lang')) {
-                return urlParams.get('lang');
-            }
+            if (urlParams.has('lang')) return urlParams.get('lang');
 
-            // Then check cookie
             const cookies = document.cookie.split(';');
             for (let cookie of cookies) {
                 const [name, value] = cookie.trim().split('=');
-                if (name === 'Athrna_Language') {
-                    return value;
-                }
+                if (name === 'Athrna_Language') return value;
             }
 
-            // Default to English
             return 'en';
         }
 
-        // Function to update the dropdown button and menu items
+        function isCurrentLanguageRtl() {
+            const currentLang = getCurrentLanguage();
+            const langItem = document.querySelector(`[data-language-code="${currentLang}"]`);
+            if (langItem) {
+                return langItem.getAttribute('data-is-rtl') === 'true';
+            }
+
+            return sessionStorage.getItem('Athrna_IsRtl') === 'true';
+        }
+
         function updateLanguageSelection(language) {
-            // Update dropdown button
             const languageButton = document.querySelector('.language-select-btn');
             if (!languageButton) return;
 
-            // Find language info
             let languageText = '';
             let languageCode = '';
 
-            // Update dropdown menu items (add 'active' class to selected item)
             document.querySelectorAll('[data-language-code]').forEach(item => {
                 const itemLanguage = item.getAttribute('data-language-code');
-
-                // Remove 'active' class from all items
                 item.classList.remove('active');
-
-                // Add 'active' class to the selected language
                 if (itemLanguage === language) {
                     item.classList.add('active');
                     languageText = item.querySelector('.language-flag').textContent;
@@ -103,13 +95,28 @@
                 }
             });
 
-            // Update button content
             if (languageText && languageCode) {
                 languageButton.innerHTML = '';
                 const span = document.createElement('span');
                 span.className = `language-flag ${languageCode}`;
                 span.textContent = languageText;
                 languageButton.appendChild(span);
+            }
+        }
+
+        function applyRtlTextHandling(isRtl) {
+            if (isRtl) {
+                document.body.classList.add('rtl-text');
+                if (!document.querySelector('link[href="/css/rtl-text.css"]')) {
+                    const rtlTextCss = document.createElement('link');
+                    rtlTextCss.rel = 'stylesheet';
+                    rtlTextCss.href = '/css/rtl-text.css';
+                    document.head.appendChild(rtlTextCss);
+                }
+            } else {
+                document.body.classList.remove('rtl-text');
+                const rtlTextCss = document.querySelector('link[href="/css/rtl-text.css"]');
+                if (rtlTextCss) rtlTextCss.remove();
             }
         }
     });

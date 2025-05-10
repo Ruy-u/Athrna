@@ -1,218 +1,146 @@
-﻿/* RTL Support for Arabic language */
+﻿/* RTL Specific Styles for Athrna */
 
-/* Base RTL layout adjustments */
-html[dir="rtl"] {
-    text-align: right;
-}
 
-    /* Header RTL adjustments */
-    html[dir="rtl"] .logo {
-        margin-left: 0;
+    /* Site Hero section */
+    .rtl-layout .site-meta span {
         margin-right: 0;
+        margin-left: 15px;
     }
 
-        html[dir="rtl"] .logo img {
-            margin-right: 0;
-            margin-left: 15px;
+    .rtl-layout .site-meta i {
+        margin-right: 0;
+        margin-left: 5px;
+    }
+
+    /* Site descriptions */
+    .rtl-layout .site-description-section h2::after {
+        left: auto;
+        right: 0;
+    }
+
+    /* Sidebar */
+    .rtl-layout .sidebar-widget h4::after {
+        left: auto;
+        right: 0;
+    }
+
+    /* Navigation components */
+    .rtl-layout .breadcrumb-item + .breadcrumb-item::before {
+        float: right;
+        padding-right: 0;
+        padding-left: 0.5rem;
+    }
+
+    /* Forms */
+    .rtl-layout .form-check {
+        padding-left: 0;
+        padding-right: 1.5em;
+    }
+
+        .rtl-layout .form-check .form-check-input {
+            float: right;
+            margin-left: 0;
+            margin-right: -1.5em;
         }
 
-    html[dir="rtl"] .search-bar {
+    /* Icons and badges */
+    .rtl-layout .bi {
         margin-right: 0;
-        margin-left: 20px;
+        margin-left: 5px;
     }
 
-    html[dir="rtl"] .header-actions {
+    .rtl-layout .messages-badge {
         margin-left: 0;
-        margin-right: auto;
+        margin-right: 5px;
     }
 
-    html[dir="rtl"] .user-avatar {
-        margin-right: 0;
-        margin-left: 10px;
-    }
-
-    /* Card RTL adjustments */
-    html[dir="rtl"] .card-content {
-        text-align: right;
-    }
-
-    /* Map RTL adjustments */
-    html[dir="rtl"] .site-info {
+    /* Dashboard */
+    .rtl-layout .dashboard-widget .widget-header h2::after {
         left: auto;
-        right: 20px;
-        text-align: right;
-    }
-
-    /* Sidebar RTL adjustments */
-    html[dir="rtl"] .sidebar-widget {
-        text-align: right;
-    }
-
-    html[dir="rtl"] .nearby-sites li,
-    html[dir="rtl"] .hours-list li,
-    html[dir="rtl"] .fees-list li {
-        flex-direction: row-reverse;
-    }
-
-    /* Form RTL adjustments */
-    html[dir="rtl"] .form-label {
-        text-align: right;
-    }
-
-    html[dir="rtl"] .form-check {
-        padding-right: 1.5rem;
-        padding-left: 0;
-    }
-
-    html[dir="rtl"] .form-check-input {
-        margin-right: -1.5rem;
-        margin-left: 0;
-    }
-
-    /* Bootstrap overrides for RTL */
-    html[dir="rtl"] .ms-auto {
-        margin-right: auto !important;
-        margin-left: 0 !important;
-    }
-
-    html[dir="rtl"] .me-auto {
-        margin-left: auto !important;
-        margin-right: 0 !important;
-    }
-
-    html[dir="rtl"] .ms-1 {
-        margin-right: 0.25rem !important;
-        margin-left: 0 !important;
-    }
-
-    html[dir="rtl"] .ms-2 {
-        margin-right: 0.5rem !important;
-        margin-left: 0 !important;
-    }
-
-    html[dir="rtl"] .ms-3 {
-        margin-right: 1rem !important;
-        margin-left: 0 !important;
-    }
-
-    html[dir="rtl"] .me-1 {
-        margin-left: 0.25rem !important;
-        margin-right: 0 !important;
-    }
-
-    html[dir="rtl"] .me-2 {
-        margin-left: 0.5rem !important;
-        margin-right: 0 !important;
-    }
-
-    html[dir="rtl"] .me-3 {
-        margin-left: 1rem !important;
-        margin-right: 0 !important;
-    }
-
-    html[dir="rtl"] .ps-2 {
-        padding-right: 0.5rem !important;
-        padding-left: 0 !important;
-    }
-
-    html[dir="rtl"] .pe-2 {
-        padding-left: 0.5rem !important;
-        padding-right: 0 !important;
-    }
-
-    /* Modal RTL adjustments */
-    html[dir="rtl"] .modal-header .btn-close {
-        margin: calc(-.5 * var(--bs-modal-header-padding-y)) auto calc(-.5 * var(--bs-modal-header-padding-y)) calc(-.5 * var(--bs-modal-header-padding-x));
-    }
-
-    /* Input groups RTL adjustments */
-    html[dir="rtl"] .input-group > .form-control:not(:last-child),
-    html[dir="rtl"] .input-group > .form-select:not(:last-child) {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-        border-top-right-radius: 0.375rem;
-        border-bottom-right-radius: 0.375rem;
-    }
-
-    html[dir="rtl"] .input-group > .input-group-text:not(:last-child) {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-        border-top-right-radius: 0.375rem;
-        border-bottom-right-radius: 0.375rem;
-    }
-
-    html[dir="rtl"] .input-group > .form-control:not(:first-child),
-    html[dir="rtl"] .input-group > .form-select:not(:first-child) {
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-        border-top-left-radius: 0.375rem;
-        border-bottom-left-radius: 0.375rem;
-    }
-
-    html[dir="rtl"] .input-group > .input-group-text:not(:first-child) {
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-        border-top-left-radius: 0.375rem;
-        border-bottom-left-radius: 0.375rem;
-    }
-
-    /* Specific components RTL adjustments */
-    html[dir="rtl"] .rating-stars {
-        direction: ltr; /* Keep rating stars direction LTR for consistency */
-        display: inline-block;
-    }
-
-    html[dir="rtl"] .dashboard-widget .widget-header {
-        text-align: right;
-    }
-
-    html[dir="rtl"] .stat-card {
-        text-align: right;
-    }
-
-    /* Dropdown menu RTL adjustments */
-    html[dir="rtl"] .dropdown-menu {
-        text-align: right;
-    }
-
-    html[dir="rtl"] .dropdown-item {
-        text-align: right;
-    }
-
-    html[dir="rtl"] .dropdown-menu-end {
-        right: auto;
-        left: 0;
-    }
-
-    /* Admin dashboard RTL adjustments */
-    html[dir="rtl"] #sidebar {
         right: 0;
-        left: auto;
     }
 
-    html[dir="rtl"] #content {
-        right: auto;
-        left: 0;
+    /* Modal dialogs */
+    .rtl-layout .modal-header .btn-close {
+        margin: -0.5rem auto -0.5rem -0.5rem;
     }
 
-    html[dir="rtl"] .admin-user-info {
-        margin-right: auto;
-        margin-left: 0;
+    /* Lists */
+    .rtl-layout ul, .rtl-layout ol {
+        padding-left: 0;
+        padding-right: 2rem;
     }
 
-/* Mobile responsive RTL adjustments */
-@media (max-width: 768px) {
-    html[dir="rtl"] .mobile-menu-toggle {
+    /* Rating stars in reviews */
+    .rtl-layout .rating-bar .rating-label {
+        text-align: right;
+    }
+
+    .rtl-layout .rating-bar .rating-count {
+        text-align: left;
+    }
+
+    /* User dashboard */
+    .rtl-layout .stat-icon {
         margin-right: 0;
         margin-left: 1rem;
     }
 
-    html[dir="rtl"] .search-toggle {
-        margin-left: 0;
-        margin-right: auto;
+    /* Footer */
+    .rtl-layout .footer-logo-img {
+        margin-right: 0;
+        margin-left: 10px;
     }
 
-    html[dir="rtl"] .site-meta {
-        align-items: flex-end;
+    .rtl-layout .footer-contact li i {
+        margin-right: 0;
+        margin-left: 10px;
     }
-}
+
+    /* Fix any Bootstrap float utilities */
+    .rtl-layout .float-start {
+        float: right !important;
+    }
+
+    .rtl-layout .float-end {
+        float: left !important;
+    }
+
+    /* Fix text alignments */
+    .rtl-layout .text-start {
+        text-align: right !important;
+    }
+
+    .rtl-layout .text-end {
+        text-align: left !important;
+    }
+
+    /* Adjust dropdown menus */
+    .rtl-layout .dropdown-menu {
+        text-align: right;
+    }
+
+    .rtl-layout .dropdown-item {
+        text-align: right;
+    }
+
+    /* Adjust input groups */
+    .rtl-layout .input-group > .form-control:not(:last-child),
+    .rtl-layout .input-group > .custom-select:not(:last-child) {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-top-right-radius: 0.25rem;
+        border-bottom-right-radius: 0.25rem;
+    }
+
+    .rtl-layout .input-group > .input-group-append > .btn,
+    .rtl-layout .input-group > .input-group-append > .input-group-text,
+    .rtl-layout .input-group > .input-group-prepend:not(:first-child) > .btn,
+    .rtl-layout .input-group > .input-group-prepend:not(:first-child) > .input-group-text,
+    .rtl-layout .input-group > .input-group-prepend:first-child > .btn:not(:first-child),
+    .rtl-layout .input-group > .input-group-prepend:first-child > .input-group-text:not(:first-child) {
+        border-top-left-radius: 0.25rem;
+        border-bottom-left-radius: 0.25rem;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
