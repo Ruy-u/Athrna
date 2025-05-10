@@ -49,11 +49,6 @@
                             <i class="bi bi-geo-alt me-2"></i> Sites
                         </a>
                     </li>
-                    <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "MapSiteIds" ? "active" : "")">
-                        <a asp-controller="Admin" asp-action="MapSiteIds">
-                            <i class="bi bi-map me-2"></i> Map Site IDs
-                        </a>
-                    </li>
                     <li class="@(ViewContext.RouteData.Values["Action"].ToString() == "Cities" ? "active" : "")">
                         <a asp-controller="Admin" asp-action="Cities">
                             <i class="bi bi-building me-2"></i> Cities

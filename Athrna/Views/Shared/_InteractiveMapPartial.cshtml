@@ -1,30 +1,35 @@
-﻿@model string
-@{
-    string defaultCity = Model ?? "madinah";
+﻿@{
+    // This partial view is for the interactive map on the home page
+    // Save this file at /Views/Shared/_InteractiveMapPartial.cshtml
 }
 
-<!-- Interactive Google Map Component -->
 <section class="interactive-map-section">
     <div class="container">
-        <h2>Interactive Map</h2>
+        <h2>Explore Historical Sites Across Saudi Arabia</h2>
+        <p>Discover the rich cultural heritage through our interactive map</p>
 
         <div class="google-map-container">
-            <!-- Map Canvas -->
-            <div id="googleMap" data-default-city="@defaultCity"></div>
-
-            <!-- City Selector -->
-            <div class="city-selector">
-                <h3>Select City</h3>
-                <div class="city-button-group">
-                    <button type="button" class="city-button @(defaultCity == "madinah" ? "active" : "")" data-city="madinah">Madinah</button>
-                    <button type="button" class="city-button @(defaultCity == "riyadh" ? "active" : "")" data-city="riyadh">Riyadh</button>
-                    <button type="button" class="city-button @(defaultCity == "alula" ? "active" : "")" data-city="alula">AlUla</button>
+            <div id="googleMap">
+                <!-- Map will be loaded here -->
+                <div class="map-loading">
+                    <i class="bi bi-globe"></i>
+                    <span>Loading map...</span>
                 </div>
             </div>
 
-            <!-- Map Legend -->
+            <!-- City selector -->
+            <div class="city-selector">
+                <h3>Select City</h3>
+                <div class="city-button-group">
+                    <button class="city-button" data-city="madinah">Madinah</button>
+                    <button class="city-button" data-city="riyadh">Riyadh</button>
+                    <button class="city-button" data-city="alula">AlUla</button>
+                </div>
+            </div>
+
+            <!-- Map legend -->
             <div class="map-legend">
-                <h3>Legend</h3>
+                <h3>Map Legend</h3>
                 <div class="legend-item">
                     <div class="legend-marker city"></div>
                     <div class="legend-text">City</div>
@@ -37,3 +42,373 @@
         </div>
     </div>
 </section>
+
+<script>
+    // Site data from the database
+    const mapSites = @Html.Raw(Json.Serialize(ViewBag.MapSites ?? new List<object>()));
+    let map;
+    let markers = [];
+    let infoWindow;
+    let activeCity = null;
+
+    // City information with coordinates
+    const cities = {
+        madinah: {
+            name: "Madinah",
+            position: { lat: 24.5246, lng: 39.5692 },
+            zoom: 11,
+            description: "The second holiest city in Islam, home to the Prophet's Mosque."
+        },
+        riyadh: {
+            name: "Riyadh",
+            position: { lat: 24.7136, lng: 46.6753 },
+            zoom: 11,
+            description: "The capital city of Saudi Arabia, blending modernity with history."
+        },
+        alula: {
+            name: "AlUla",
+            position: { lat: 26.6175, lng: 37.9158 },
+            zoom: 10,
+            description: "An archaeological wonder with Hegra, Saudi Arabia's first UNESCO World Heritage site."
+        }
+    };
+
+    /**
+     * Parses location string from database format (e.g., "24.4672° N, 39.6111° E")
+     * to Google Maps compatible format { lat: 24.4672, lng: 39.6111 }
+     */
+    function parseLocationString(locationString) {
+        if (!locationString) return null;
+
+        try {
+            // Try to extract latitude and longitude from the string
+            const latMatch = locationString.match(/([\d.]+)°\s*([NS])/i);
+            const lngMatch = locationString.match(/([\d.]+)°\s*([EW])/i);
+
+            if (latMatch && lngMatch) {
+                // Parse latitude and longitude values
+                let lat = parseFloat(latMatch[1]);
+                let lng = parseFloat(lngMatch[1]);
+
+                // Apply sign based on direction
+                if (latMatch[2].toUpperCase() === 'S') lat = -lat;
+                if (lngMatch[2].toUpperCase() === 'W') lng = -lng;
+
+                return { lat, lng };
+            }
+
+            // Alternative format: simple "lat, lng" format
+            const coordMatch = locationString.match(/([\d.-]+)\s*,\s*([\d.-]+)/);
+            if (coordMatch) {
+                return {
+                    lat: parseFloat(coordMatch[1]),
+                    lng: parseFloat(coordMatch[2])
+                };
+            }
+
+            // Attempt to parse from the database location format
+            const locationParts = locationString.split(',');
+            if (locationParts.length >= 2) {
+                let latStr = locationParts[0].trim().replace('°', '').replace('N', '').replace('S', '');
+                let lngStr = locationParts[1].trim().replace('°', '').replace('E', '').replace('W', '');
+
+                latStr = latStr.replace(/[^\d.-]/g, '');
+                lngStr = lngStr.replace(/[^\d.-]/g, '');
+
+                let lat = parseFloat(latStr);
+                let lng = parseFloat(lngStr);
+
+                // Handle southern and western hemispheres
+                if (locationString.includes('S')) lat = -Math.abs(lat);
+                if (locationString.includes('W')) lng = -Math.abs(lng);
+
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    return { lat, lng };
+                }
+            }
+        } catch (error) {
+            console.error("Error parsing location string:", error);
+        }
+
+        return null;
+    }
+
+    // Initialize map when Google Maps script is loaded
+    function initMap() {
+        if (!document.getElementById('googleMap')) {
+            console.error("Google Map container not found");
+            return;
+        }
+
+        try {
+            console.log("Initializing map");
+
+            // Create a map centered on Saudi Arabia
+            map = new google.maps.Map(document.getElementById('googleMap'), {
+                center: { lat: 24.7136, lng: 42.3528 }, // Center on Saudi Arabia
+                zoom: 6,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                mapTypeControl: true,
+                mapTypeControlOptions: {
+                    style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+                },
+                fullscreenControl: true,
+                streetViewControl: false,
+                styles: [
+                    {
+                        "featureType": "administrative",
+                        "elementType": "geometry",
+                        "stylers": [
+                            {
+                                "visibility": "off"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "poi",
+                        "stylers": [
+                            {
+                                "visibility": "off"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "transit",
+                        "stylers": [
+                            {
+                                "visibility": "off"
+                            }
+                        ]
+                    }
+                ]
+            });
+
+            // Create an info window to share between markers
+            infoWindow = new google.maps.InfoWindow();
+
+            // Add city markers
+            addCityMarkers();
+
+            // Add all site markers from the database
+            addAllSiteMarkers();
+
+            // Add event listeners for city buttons
+            const cityButtons = document.querySelectorAll('.city-button');
+            cityButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const city = this.getAttribute('data-city');
+                    focusCity(city);
+                });
+            });
+
+            console.log("Map initialization complete");
+        } catch (error) {
+            console.error("Error initializing map:", error);
+            const mapContainer = document.getElementById('googleMap');
+            if (mapContainer) {
+                mapContainer.innerHTML = '<div class="map-error">Error initializing map: ' + error.message + '</div>';
+            }
+        }
+    }
+
+    /**
+     * Adds city markers to the map
+     */
+    function addCityMarkers() {
+        for (const [cityId, city] of Object.entries(cities)) {
+            try {
+                const marker = new google.maps.Marker({
+                    position: city.position,
+                    map: map,
+                    title: city.name,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 10,
+                        fillColor: "#1a3b29",
+                        fillOpacity: 0.8,
+                        strokeWeight: 2,
+                        strokeColor: "#ffffff"
+                    },
+                    cityId: cityId
+                });
+
+                // Add click event to focus on the city
+                marker.addListener("click", () => {
+                    focusCity(cityId);
+                });
+
+                // Add mouseover event to show city info
+                marker.addListener("mouseover", () => {
+                    const content = `
+                        <div class="map-info-window">
+                            <h3>${city.name}</h3>
+                            <p>${city.description}</p>
+                            <a href="/City/Explore/${cityId.toLowerCase()}" class="btn btn-primary btn-sm">Explore ${city.name}</a>
+                        </div>
+                    `;
+                    infoWindow.setContent(content);
+                    infoWindow.open(map, marker);
+                });
+
+                markers.push(marker);
+            } catch (error) {
+                console.error(`Error adding marker for city ${cityId}:`, error);
+            }
+        }
+    }
+
+    /**
+     * Adds all site markers from the database
+     */
+    function addAllSiteMarkers() {
+        if (!mapSites || mapSites.length === 0) {
+            console.log("No sites available to display on the map");
+            return;
+        }
+
+        console.log(`Adding ${mapSites.length} sites to the map`);
+
+        mapSites.forEach(site => {
+            try {
+                // Parse location string to get coordinates
+                let position = null;
+
+                if (site.location) {
+                    position = parseLocationString(site.location);
+                }
+
+                // Skip if we couldn't parse valid coordinates
+                if (!position) {
+                    console.warn(`Invalid coordinates for site: ${site.name}`);
+                    return;
+                }
+
+                addSiteMarker(site, position);
+            } catch (error) {
+                console.error(`Error adding marker for site ${site?.name}: ${error.message}`);
+            }
+        });
+    }
+
+    /**
+     * Adds a site marker to the map
+     */
+    function addSiteMarker(site, position) {
+        // Create marker
+        const marker = new google.maps.Marker({
+            position: position,
+            map: map,
+            title: site.name,
+            icon: {
+                path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                scale: 5,
+                fillColor: "#f8c15c",
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: "#1a3b29"
+            },
+            animation: google.maps.Animation.DROP,
+            siteId: site.id,
+            cityName: site.cityName
+        });
+
+        // Prepare info window content
+        const culturalInfo = site.culturalInfo ? `<p><strong>Established:</strong> ${site.culturalInfo.establishedDate}</p>` : '';
+
+        const infoContent = `
+            <div class="map-info-window">
+                <div class="site-image">
+                    <img src="${site.imagePath || '/api/placeholder/150/100'}" alt="${site.name}" onerror="this.src='/api/placeholder/150/100'">
+                </div>
+                <div class="site-info">
+                    <h3>${site.name}</h3>
+                    <p>${site.description ? site.description.substring(0, 100) + '...' : ''}</p>
+                    ${culturalInfo}
+                    <a href="/City/Site/${site.id}" class="btn btn-primary btn-sm">View Details</a>
+                </div>
+            </div>
+        `;
+
+        // Add click listener
+        marker.addListener("click", () => {
+            infoWindow.setContent(infoContent);
+            infoWindow.open(map, marker);
+        });
+
+        markers.push(marker);
+    }
+
+    function focusCity(cityId) {
+        if (!cities[cityId]) {
+            console.error(`City not found: ${cityId}`);
+            return;
+        }
+
+        try {
+            console.log(`Focusing on city: ${cityId}`);
+
+            // Set active city
+            activeCity = cityId;
+
+            // Update city buttons active state
+            const cityButtons = document.querySelectorAll('.city-button');
+            cityButtons.forEach(button => {
+                if (button.getAttribute('data-city') === cityId) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+
+            // Pan to city
+            map.panTo(cities[cityId].position);
+            map.setZoom(cities[cityId].zoom);
+
+            // Filter markers to show only this city's sites
+            filterMarkersByCity(cityId);
+
+        } catch (error) {
+            console.error(`Error focusing city ${cityId}:`, error);
+        }
+    }
+    function filterMarkersByCity(cityId) {
+        // Get the city name in lowercase
+        const cityName = cities[cityId].name.toLowerCase();
+
+        // Show all markers first
+        markers.forEach(marker => {
+            marker.setMap(map);
+        });
+
+        // Filter site markers that don't belong to this city
+        markers.forEach(marker => {
+            if (marker.siteId) {
+                // If we have a cityName property on the marker, use it
+                // Otherwise, try to determine from the site's city ID
+                const markerCityName = marker.cityName ? marker.cityName.toLowerCase() : '';
+
+                if (markerCityName !== cityName && markerCityName !== cityId) {
+                    // Hide this marker as it doesn't belong to the selected city
+                    marker.setMap(null);
+                }
+            }
+        });
+    }
+
+    // Make initMap globally available for Google Maps callback
+    window.initMap = initMap;
+
+    // Load Google Maps API
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if Google Maps API is already loaded
+        if (typeof google !== 'undefined' && google.maps) {
+            initMap();
+        } else {
+            const script = document.createElement('script');
+            script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCfmD2cv4d6ML3shp0YER9gpHT5VHdsvpQ&callback=initMap';
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+    });
+</script>

@@ -1,6 +1,8 @@
 using Athrna.Models;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Athrna.Data;
 using System.Diagnostics;
 
 namespace Athrna.Controllers
@@ -8,21 +10,57 @@ namespace Athrna.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context)
         {
             _logger = logger;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            try
+            {
+                // Load all sites from the database to display on the map
+                var sites = await _context.Site
+                    .Include(s => s.City)
+                    .Include(s => s.CulturalInfo)
+                    .Select(s => new
+                    {
+                        s.Id,
+                        s.Name,
+                        s.Location,
+                        s.SiteType,
+                        s.Description,
+                        s.ImagePath,
+                        CityName = s.City.Name,
+                        CityId = s.CityId,
+                        CulturalInfo = s.CulturalInfo != null ? new
+                        {
+                            s.CulturalInfo.EstablishedDate,
+                            s.CulturalInfo.Summary
+                        } : null
+                    })
+                    .ToListAsync();
+
+                // Pass the sites data to the view
+                ViewBag.MapSites = sites;
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading sites for map on homepage");
+                return View();
+            }
         }
 
         public IActionResult Privacy()
         {
             return View();
         }
+
         public IActionResult About()
         {
             return View();
@@ -87,6 +125,7 @@ namespace Athrna.Controllers
                 _ => "An error occurred while processing your request."
             };
         }
+
         [Route("/Home/HandleError")]
         public IActionResult HandleError(int statusCode)
         {
