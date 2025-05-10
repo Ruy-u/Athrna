@@ -392,7 +392,11 @@ function clearSiteMarkers() {
  * Adds historical site markers for a specific city
  * @param {string} cityId - The ID of the city
  */
-function addSiteMarkers(cityId) {
+/**
+ * Updated addSiteMarkers function that can work with database location formats
+ * This should replace or be integrated with the existing addSiteMarkers function
+ */
+function addSiteMarkersFromDatabase(cityId) {
     const sites = historicalSites[cityId];
     if (!sites) {
         console.error(`No sites found for city: ${cityId}`);
@@ -401,8 +405,22 @@ function addSiteMarkers(cityId) {
 
     sites.forEach(site => {
         try {
+            // Parse position from location string if needed
+            let position = site.position;
+
+            if (typeof position === 'string') {
+                // Parse from string format
+                const parsedPosition = parseLocationString(position);
+                if (parsedPosition) {
+                    position = parsedPosition;
+                } else {
+                    console.warn(`Could not parse position for site: ${site.name}`);
+                    return; // Skip this site
+                }
+            }
+
             const marker = new google.maps.Marker({
-                position: site.position,
+                position: position,
                 map: map,
                 title: site.name,
                 icon: {
@@ -420,7 +438,7 @@ function addSiteMarkers(cityId) {
             // Add click event to navigate to site page
             marker.addListener("click", () => {
                 // Use the dbId property for correct navigation
-                window.location.href = `/City/Site/${site.dbId}`;
+                window.location.href = `/City/Site/${site.dbId || site.id}`;
             });
 
             // Add hover event to show site info
@@ -428,13 +446,13 @@ function addSiteMarkers(cityId) {
                 const content = `
                     <div class="map-info-window">
                         <div class="site-image">
-                            <img src="${site.image}" alt="${site.name}" onerror="this.src='/api/placeholder/150/100'">
+                            <img src="${site.image || '/api/placeholder/150/100'}" alt="${site.name}" onerror="this.src='/api/placeholder/150/100'">
                         </div>
                         <div class="site-info">
                             <h3>${site.name}</h3>
-                            <p>${site.description}</p>
-                            <p><strong>Established:</strong> ${site.year}</p>
-                            <a href="/City/Site/${site.dbId}" class="btn btn-primary btn-sm">View Details</a>
+                            <p>${site.description || ''}</p>
+                            <p><strong>Established:</strong> ${site.year || 'Unknown'}</p>
+                            <a href="/City/Site/${site.dbId || site.id}" class="btn btn-primary btn-sm">View Details</a>
                         </div>
                     </div>
                 `;
@@ -464,6 +482,46 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 });
+/**
+ * Parses location string from database format (e.g., "24.4672° N, 39.6111° E")
+ * to Google Maps compatible format { lat: 24.4672, lng: 39.6111 }
+ * 
+ * @param {string} locationString - Location string in the format "24.4672° N, 39.6111° E"
+ * @returns {Object} - Object with lat and lng properties or null if parsing fails
+ */
+function parseLocationString(locationString) {
+    if (!locationString) return null;
 
+    try {
+        // Try to extract latitude and longitude from the string
+        const latMatch = locationString.match(/([\d.]+)°\s*([NS])/i);
+        const lngMatch = locationString.match(/([\d.]+)°\s*([EW])/i);
+
+        if (latMatch && lngMatch) {
+            // Parse latitude and longitude values
+            let lat = parseFloat(latMatch[1]);
+            let lng = parseFloat(lngMatch[1]);
+
+            // Apply sign based on direction
+            if (latMatch[2].toUpperCase() === 'S') lat = -lat;
+            if (lngMatch[2].toUpperCase() === 'W') lng = -lng;
+
+            return { lat, lng };
+        }
+
+        // Alternative format: simple "lat, lng" format
+        const coordMatch = locationString.match(/([\d.-]+)\s*,\s*([\d.-]+)/);
+        if (coordMatch) {
+            return {
+                lat: parseFloat(coordMatch[1]),
+                lng: parseFloat(coordMatch[2])
+            };
+        }
+    } catch (error) {
+        console.error("Error parsing location string:", error);
+    }
+
+    return null;
+}
 // Make initMap globally available for Google Maps callback
 window.initMap = initMap;

@@ -1469,11 +1469,27 @@ namespace Athrna.Controllers
             TempData["ErrorMessage"] = $"You need admin role level {requiredLevel} or higher to access this feature.";
             return RedirectToAction("Index");
         }
-    
-    public async Task<IActionResult> MapSiteIds()
+
+        public async Task<IActionResult> MapSiteIds()
         {
-            var sites = await _context.Site.Include(s => s.City).ToListAsync();
-            return View(sites);
+            try
+            {
+                // Get all sites with their related cities
+                var sites = await _context.Site
+                    .Include(s => s.City)
+                    .OrderBy(s => s.City.Name)
+                    .ThenBy(s => s.Name)
+                    .ToListAsync();
+
+                // Pass to view
+                return View(sites);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading MapSiteIds view");
+                TempData["ErrorMessage"] = "An error occurred while loading the map site IDs.";
+                return RedirectToAction("Index");
+            }
         }
     }
 }
