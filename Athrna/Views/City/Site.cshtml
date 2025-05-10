@@ -27,9 +27,12 @@
         <img src="/api/placeholder/1200/400" alt="@Model.Name" class="site-hero-img">
     }
     <div class="container">
-        <h1 class="site-title" data-translate="@Model.Name">@Model.Name</h1>
+        <h1 class="site-title" data-translate="site-title">@Model.Name</h1>
         <div class="site-meta">
-            <span class="site-type" data-translate="@Model.SiteType">@Model.SiteType</span>
+            <span class="site-type" data-translate="site-type">@Model.SiteType</span>
+            <span class="site-location">
+                <i class="bi bi-geo-alt"></i> @Model.Location
+            </span>
             @if (Model.CulturalInfo != null)
             {
                 <span class="site-year">
@@ -322,7 +325,7 @@
 
                             <div class="form-group mb-3">
                                 <label for="review" data-translate="Your Review (optional)">Your Review (optional)</label>
-                                <textarea id="review" name="review" class="form-control" rows="4"></textarea>
+                                <textarea id="review" name="review" class="form-control" rows="4" placeholder="Share your experience..."></textarea>
                             </div>
 
                             <button type="submit" class="btn btn-primary" data-translate="Submit Review">Submit Review</button>

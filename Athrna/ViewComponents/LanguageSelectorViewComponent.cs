@@ -16,20 +16,14 @@ namespace Athrna.ViewComponents
                 currentLanguage = lang;
             }
 
-            // Define expanded list of languages
+            // Define just 5 core languages
             var languages = new List<LanguageInfo>
             {
                 new LanguageInfo { Code = "en", Name = "English" },
-                new LanguageInfo { Code = "ar", Name = "العربية", IsRtl = true }, // Arabic - with RTL flag
-                new LanguageInfo { Code = "zh", Name = "中文" }, // Chinese
-                new LanguageInfo { Code = "es", Name = "Español" }, // Spanish
-                new LanguageInfo { Code = "hi", Name = "हिन्दी" }, // Hindi
-                new LanguageInfo { Code = "fr", Name = "Français" }, // French
-                new LanguageInfo { Code = "bn", Name = "বাংলা" }, // Bengali
-                new LanguageInfo { Code = "ru", Name = "Русский" }, // Russian
-                new LanguageInfo { Code = "pt", Name = "Português" }, // Portuguese
-                new LanguageInfo { Code = "ja", Name = "日本語" }, // Japanese
-                new LanguageInfo { Code = "de", Name = "Deutsch" }, // German
+                new LanguageInfo { Code = "ar", Name = "العربية" }, // Arabic
+                new LanguageInfo { Code = "fr", Name = "Français" },
+                new LanguageInfo { Code = "de", Name = "Deutsch" },
+                new LanguageInfo { Code = "es", Name = "Español" }
             };
 
             // Create the model
@@ -53,6 +47,5 @@ namespace Athrna.ViewComponents
     {
         public string Code { get; set; }
         public string Name { get; set; }
-        public bool IsRtl { get; set; } = false; // Added RTL flag
     }
 }

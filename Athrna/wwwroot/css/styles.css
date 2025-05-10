@@ -156,11 +156,6 @@ header {
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600'%3E%3Crect width='1200' height='600' fill='%23006c35'/%3E%3Ctext x='50%' y='45%' text-anchor='middle' font-size='120' fill='white' font-family='sans-serif'%3E%D8%A7%D9%84%D9%84%D9%87%20%D8%A3%D9%83%D8%A8%D8%B1%3C/text%3E%3Crect x='300' y='470' width='600' height='30' rx='15' fill='white'/%3E%3C/svg%3E");
     }
 
-    /* Chinese flag */
-    .language-flag.zh::before {
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 600'%3E%3Cpath fill='%23EE1C25' d='M0 0h900v600H0z'/%3E%3Cpath fill='%23FFFF00' d='M100 100l30 93h97l-78 56 30 93-79-57-79 57 30-93-78-56h97l30-93zm250-30l13 40h42l-34 24 13 40-34-25-34 25 13-40-34-24h42l13-40zm70 70l13 40h42l-34 24 13 40-34-25-34 25 13-40-34-24h42l13-40zm-104 80l13 40h42l-34 24 13 40-34-25-34 25 13-40-34-24h42l13-40zm180 0l13 40h42l-34 24 13 40-34-25-34 25 13-40-34-24h42l13-40z'/%3E%3C/svg%3E");
-    }
-
     /* French flag */
     .language-flag.fr::before {
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 600'%3E%3Cpath fill='%23ED2939' d='M0 0h900v600H0z'/%3E%3Cpath fill='%23fff' d='M0 0h600v600H0z'/%3E%3Cpath fill='%23002395' d='M0 0h300v600H0z'/%3E%3C/svg%3E");
@@ -175,32 +170,6 @@ header {
     .language-flag.es::before {
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 750 500'%3E%3Crect width='750' height='500' fill='%23c60b1e'/%3E%3Crect width='750' height='250' fill='%23ffc400' y='125'/%3E%3C/svg%3E");
     }
-
-    /* Hindi flag (India) */
-    .language-flag.hi::before {
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 600'%3E%3Cpath fill='%23FF9933' d='M0 0h900v200H0z'/%3E%3Cpath fill='%23FFFFFF' d='M0 200h900v200H0z'/%3E%3Cpath fill='%23138808' d='M0 400h900v200H0z'/%3E%3Ccircle fill='%23000080' cx='450' cy='300' r='50'/%3E%3Ccircle fill='%23FFFFFF' cx='450' cy='300' r='45'/%3E%3Ccircle fill='%23000080' cx='450' cy='300' r='8.5'/%3E%3Cpath stroke='%23000080' stroke-width='1' d='M450 255a45 45 0 0 1 0 90 45 45 0 0 1 0 -90' fill='none'/%3E%3C/svg%3E");
-    }
-
-    /* Bengali flag (Bangladesh) */
-    .language-flag.bn::before {
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 12'%3E%3Crect width='20' height='12' fill='%23006a4e'/%3E%3Ccircle cx='9' cy='6' r='4' fill='%23f42a41'/%3E%3C/svg%3E");
-    }
-
-    /* Russian flag */
-    .language-flag.ru::before {
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 6'%3E%3Crect width='9' height='6' fill='%23fff'/%3E%3Crect width='9' height='4' fill='%230039a6' y='2'/%3E%3Crect width='9' height='2' fill='%23d52b1e' y='4'/%3E%3C/svg%3E");
-    }
-
-    /* Portuguese flag */
-    .language-flag.pt::before {
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%23f00'/%3E%3Crect width='240' height='400' fill='%23060'/%3E%3Ccircle cx='240' cy='200' r='65' fill='%23ff0' stroke='%23000' stroke-width='5'/%3E%3C/svg%3E");
-    }
-
-    /* Japanese flag */
-    .language-flag.ja::before {
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 600'%3E%3Crect width='900' height='600' fill='%23fff'/%3E%3Ccircle cx='450' cy='300' r='180' fill='%23bc002d'/%3E%3C/svg%3E");
-    }
-
 
 .dropdown-menu {
     min-width: 150px;
