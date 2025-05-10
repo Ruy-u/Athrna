@@ -1,0 +1,448 @@
+﻿@{
+    ViewData["Title"] = "Frequently Asked Questions";
+}
+
+<div class="page-header">
+    <div class="container">
+        <h1>Frequently Asked Questions</h1>
+        <p>Find answers to common questions about Athrna</p>
+    </div>
+</div>
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-lg-10 offset-lg-1">
+            <div class="faq-section">
+                <!-- FAQ Categories Navigation -->
+                <div class="faq-nav">
+                    <ul class="nav nav-pills mb-4" id="faqTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="general-tab" data-bs-toggle="pill" data-bs-target="#general" type="button" role="tab" aria-controls="general" aria-selected="true">General</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="guides-tab" data-bs-toggle="pill" data-bs-target="#guides" type="button" role="tab" aria-controls="guides" aria-selected="false">Guide Services</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="bookings-tab" data-bs-toggle="pill" data-bs-target="#bookings" type="button" role="tab" aria-controls="bookings" aria-selected="false">Bookings</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="forguides-tab" data-bs-toggle="pill" data-bs-target="#forguides" type="button" role="tab" aria-controls="forguides" aria-selected="false">For Guides</button>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- FAQ Content -->
+                <div class="tab-content" id="faqTabContent">
+                    <!-- General Questions -->
+                    <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+                        <div class="faq-category">
+                            <h2>General Questions</h2>
+                            
+                            <div class="accordion" id="generalAccordion">
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header" id="headingOne">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                            What is Athrna?
+                                        </button>
+                                    </h3>
+                                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#generalAccordion">
+                                        <div class="accordion-body">
+                                            Athrna is a platform dedicated to Saudi Arabia's historical and cultural sites. We provide detailed information about important sites across the Kingdom and connect visitors with knowledgeable local guides who can provide personalized tours and insights.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header" id="headingTwo">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                            Do I need to create an account to use Athrna?
+                                        </button>
+                                    </h3>
+                                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#generalAccordion">
+                                        <div class="accordion-body">
+                                            You can browse information about historical sites without an account. However, creating a free account allows you to bookmark sites you're interested in, rate and review places you've visited, and book tours with guides. We recommend creating an account for the full Athrna experience.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header" id="headingThree">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                            Is Athrna available in multiple languages?
+                                        </button>
+                                    </h3>
+                                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#generalAccordion">
+                                        <div class="accordion-body">
+                                            Yes, Athrna is available in multiple languages including English, Arabic, French, German, and Spanish. You can change your language preference using the language selector in the header.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Guide Services Tab -->
+                    <div class="tab-pane fade" id="guides" role="tabpanel" aria-labelledby="guides-tab">
+                        <div class="faq-category">
+                            <h2>Guide Services</h2>
+                            
+                            <div class="accordion" id="guidesAccordion">
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header" id="headingFour">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
+                                            How do I book a tour with a guide?
+                                        </button>
+                                    </h3>
+                                    <div id="collapseFour" class="accordion-collapse collapse show" aria-labelledby="headingFour" data-bs-parent="#guidesAccordion">
+                                        <div class="accordion-body">
+                                            You can book a tour with a guide by visiting a city or site page and selecting a guide from the available options. Alternatively, you can browse all guides on the "Tour Guides" page. Once you've selected a guide, you can choose available time slots and submit a booking request.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header" id="headingFive">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                                            Are all guides certified?
+                                        </button>
+                                    </h3>
+                                    <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#guidesAccordion">
+                                        <div class="accordion-body">
+                                            Yes, all guides on Athrna are licensed by the Saudi Tourism Authority and have undergone proper certification. We verify their credentials during the registration process to ensure they have the necessary knowledge and qualifications.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header" id="headingSix">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                                            How do I pay for guide services?
+                                        </button>
+                                    </h3>
+                                    <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#guidesAccordion">
+                                        <div class="accordion-body">
+                                            Currently, payment arrangements are made directly with the guide after your booking is confirmed. In the future, we plan to implement secure online payment options through the platform.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bookings Tab -->
+                    <div class="tab-pane fade" id="bookings" role="tabpanel" aria-labelledby="bookings-tab">
+                        <div class="faq-category">
+                            <h2>Bookings and Cancellations</h2>
+                            
+                            <div class="accordion" id="bookingsAccordion">
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header" id="headingSeven">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeven" aria-expanded="true" aria-controls="collapseSeven">
+                                            Can I cancel or reschedule a booking?
+                                        </button>
+                                    </h3>
+                                    <div id="collapseSeven" class="accordion-collapse collapse show" aria-labelledby="headingSeven" data-bs-parent="#bookingsAccordion">
+                                        <div class="accordion-body">
+                                            Yes, you can cancel a booking through your dashboard up to 24 hours before the scheduled time without any penalty. To reschedule, please contact your guide directly through the messaging system.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header" id="headingEight">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight">
+                                            What happens if my guide cancels?
+                                        </button>
+                                    </h3>
+                                    <div id="collapseEight" class="accordion-collapse collapse" aria-labelledby="headingEight" data-bs-parent="#bookingsAccordion">
+                                        <div class="accordion-body">
+                                            If a guide cancels a confirmed booking, you will be notified immediately and offered the option to reschedule or find an alternative guide. We monitor cancellation rates closely to ensure guides maintain a high level of reliability.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header" id="headingNine">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNine" aria-expanded="false" aria-controls="collapseNine">
+                                            How far in advance should I book a tour?
+                                        </button>
+                                    </h3>
+                                    <div id="collapseNine" class="accordion-collapse collapse" aria-labelledby="headingNine" data-bs-parent="#bookingsAccordion">
+                                        <div class="accordion-body">
+                                            We recommend booking at least 48 hours in advance to ensure guide availability. For popular sites during peak tourist seasons, booking a week or more in advance is advisable. Last-minute bookings are possible but subject to guide availability.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- For Guides Tab -->
+                    <div class="tab-pane fade" id="forguides" role="tabpanel" aria-labelledby="forguides-tab">
+                        <div class="faq-category">
+                            <h2>For Guides</h2>
+                            
+                            <div class="accordion" id="forGuidesAccordion">
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header" id="headingTen">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTen" aria-expanded="true" aria-controls="collapseTen">
+                                            How can I become a guide on Athrna?
+                                        </button>
+                                    </h3>
+                                    <div id="collapseTen" class="accordion-collapse collapse show" aria-labelledby="headingTen" data-bs-parent="#forGuidesAccordion">
+                                        <div class="accordion-body">
+                                            To become a guide on Athrna, you must have a valid tour guide license from the Saudi Tourism Authority. You can register through our platform by selecting "Register as a Guide" during the registration process. Your application will be reviewed, and upon approval, you can create your profile and start accepting bookings.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header" id="headingEleven">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEleven" aria-expanded="false" aria-controls="collapseEleven">
+                                            Are there any fees for guides?
+                                        </button>
+                                    </h3>
+                                    <div id="collapseEleven" class="accordion-collapse collapse" aria-labelledby="headingEleven" data-bs-parent="#forGuidesAccordion">
+                                        <div class="accordion-body">
+                                            During our initial launch phase, there are no fees for guides to join and use the platform. In the future, a small service fee may apply to bookings made through the platform to support ongoing development and maintenance.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header" id="headingTwelve">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwelve" aria-expanded="false" aria-controls="collapseTwelve">
+                                            How do I manage my availability?
+                                        </button>
+                                    </h3>
+                                    <div id="collapseTwelve" class="accordion-collapse collapse" aria-labelledby="headingTwelve" data-bs-parent="#forGuidesAccordion">
+                                        <div class="accordion-body">
+                                            Once approved as a guide, you can manage your availability through your Guide Dashboard. You can set your regular working hours and also mark specific dates as unavailable. The system will only show your available time slots to potential clients, helping to prevent double-bookings.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* FAQ page styles that match site theme */
+    .page-header {
+        background-color: #1a3b29;
+        color: white;
+        padding: 3rem 0;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .page-header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+    
+    .faq-section {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    
+    .faq-nav {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .faq-nav .nav-pills .nav-link {
+        color: #495057;
+        border-radius: 30px;
+        padding: 0.5rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .faq-nav .nav-pills .nav-link.active {
+        background-color: #1a3b29;
+        color: white;
+    }
+    
+    .faq-nav .nav-pills .nav-link:hover:not(.active) {
+        background-color: rgba(26, 59, 41, 0.05);
+    }
+    
+    .faq-category {
+        padding: 2rem;
+    }
+    
+    .faq-category h2 {
+        color: #1a3b29;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+        position: relative;
+        padding-bottom: 0.75rem;
+    }
+    
+    .faq-category h2::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 50px;
+        height: 3px;
+        background-color: #f8c15c;
+    }
+    
+    .accordion-item {
+        border: 1px solid #e9ecef;
+        border-radius: 8px !important;
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+    
+    .accordion-button {
+        background-color: #f8f9fa;
+        color: #1a3b29;
+        font-weight: 600;
+        padding: 1.25rem;
+        border-radius: 8px !important;
+    }
+    
+    .accordion-button:not(.collapsed) {
+        background-color: #1a3b29;
+        color: white;
+    }
+    
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: #e9ecef;
+    }
+    
+    .accordion-button::after {
+        background-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .accordion-button:not(.collapsed)::after {
+        filter: brightness(5);
+    }
+    
+    .accordion-body {
+        padding: 1.5rem;
+        line-height: 1.6;
+    }
+    
+    .more-questions-section {
+        background-color: #f8f9fa;
+        padding: 3rem 2rem;
+        text-align: center;
+        border-top: 1px solid #f0f0f0;
+    }
+    
+    .more-questions-content h2 {
+        color: #1a3b29;
+        margin-bottom: 1rem;
+    }
+    
+    .more-questions-content .btn-primary {
+        background-color: #1a3b29;
+        border-color: #1a3b29;
+        padding: 0.75rem 2rem;
+        font-weight: 500;
+        margin-top: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .more-questions-content .btn-primary:hover {
+        background-color: #2c5f46;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .page-header {
+            padding: 2rem 0;
+        }
+        
+        .page-header h1 {
+            font-size: 2rem;
+        }
+        
+        .faq-nav .nav-pills {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+        
+        .faq-nav .nav-item {
+            flex-shrink: 0;
+        }
+        
+        .faq-category {
+            padding: 1.5rem;
+        }
+    }
+    
+    /* Dark mode support */
+    [data-theme="dark"] .faq-section {
+        background-color: #2d2d2d;
+    }
+    
+    [data-theme="dark"] .faq-nav {
+        background-color: #333;
+        border-color: #444;
+    }
+    
+    [data-theme="dark"] .faq-nav .nav-pills .nav-link {
+        color: #e0e0e0;
+    }
+    
+    [data-theme="dark"] .faq-nav .nav-pills .nav-link.active {
+        background-color: #4a9e7f;
+    }
+    
+    [data-theme="dark"] .faq-nav .nav-pills .nav-link:hover:not(.active) {
+        background-color: rgba(74, 158, 127, 0.2);
+    }
+    
+    [data-theme="dark"] .faq-category h2 {
+        color: #4a9e7f;
+    }
+    
+    [data-theme="dark"] .accordion-item {
+        border-color: #444;
+    }
+    
+    [data-theme="dark"] .accordion-button {
+        background-color: #333;
+        color: #e0e0e0;
+    }
+    
+    [data-theme="dark"] .accordion-button:not(.collapsed) {
+        background-color: #4a9e7f;
+    }
+    
+    [data-theme="dark"] .accordion-body {
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+    }
+    
+    [data-theme="dark"] .more-questions-section {
+        background-color: #333;
+        border-color: #444;
+    }
+    
+    [data-theme="dark"] .more-questions-content h2 {
+        color: #4a9e7f;
+    }
+</style>

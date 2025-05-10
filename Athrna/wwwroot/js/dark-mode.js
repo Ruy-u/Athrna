@@ -1,5 +1,5 @@
 ﻿/**
- * Improved Dark Mode Functionality
+ * Enhanced Dark Mode Functionality with better support for City/Site pages
  */
 document.addEventListener('DOMContentLoaded', function () {
     console.log("Dark mode script loaded");
@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Set up toggle button click event
     setupToggleButton();
+
+    // Add observation for City/Site specific elements that might be loaded dynamically
+    observeDynamicContent();
 });
 
 /**
@@ -19,6 +22,12 @@ document.addEventListener('DOMContentLoaded', function () {
  */
 function createDarkModeToggle() {
     console.log("Creating dark mode toggle");
+
+    // Check if toggle already exists to avoid duplicates
+    if (document.getElementById('darkModeToggle')) {
+        console.log("Dark mode toggle already exists");
+        return;
+    }
 
     // Create the toggle button
     const toggleButton = document.createElement('button');
@@ -91,6 +100,54 @@ function setTheme(theme) {
     } else {
         document.body.classList.remove('dark-theme');
     }
+
+    // Apply theme to site-specific elements that might not have been updated
+    applySiteSpecificTheme(theme);
+}
+
+/**
+ * Applies theme to site-specific elements that might be tricky to style with CSS
+ */
+function applySiteSpecificTheme(theme) {
+    // City/Site page specific elements
+    if (window.location.pathname.includes('/City/Site/') ||
+        window.location.pathname.includes('/City/Explore/')) {
+
+        // Force update for elements that might be resistant to CSS-only styling
+        if (theme === 'dark') {
+            // Apply dark mode styling to specific elements
+            document.querySelectorAll('.site-card, .service-item, .guide-profile, .sidebar-widget').forEach(el => {
+                el.style.backgroundColor = '#1e1e1e';
+                el.style.color = '#e0e0e0';
+                el.style.borderColor = '#333333';
+            });
+
+            // Fix headings within cards
+            document.querySelectorAll('.site-card h3, .service-details h4, .guide-info h4, .sidebar-widget h4').forEach(el => {
+                el.style.color = '#e0e0e0';
+            });
+
+            // Fix descriptions and paragraphs
+            document.querySelectorAll('.site-description, .cultural-info, .service-details p, .guide-details').forEach(el => {
+                el.style.color = '#e0e0e0';
+            });
+
+            // Fix sidebar lists
+            document.querySelectorAll('.nearby-sites li, .hours-list li, .fees-list li').forEach(el => {
+                el.style.borderColor = '#333333';
+            });
+        } else {
+            // Remove inline styles when returning to light mode
+            document.querySelectorAll('.site-card, .service-item, .guide-profile, .sidebar-widget, ' +
+                '.site-card h3, .service-details h4, .guide-info h4, .sidebar-widget h4, ' +
+                '.site-description, .cultural-info, .service-details p, .guide-details, ' +
+                '.nearby-sites li, .hours-list li, .fees-list li').forEach(el => {
+                    el.style.backgroundColor = '';
+                    el.style.color = '';
+                    el.style.borderColor = '';
+                });
+        }
+    }
 }
 
 /**
@@ -138,6 +195,30 @@ function updateToggleButton(isDarkMode) {
 }
 
 /**
+ * Sets up a MutationObserver to detect dynamic content changes,
+ * especially helpful for City/Site pages where content may load dynamically
+ */
+function observeDynamicContent() {
+    // Only set up on City/Site pages
+    if (window.location.pathname.includes('/City/Site/') ||
+        window.location.pathname.includes('/City/Explore/')) {
+
+        console.log("Setting up observer for dynamic content on City/Site page");
+
+        const observer = new MutationObserver(function (mutations) {
+            // Check if we need to reapply site-specific theming
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            applySiteSpecificTheme(currentTheme);
+        });
+
+        // Start observing the main content area for changes
+        const targetNode = document.querySelector('main') || document.body;
+        const config = { childList: true, subtree: true };
+        observer.observe(targetNode, config);
+    }
+}
+
+/**
  * Check and handle OS theme preference changes
  */
 const prefersDarkModeMedia = window.matchMedia('(prefers-color-scheme: dark)');
@@ -161,3 +242,13 @@ setTimeout(function () {
     window.refreshDarkMode();
     console.log("Delayed theme refresh executed");
 }, 500);
+
+// Add second refresh for site-specific content that might load later
+setTimeout(function () {
+    // Check for site-specific page
+    if (window.location.pathname.includes('/City/Site/') ||
+        window.location.pathname.includes('/City/Explore/')) {
+        console.log("Second refresh for site-specific content");
+        window.refreshDarkMode();
+    }
+}, 1500);

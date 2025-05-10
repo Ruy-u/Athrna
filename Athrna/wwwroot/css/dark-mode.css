@@ -1,4 +1,4 @@
-﻿/* Enhanced Dark Mode CSS with specific targeting for cards and map section */
+﻿/* Enhanced Dark Mode CSS with improved support for City Site pages */
 
 /* Light mode (default) */
 :root {
@@ -22,6 +22,15 @@
     --footer-text: #6c757d;
     --map-bg: #f8f9fa;
     --map-border: #dee2e6;
+    --site-card-bg: #ffffff;
+    --site-card-text: #333333;
+    --site-card-shadow: rgba(0, 0, 0, 0.1);
+    --site-meta-text: #ffffff;
+    --site-sidebar-bg: #ffffff;
+    --site-sidebar-text: #333333;
+    --site-widget-header-bg: #f8f9fa;
+    --site-rating-star: #f8c15c;
+    --site-card-hover-shadow: rgba(0, 0, 0, 0.15);
 }
 
 /* Dark mode variables */
@@ -46,9 +55,18 @@
     --footer-text: #a0a0a0;
     --map-bg: #1e1e1e;
     --map-border: #333333;
+    --site-card-bg: #1e1e1e;
+    --site-card-text: #e0e0e0;
+    --site-card-shadow: rgba(0, 0, 0, 0.3);
+    --site-meta-text: #ffffff;
+    --site-sidebar-bg: #1e1e1e;
+    --site-sidebar-text: #e0e0e0;
+    --site-widget-header-bg: #2d2d2d;
+    --site-rating-star: #f8c15c;
+    --site-card-hover-shadow: rgba(0, 0, 0, 0.5);
 }
 
-    /* Core element styles - using !important for critical properties */
+    /* Core element styles */
     [data-theme="dark"] body {
         background-color: var(--bg-color) !important;
         color: var(--text-color) !important;
@@ -65,80 +83,168 @@
         color: var(--header-text) !important;
     }
 
-    /* Card styles - with explicit targeting for all card variations */
+    /* Global card styles */
     [data-theme="dark"] .card,
     [data-theme="dark"] .dashboard-widget,
-    [data-theme="dark"] .site-card,
     [data-theme="dark"] .bookmark-card,
     [data-theme="dark"] .guide-card,
     [data-theme="dark"] .rating-item,
     [data-theme="dark"] .bookmark-item,
     [data-theme="dark"] .stat-card,
     [data-theme="dark"] .site-description-section,
-    [data-theme="dark"] .cards-container .card,
-    [data-theme="dark"] .cards-container > div > .card,
+    [data-theme="dark"] .sidebar-widget,
     [data-theme="dark"] div.card,
     [data-theme="dark"] .card-content {
         background-color: var(--card-bg) !important;
         border-color: var(--card-border) !important;
         color: var(--text-color) !important;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
     }
 
-        /* Target card children */
-        [data-theme="dark"] .card *:not(a):not(button):not(.btn):not(.text-muted):not([class*="text-"]):not(h1):not(h2):not(h3):not(h4):not(h5):not(h6) {
-            color: var(--text-color) !important;
+    /* City/Site specific elements */
+    [data-theme="dark"] .site-card {
+        background-color: var(--site-card-bg) !important;
+        border-color: var(--card-border) !important;
+        color: var(--site-card-text) !important;
+        box-shadow: 0 4px 6px var(--site-card-shadow) !important;
+    }
+
+        [data-theme="dark"] .site-card:hover {
+            box-shadow: 0 10px 20px var(--site-card-hover-shadow) !important;
         }
 
-    /* Card headers and footers */
-    [data-theme="dark"] .card-header,
-    [data-theme="dark"] .card-footer {
+    [data-theme="dark"] .site-meta {
+        background-color: var(--site-meta-bg) !important;
+        color: var(--site-meta-text) !important;
+    }
+
+    [data-theme="dark"] .site-hero .container {
+        color: var(--site-meta-text) !important;
+    }
+
+    [data-theme="dark"] .site-title {
+        color: var(--site-meta-text) !important;
+    }
+
+    [data-theme="dark"] .site-sidebar {
+        background-color: var(--site-sidebar-bg) !important;
+        color: var(--site-sidebar-text) !important;
+    }
+
+    [data-theme="dark"] .sidebar-widget h4 {
+        color: var(--text-color) !important;
+        border-color: var(--card-border) !important;
+    }
+
+    [data-theme="dark"] .site-info h5,
+    [data-theme="dark"] .card-header h6 {
+        color: var(--text-color) !important;
+    }
+
+    /* Service items */
+    [data-theme="dark"] .service-item {
         background-color: var(--secondary-bg) !important;
         border-color: var(--card-border) !important;
     }
 
-    /* Map section specific styling */
-    [data-theme="dark"] .map-section,
-    [data-theme="dark"] .map-container,
-    [data-theme="dark"] .map-display,
-    [data-theme="dark"] .map-controls,
-    [data-theme="dark"] #map,
-    [data-theme="dark"] .map,
-    [data-theme="dark"] .site-info {
-        background-color: var(--map-bg) !important;
-        border-color: var(--map-border) !important;
+        [data-theme="dark"] .service-item:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
+        }
+
+    [data-theme="dark"] .service-icon {
+        color: var(--accent-color) !important;
+    }
+
+    [data-theme="dark"] .service-details h4 {
         color: var(--text-color) !important;
     }
 
-        [data-theme="dark"] .map-section h2 {
-            color: var(--text-color) !important;
+    [data-theme="dark"] .service-details p {
+        color: var(--muted-text) !important;
+    }
+
+    /* Guide profiles */
+    [data-theme="dark"] .guide-profile {
+        background-color: var(--secondary-bg) !important;
+    }
+
+        [data-theme="dark"] .guide-profile:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
         }
 
-    [data-theme="dark"] .map-btn {
-        background-color: var(--secondary-bg) !important;
+    [data-theme="dark"] .guide-info h4 {
         color: var(--text-color) !important;
+    }
+
+    [data-theme="dark"] .guide-details {
+        color: var(--muted-text) !important;
+    }
+
+    /* Ratings section */
+    [data-theme="dark"] .rating-summary {
+        background-color: var(--secondary-bg) !important;
         border-color: var(--card-border) !important;
     }
 
-        [data-theme="dark"] .map-btn.active,
-        [data-theme="dark"] .map-btn:hover {
-            background-color: var(--accent-color) !important;
-            color: var(--header-text) !important;
-        }
-
-    /* Form controls */
-    [data-theme="dark"] .form-control,
-    [data-theme="dark"] .form-select {
-        background-color: var(--input-bg) !important;
-        border-color: var(--input-border) !important;
+    [data-theme="dark"] .rating-value {
         color: var(--text-color) !important;
     }
 
-        [data-theme="dark"] .form-control:focus,
-        [data-theme="dark"] .form-select:focus {
-            background-color: var(--input-bg) !important;
-            color: var(--text-color) !important;
-            border-color: var(--accent-color) !important;
-        }
+    [data-theme="dark"] .stars,
+    [data-theme="dark"] .review-stars,
+    [data-theme="dark"] .rating-stars {
+        color: var(--site-rating-star) !important;
+    }
+
+    [data-theme="dark"] .rating-count,
+    [data-theme="dark"] .rating-label {
+        color: var(--muted-text) !important;
+    }
+
+    [data-theme="dark"] .review-item {
+        border-color: var(--card-border) !important;
+    }
+
+    [data-theme="dark"] .reviewer-name {
+        color: var(--text-color) !important;
+    }
+
+    [data-theme="dark"] .review-text {
+        color: var(--muted-text) !important;
+    }
+
+    /* Lists and tables */
+    [data-theme="dark"] .nearby-sites li,
+    [data-theme="dark"] .hours-list li,
+    [data-theme="dark"] .fees-list li {
+        border-color: var(--card-border) !important;
+        color: var(--text-color) !important;
+    }
+
+    [data-theme="dark"] .site-type-badge {
+        background-color: var(--accent-color) !important;
+        color: var(--site-meta-text) !important;
+    }
+
+    /* Location map */
+    [data-theme="dark"] .site-location-map {
+        border-color: var(--card-border) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    /* City header */
+    [data-theme="dark"] .city-header {
+        background-color: rgba(0, 0, 0, 0.7) !important;
+    }
+
+    [data-theme="dark"] .city-overlay {
+        background-color: rgba(0, 0, 0, 0.6) !important;
+    }
+
+    [data-theme="dark"] .city-header h1,
+    [data-theme="dark"] .city-header p {
+        color: var(--site-meta-text) !important;
+    }
 
     /* Buttons */
     [data-theme="dark"] .btn-primary {
@@ -157,98 +263,66 @@
             color: var(--button-primary-text) !important;
         }
 
-    /* Force card content text colors */
-    [data-theme="dark"] .card h1,
-    [data-theme="dark"] .card h2,
-    [data-theme="dark"] .card h3,
-    [data-theme="dark"] .card h4,
-    [data-theme="dark"] .card h5,
-    [data-theme="dark"] .card h6,
-    [data-theme="dark"] .card p,
-    [data-theme="dark"] .card span,
-    [data-theme="dark"] .card li,
-    [data-theme="dark"] .card a:not(.btn) {
-        color: var(--text-color) !important;
+    /* Rating input */
+    [data-theme="dark"] .rating-stars label {
+        color: #555 !important;
     }
 
-
-    /* Additional overrides for specific site components */
-    [data-theme="dark"] .dashboard-header,
-    [data-theme="dark"] .city-header,
-    [data-theme="dark"] .site-hero,
-    [data-theme="dark"] .site-header {
-        background-color: var(--accent-color) !important;
-    }
-
-    [data-theme="dark"] .hero {
-        background-color: var(--accent-color) !important;
-        color: var(--header-text) !important;
-    }
-
-    [data-theme="dark"] footer {
-        background-color: var(--footer-bg) !important;
-        color: var(--footer-text) !important;
-    }
-
-    [data-theme="dark"] .table {
-        color: var(--text-color) !important;
-    }
-
-        [data-theme="dark"] .table thead th {
-            background-color: var(--secondary-bg) !important;
+        [data-theme="dark"] .rating-stars input:checked ~ label,
+        [data-theme="dark"] .rating-stars label:hover,
+        [data-theme="dark"] .rating-stars label:hover ~ label {
+            color: var(--site-rating-star) !important;
         }
 
-    [data-theme="dark"] .modal-content {
-        background-color: var(--card-bg) !important;
+    /* Force text colors */
+    [data-theme="dark"] h1,
+    [data-theme="dark"] h2,
+    [data-theme="dark"] h3,
+    [data-theme="dark"] h4,
+    [data-theme="dark"] h5,
+    [data-theme="dark"] h6,
+    [data-theme="dark"] p,
+    [data-theme="dark"] span:not(.badge):not(.site-type):not([class*="text-"]),
+    [data-theme="dark"] li,
+    [data-theme="dark"] label,
+    [data-theme="dark"] .site-description,
+    [data-theme="dark"] .cultural-info {
         color: var(--text-color) !important;
     }
 
-    [data-theme="dark"] a {
-        color: var(--link-color) !important;
+    /* Fix forms in dark mode */
+    [data-theme="dark"] input[type="text"],
+    [data-theme="dark"] input[type="email"],
+    [data-theme="dark"] input[type="password"],
+    [data-theme="dark"] select,
+    [data-theme="dark"] textarea {
+        background-color: var(--input-bg) !important;
+        border-color: var(--input-border) !important;
+        color: var(--text-color) !important;
     }
 
-    [data-theme="dark"] .text-muted,
-    [data-theme="dark"] .text-dark {
+    /* Fix cards in dark mode - ensure all content is properly colored */
+    [data-theme="dark"] .card *,
+    [data-theme="dark"] .site-description-section *,
+    [data-theme="dark"] .sidebar-widget * {
+        color: var(--text-color) !important;
+    }
+
+    /* Override for special elements that should have different colors */
+    [data-theme="dark"] .card .text-muted,
+    [data-theme="dark"] .site-description-section .text-muted,
+    [data-theme="dark"] .sidebar-widget .text-muted {
         color: var(--muted-text) !important;
     }
 
-    /* Admin area overrides */
-    [data-theme="dark"] #sidebar {
-        background-color: var(--card-bg) !important;
-        color: var(--text-color) !important;
+    [data-theme="dark"] .card .stars *,
+    [data-theme="dark"] .card .rating-stars *,
+    [data-theme="dark"] .card .review-stars * {
+        color: var(--site-rating-star) !important;
     }
 
-        [data-theme="dark"] #sidebar .sidebar-header {
-            background-color: var(--accent-color) !important;
-        }
-
-        [data-theme="dark"] #sidebar ul li a {
-            color: var(--text-color) !important;
-        }
-
-            [data-theme="dark"] #sidebar ul li.active > a,
-            [data-theme="dark"] #sidebar ul li a:hover {
-                background-color: var(--accent-color) !important;
-                color: var(--header-text) !important;
-            }
-
-    /* HOME PAGE SPECIFIC STYLING */
-    /* Cards on homepage */
-    [data-theme="dark"] .cards-container .card .card-img img {
-        border-color: var(--card-border) !important;
-    }
-
-    [data-theme="dark"] .cards-container .card .card-content {
-        background-color: var(--card-bg) !important;
-    }
-
-        [data-theme="dark"] .cards-container .card .card-content h2,
-        [data-theme="dark"] .cards-container .card .card-content p {
-            color: var(--text-color) !important;
-        }
-
-    [data-theme="dark"] .explore-btn {
-        background-color: var(--button-primary-bg) !important;
+    [data-theme="dark"] .btn-primary *,
+    [data-theme="dark"] .btn-outline-primary:hover * {
         color: var(--button-primary-text) !important;
     }
 
@@ -280,13 +354,15 @@ body,
 .dashboard-widget,
 .form-control,
 .btn,
-a {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+a,
+.site-card,
+.service-item,
+.guide-profile,
+.site-sidebar,
+.sidebar-widget {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
-[data-theme="dark"] .card,
-[data-theme="dark"] .card * {
-    color: var(--text-color) !important;
-}
+
 /* Fix for inputs in dark mode */
 [data-theme="dark"] input:-webkit-autofill,
 [data-theme="dark"] input:-webkit-autofill:hover,
@@ -301,44 +377,3 @@ a {
     -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
     transition: background-color 5000s ease-in-out 0s;
 }
-[data-theme="dark"] .card {
-    background-color: var(--card-bg) !important;
-    border-color: var(--card-border) !important;
-    color: var(--text-color) !important;
-}
-[data-theme="dark"] .card *,
-[data-theme="dark"] .card-content *,
-[data-theme="dark"] .cards-container .card * {
-    color: var(--text-color) !important;
-}
-.registration-container {
-    max-width: 500px;
-    margin: 40px auto;
-    background-color: rgba(255, 255, 255, 0.95);
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #333; /* Default text color */
-}
-
-/* Dark mode adjustments */
-[data-theme="dark"] .registration-container,
-[data-theme="dark"] #guideDetailsSection {
-    background-color: var(--card-bg) !important;
-    color: var(--text-color) !important; /* Set text color in dark mode */
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-}
-
-    [data-theme="dark"] .registration-container .form-label,
-    [data-theme="dark"] .registration-container input,
-    [data-theme="dark"] .registration-header,
-    [data-theme="dark"] .registration-container .form-text {
-        color: var(--text-color) !important;
-    }
-
-    /* Adjust button and link styles */
-    [data-theme="dark"] .registration-container .register-btn,
-    [data-theme="dark"] .registration-container .login-link {
-        color: var(--button-text-color) !important; 
-    }

@@ -170,22 +170,63 @@
         @RenderBody()
     </main>
 
-    <footer role="contentinfo">
+    <footer role="contentinfo" class="enhanced-footer">
         <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <p>&copy; @DateTime.Now.Year Athrna - Saudi Historical Sites All rights reserved</p>
+            <div class="footer-content">
+                <!-- Logo and Description -->
+                <div class="footer-brand">
+                    <a href="/" class="footer-logo">
+                        <img src="~/images/logo.jpg" alt="Athrna Logo" class="footer-logo-img">
+                        <span class="footer-logo-text" data-no-translate="true">Athrna</span>
+                    </a>
+                    <p class="footer-description">
+                        Discover Saudi Arabia's historical wonders and cultural treasures through our guided tours and detailed information.
+                    </p>
                 </div>
-                <div class="col-md-6 text-md-end">
+
+                <!-- Resources -->
+                <div class="footer-links-section">
+                    <h3>Resources</h3>
                     <ul class="footer-links">
+                        <li><a href="/Home/About">About Us</a></li>
+                        <li><a href="/Home/FAQ">FAQ</a></li>
                         <li><a href="/Home/Privacy">Privacy Policy</a></li>
-                        <li><a href="/Home/Accessibility">Accessibility</a></li>
-                        <li><a href="/Home/Contact">Contact Us</a></li>
+                        <li><a href="/Home/Terms">Terms of Service</a></li>
                     </ul>
+                </div>
+
+                <!-- Contact -->
+                <div class="footer-links-section">
+                    <h3>Contact Us</h3>
+                    <ul class="footer-contact">
+                        <li>
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Taibah University, Madinah, Saudi Arabia</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-envelope-fill"></i>
+                            <a href="mailto:athrnasite@gmail.com">athrnasite@gmail.com</a>
+                        </li>
+                        <li>
+                            <i class="bi bi-telephone-fill"></i>
+                            <a href="tel:+966540525841">+966 54 052 5841</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <hr class="footer-divider">
+
+            <!-- Bottom Footer -->
+            <div class="footer-bottom">
+                <div class="copyright">
+                    &copy; @DateTime.Now.Year Athrna - Saudi Historical Sites. All rights reserved.
                 </div>
             </div>
         </div>
     </footer>
+
     <!-- Include Login Modal Partial View -->
     @await Html.PartialAsync("_LoginModal")
 

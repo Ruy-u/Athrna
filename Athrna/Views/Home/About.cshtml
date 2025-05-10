@@ -1,0 +1,314 @@
+﻿@{
+    ViewData["Title"] = "About Us";
+}
+
+<div class="page-header">
+    <div class="container">
+        <h1>About Athrna</h1>
+        <p>Discover our mission and vision for Saudi cultural heritage</p>
+    </div>
+</div>
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-lg-10 offset-lg-1">
+            <div class="about-section">
+                <div class="section-block">
+                    <h2>Our Mission</h2>
+                    <p>
+                        At Athrna, our mission is to preserve, promote, and share the rich cultural and historical heritage of Saudi Arabia. 
+                        We believe in creating meaningful connections between travelers and the Kingdom's fascinating historical sites 
+                        through authentic experiences and in-depth knowledge.
+                    </p>
+                </div>
+
+                <div class="section-block">
+                    <h2>Our Vision</h2>
+                    <p>
+                        To be the premier platform for cultural tourism in Saudi Arabia, making the Kingdom's 
+                        historical treasures accessible to travelers from around the world while supporting 
+                        local communities and preserving cultural heritage for future generations.
+                    </p>
+                </div>
+
+                <div class="section-block">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h2>Who We Are</h2>
+                            <p>
+                                Athrna was founded in 2023 by a team of passionate historians, technologists, and tourism 
+                                experts who saw the need for a comprehensive resource dedicated to Saudi Arabia's historical sites. 
+                                Our team includes certified local guides with deep knowledge of regional history and culture, 
+                                ensuring authentic and enriching experiences for all visitors.
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="about-image">
+                                <img src="/api/placeholder/600/400" alt="Athrna Team" class="img-fluid rounded">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <h2>What We Offer</h2>
+                    <div class="services-grid">
+                        <div class="service-item">
+                            <div class="service-icon">
+                                <i class="bi bi-info-circle-fill"></i>
+                            </div>
+                            <div class="service-content">
+                                <h3>Detailed Information</h3>
+                                <p>Comprehensive details about historical and cultural sites across the Kingdom</p>
+                            </div>
+                        </div>
+                        
+                        <div class="service-item">
+                            <div class="service-icon">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                            <div class="service-content">
+                                <h3>Local Guides</h3>
+                                <p>Connection with knowledgeable local guides for personalized tours</p>
+                            </div>
+                        </div>
+                        
+                        <div class="service-item">
+                            <div class="service-icon">
+                                <i class="bi bi-book-fill"></i>
+                            </div>
+                            <div class="service-content">
+                                <h3>Cultural Context</h3>
+                                <p>Insights and background that bring history to life</p>
+                            </div>
+                        </div>
+                        
+                        <div class="service-item">
+                            <div class="service-icon">
+                                <i class="bi bi-calendar-check-fill"></i>
+                            </div>
+                            <div class="service-content">
+                                <h3>Easy Booking</h3>
+                                <p>Convenient booking system for guide services and site visits</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <h2>Our Commitment</h2>
+                    <p>
+                        We are committed to accuracy, authenticity, and cultural sensitivity in all our content and services. 
+                        We work closely with local authorities, cultural institutions, and community members to ensure 
+                        that our platform respects and honors Saudi heritage while making it accessible to visitors.
+                    </p>
+                    
+                    <div class="commitment-highlights">
+                        <div class="commitment-item">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Authentic cultural experiences</span>
+                        </div>
+                        <div class="commitment-item">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Verified historical information</span>
+                        </div>
+                        <div class="commitment-item">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Support for local communities</span>
+                        </div>
+                        <div class="commitment-item">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Respect for cultural heritage</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* About page styles that match site theme */
+    .page-header {
+        background-color: #1a3b29;
+        color: white;
+        padding: 3rem 0;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .page-header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+    
+    .about-section {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    
+    .section-block {
+        padding: 2rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .section-block:last-child {
+        border-bottom: none;
+    }
+    
+    .section-block h2 {
+        color: #1a3b29;
+        margin-bottom: 1.25rem;
+        font-weight: 600;
+        position: relative;
+        padding-bottom: 0.75rem;
+    }
+    
+    .section-block h2::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 50px;
+        height: 3px;
+        background-color: #f8c15c;
+    }
+    
+    .about-image {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .service-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.5rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .service-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .service-icon {
+        font-size: 2rem;
+        color: #1a3b29;
+        min-width: 50px;
+        text-align: center;
+    }
+    
+    .service-content h3 {
+        color: #1a3b29;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .commitment-highlights {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .commitment-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .commitment-item i {
+        color: #1a3b29;
+        font-size: 1.25rem;
+    }
+    
+    .contact-cta {
+        background-color: #f8f9fa;
+        padding: 3rem 2rem;
+    }
+    
+    .contact-cta .btn-primary {
+        background-color: #1a3b29;
+        border-color: #1a3b29;
+        padding: 0.75rem 2rem;
+        font-weight: 500;
+        margin-top: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .contact-cta .btn-primary:hover {
+        background-color: #2c5f46;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .page-header {
+            padding: 2rem 0;
+        }
+        
+        .page-header h1 {
+            font-size: 2rem;
+        }
+        
+        .section-block {
+            padding: 1.5rem;
+        }
+        
+        .services-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .about-image {
+            margin-top: 1.5rem;
+        }
+    }
+    
+    /* Dark mode support */
+    [data-theme="dark"] .about-section {
+        background-color: #2d2d2d;
+    }
+    
+    [data-theme="dark"] .section-block {
+        border-color: #444;
+    }
+    
+    [data-theme="dark"] .section-block h2 {
+        color: #4a9e7f;
+    }
+    
+    [data-theme="dark"] .service-item,
+    [data-theme="dark"] .commitment-item,
+    [data-theme="dark"] .contact-cta {
+        background-color: #3a3a3a;
+    }
+    
+    [data-theme="dark"] .service-icon,
+    [data-theme="dark"] .commitment-item i,
+    [data-theme="dark"] .service-content h3 {
+        color: #4a9e7f;
+    }
+</style>
