@@ -3,12 +3,22 @@
 @{
     ViewData["Title"] = "My Dashboard";
 }
-
+<script>
+    (function () {
+        try {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch (e) {
+            // Fallback: do nothing
+        }
+    })();
+</script>
 <div class="dashboard-container">
     <div class="dashboard-header">
         <div class="container">
-            <h1>Welcome, @Model.User.Username!</h1>
-            <p>Manage your bookmarks, reviews, and profile information here.</p>
+            <h1>Manage your bookmarks, reviews, and profile information here.</h1>
         </div>
     </div>
 
@@ -284,6 +294,7 @@
 
 @section Styles {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/dark-mode.css" />
     <style>
         .dashboard-container {
             background-color: #f8f9fa;

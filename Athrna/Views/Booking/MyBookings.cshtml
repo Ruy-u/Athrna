@@ -5,10 +5,39 @@
 }
 
 <div class="container mt-5">
+    <div class="dashboard-nav mb-4">
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="UserDashboard" asp-action="Index">Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="UserDashboard" asp-action="Bookmarks">My Bookmarks</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" asp-controller="Booking" asp-action="MyBookings">My Bookings</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="UserDashboard" asp-action="Ratings">My Ratings</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="UserDashboard" asp-action="Messages">
+                    Messages
+                    @if (ViewBag.UnreadMessages > 0)
+                    {
+                        <span class="badge bg-danger">@ViewBag.UnreadMessages</span>
+                    }
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="UserDashboard" asp-action="Profile">My Profile</a>
+            </li>
+        </ul>
+    </div>
+
     <div class="row">
         <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div class="bookings-list">
+                <div class="container">
                     <h2 class="h4 mb-0">My Tour Bookings</h2>
                 </div>
                 <div class="card-body">

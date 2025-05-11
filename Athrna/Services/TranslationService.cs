@@ -286,15 +286,21 @@ namespace Athrna.Services
             {
                 _logger.LogError(ex, "Error getting supported languages");
 
-                // Return a fallback list of common languages
+                // Return a fallback list of common languages that includes our expanded set
                 return new List<LanguageInfo>
-                {
-                    new LanguageInfo { Code = "en", Name = "English" },
-                    new LanguageInfo { Code = "ar", Name = "Arabic" },
-                    new LanguageInfo { Code = "fr", Name = "French" },
-                    new LanguageInfo { Code = "de", Name = "German" },
-                    new LanguageInfo { Code = "es", Name = "Spanish" }
-                };
+        {
+            new LanguageInfo { Code = "en", Name = "English" },
+            new LanguageInfo { Code = "ar", Name = "Arabic" },
+            new LanguageInfo { Code = "zh", Name = "Chinese" },
+            new LanguageInfo { Code = "es", Name = "Spanish" },
+            new LanguageInfo { Code = "hi", Name = "Hindi" },
+            new LanguageInfo { Code = "fr", Name = "French" },
+            new LanguageInfo { Code = "bn", Name = "Bengali" },
+            new LanguageInfo { Code = "ru", Name = "Russian" },
+            new LanguageInfo { Code = "pt", Name = "Portuguese" },
+            new LanguageInfo { Code = "ja", Name = "Japanese" },
+            new LanguageInfo { Code = "de", Name = "German" }
+        };
             }
         }
         private string ComputeHash(string text)

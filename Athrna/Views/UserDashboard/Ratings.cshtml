@@ -3,7 +3,19 @@
 @{
     ViewData["Title"] = "My Ratings";
 }
-
+<script>
+    (function () {
+        try {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        } catch (e) {
+            // Fallback: do nothing
+        }
+    })();
+</script>
+<link rel="stylesheet" href="~/css/dark-mode.css" />
 <div class="dashboard-container">
     <div class="dashboard-header">
         <div class="container">
@@ -17,16 +29,34 @@
         <div class="dashboard-nav mb-4">
             <ul class="nav nav-tabs">
                 <li class="nav-item">
-                    <a class="nav-link" asp-action="Index">Dashboard</a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Index" ? "active" : "")"
+                       asp-action="Index">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-action="Bookmarks">My Bookmarks</a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Bookmarks" ? "active" : "")"
+                       asp-action="Bookmarks">My Bookmarks</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" asp-action="Ratings">My Ratings</a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "MyBookings" ? "active" : "")"
+                       asp-controller="Booking" asp-action="MyBookings">My Bookings</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-action="Profile">My Profile</a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Ratings" ? "active" : "")"
+                       asp-action="Ratings">My Ratings</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Messages" ? "active" : "")"
+                       asp-action="Messages">
+                        Messages
+                        @if (Model is UserDashboardViewModel dashboard && dashboard.UnreadMessages > 0)
+                        {
+                            <span class="badge bg-danger">@dashboard.UnreadMessages</span>
+                        }
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Profile" ? "active" : "")"
+                       asp-action="Profile">My Profile</a>
                 </li>
             </ul>
         </div>
