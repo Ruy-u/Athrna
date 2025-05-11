@@ -1018,35 +1018,69 @@ namespace Athrna.Controllers
             return Task.FromResult<IActionResult>(RedirectToAction(nameof(Cities)));
         }
 
-        // GET: Admin/ToggleAdmin/5
-        public async Task<IActionResult> ToggleAdmin(int id)
+        // GET: Admin/ToggleAdmin/5?roleLevel=5
+        [Authorize(Policy = "AdminManagement")]
+        public async Task<IActionResult> ToggleAdmin(int id, int roleLevel = 5)
         {
-            var client = await _context.Client
-                .Include(c => c.Administrator)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            try
+            {
+                _logger.LogInformation("ToggleAdmin called for user ID: {UserId} with roleLevel: {RoleLevel}", id, roleLevel);
 
-            if (client == null)
-            {
-                return NotFound();
-            }
+                var client = await _context.Client
+                    .Include(c => c.Administrator)
+                    .FirstOrDefaultAsync(c => c.Id == id);
 
-            if (client.Administrator != null)
-            {
-                // Remove admin privileges
-                _context.Administrator.Remove(client.Administrator);
-            }
-            else
-            {
-                // Add admin privileges
-                var administrator = new Administrator
+                if (client == null)
                 {
-                    ClientId = client.Id
-                };
-                _context.Administrator.Add(administrator);
-            }
+                    _logger.LogWarning("User not found with ID: {UserId}", id);
+                    TempData["ErrorMessage"] = "User not found.";
+                    return RedirectToAction(nameof(Users));
+                }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Users));
+                // Check if current user is trying to modify their own admin status
+                if (client.Id == int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)))
+                {
+                    _logger.LogWarning("User attempted to modify their own admin status: {UserId}", id);
+                    TempData["ErrorMessage"] = "You cannot modify your own admin status.";
+                    return RedirectToAction(nameof(Users));
+                }
+
+                if (client.Administrator != null)
+                {
+                    // Remove admin privileges
+                    _logger.LogInformation("Removing admin privileges for user ID: {UserId}", id);
+                    _context.Administrator.Remove(client.Administrator);
+                    TempData["SuccessMessage"] = $"Admin privileges removed from {client.Username}.";
+                }
+                else
+                {
+                    // Add admin privileges with specified role level
+                    // Ensure role level is within valid range
+                    if (roleLevel < 1 || roleLevel > 5)
+                    {
+                        roleLevel = 5; // Default to lowest permission if invalid
+                    }
+
+                    _logger.LogInformation("Adding admin privileges for user ID: {UserId} with role level: {RoleLevel}", id, roleLevel);
+
+                    var administrator = new Administrator
+                    {
+                        ClientId = client.Id,
+                        RoleLevel = roleLevel
+                    };
+                    _context.Administrator.Add(administrator);
+                    TempData["SuccessMessage"] = $"{client.Username} has been made an admin with role level {roleLevel}.";
+                }
+
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Users));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in ToggleAdmin for user ID: {UserId}", id);
+                TempData["ErrorMessage"] = "An error occurred while updating admin status.";
+                return RedirectToAction(nameof(Users));
+            }
         }
 
         // GET: Admin/Ratings
@@ -1358,52 +1392,6 @@ namespace Athrna.Controllers
 
             TempData["SuccessMessage"] = "Admin role updated successfully.";
             return RedirectToAction(nameof(ManageAdmins));
-        }
-
-        // GET: Admin/ToggleAdmin/5
-        [Authorize(Policy = "AdminManagement")]
-        public async Task<IActionResult> ToggleAdmin(int id, int roleLevel = 5)
-        {
-            var client = await _context.Client
-                .Include(c => c.Administrator)
-                .FirstOrDefaultAsync(c => c.Id == id);
-
-            if (client == null)
-            {
-                return NotFound();
-            }
-
-            if (client.Administrator != null)
-            {
-                // Prevent an admin from removing their own admin status
-                if (client.Id == int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)))
-                {
-                    TempData["ErrorMessage"] = "You cannot remove your own admin status.";
-                    return RedirectToAction(nameof(Users));
-                }
-
-                // Remove admin privileges
-                _context.Administrator.Remove(client.Administrator);
-            }
-            else
-            {
-                // Add admin privileges with specified role level
-                // Ensure role level is within valid range
-                if (roleLevel < 1 || roleLevel > 5)
-                {
-                    roleLevel = 5; // Default to lowest permission if invalid
-                }
-
-                var administrator = new Administrator
-                {
-                    ClientId = client.Id,
-                    RoleLevel = roleLevel
-                };
-                _context.Administrator.Add(administrator);
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Users));
         }
 
         [HttpGet]

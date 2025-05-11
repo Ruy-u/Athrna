@@ -226,39 +226,109 @@ header {
 /* Auth Buttons */
 .auth-buttons {
     display: flex;
-    gap: 15px;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px; /* Slightly increased gap */
+    margin-left: 15px;
 }
 
 .auth-btn {
-    padding: 10px 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 110px; /* Increased minimum width */
+    padding: 8px 20px; /* More horizontal padding */
     border-radius: 5px;
     text-decoration: none;
     font-weight: bold;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap; /* Prevent wrapping */
+    overflow: visible; /* Ensure text isn't cut off */
     transition: all 0.3s ease;
+    height: 42px; /* Slightly increased height */
+    box-sizing: border-box;
+    font-size: 0.95rem; /* Explicitly set font size */
 }
 
 .login-btn {
     background-color: transparent;
     color: white;
-    border: 2px solid white;
+    border: 2px solid white !important;
+    min-width: 100px; /* Can be slightly narrower than Register */
 }
-
-    .login-btn:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: white;
-    }
 
 .register-btn {
     background-color: #f8c15c;
     color: #1a3b29;
     border: 2px solid #f8c15c;
+    min-width: 60px; /* Wider for "Register" which is often longer */
 }
 
-    .register-btn:hover {
-        background-color: #e6a93d;
-        border-color: #e6a93d;
+.login-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.register-btn:hover {
+    background-color: #e6a93d;
+    border-color: #e6a93d;
+}
+
+/* Responsive adjustments for auth buttons */
+@media (max-width: 992px) {
+    .auth-buttons {
+        gap: 10px;
     }
 
+    .auth-btn {
+        padding: 8px 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .auth-btn {
+        min-width: 100px; /* Still maintain decent width on tablets */
+        padding: 6px 14px;
+    }
+
+    .login-btn {
+        min-width: 90px;
+    }
+
+    .register-btn {
+        min-width: 110px;
+    }
+}
+
+@media (max-width: 576px) {
+    .header-actions {
+        margin-left: auto;
+    }
+
+    .auth-buttons {
+        gap: 8px;
+    }
+
+    .auth-btn {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+}
+
+/* For very small screens */
+@media (max-width: 400px) {
+    .auth-buttons {
+        flex-direction: column;
+        gap: 5px;
+        align-items: flex-end;
+    }
+
+    .auth-btn {
+        width: auto;
+        min-width: 90px;
+    }
+}
 /* User Menu */
 .user-menu-btn {
     background: none;

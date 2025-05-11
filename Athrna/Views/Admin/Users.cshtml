@@ -131,6 +131,7 @@
                                                                     <form asp-action="ToggleAdmin" method="get">
                                                                         <div class="modal-body">
                                                                             <input type="hidden" name="id" value="@user.Id" />
+                                                                            <input type="hidden" name="AdminRoleLevel" value="@ViewBag.AdminRoleLevel" />
 
                                                                             <div class="form-group mb-3">
                                                                                 <label for="roleLevel-@user.Id" class="form-label">Admin Role Level</label>
